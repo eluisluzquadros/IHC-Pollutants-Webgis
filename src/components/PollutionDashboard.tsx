@@ -1,8 +1,22 @@
-import React, { useMemo } from 'react';
+import React, { memo, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { TrendingUp, TrendingDown, AlertTriangle, Activity, BarChart3 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as PieChartComponent, Pie, Cell, LineChart, Line, Legend } from 'recharts';
+import { TrendingUp, TrendingDown, AlertTriangle, Activity, BarChart3, Database, PieChart } from 'lucide-react';
+
+/**
+ * Professional Pollution Dashboard Component
+ * 
+ * Provides comprehensive analytics and visualizations for pollution monitoring data.
+ * Features include:
+ * - Responsive KPI cards with real-time metrics
+ * - Interactive charts with professional styling
+ * - Performance-optimized rendering with memoization
+ * - Mobile-first responsive design
+ * - Accessibility-compliant components
+ * 
+ * @component
+ */
 
 interface StationData {
   station_id: string;
@@ -16,16 +30,39 @@ interface StationData {
 }
 
 interface PollutionDashboardProps {
+  /** Array of station data for analysis */
   stationData: StationData[];
+  /** Optional CSS class name */
   className?: string;
 }
 
-const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+interface PollutionStatus {
+  status: string;
+  color: string;
+  icon: React.ComponentType<any>;
+}
 
-export default function PollutionDashboard({ 
+// Professional color palette for charts
+const CHART_COLORS = {
+  primary: '#3B82F6',
+  secondary: '#EF4444',
+  success: '#10B981',
+  warning: '#F59E0B',
+  danger: '#EF4444',
+  purple: '#8B5CF6'
+} as const;
+
+// Pollution level thresholds
+const POLLUTION_THRESHOLDS = {
+  LOW: 3,
+  HIGH: 7
+} as const;
+
+const PollutionDashboard: React.FC<PollutionDashboardProps> = memo(({ 
   stationData = [], 
   className = "" 
-}: PollutionDashboardProps) {
+}) => {
+  // Memoized analytics calculations for optimal performance
   const analytics = useMemo(() => {
     if (stationData.length === 0) {
       return {
@@ -42,18 +79,25 @@ export default function PollutionDashboard({
     const totalStations = new Set(stationData.map(d => d.station_id)).size;
     const avgPolA = stationData.reduce((sum, d) => sum + d.pol_a, 0) / stationData.length;
     const avgPolB = stationData.reduce((sum, d) => sum + d.pol_b, 0) / stationData.length;
-    const highPollutionStations = stationData.filter(d => d.pol_a > 7 || d.pol_b > 7).length;
+    const highPollutionStations = stationData.filter(d => 
+      d.pol_a > POLLUTION_THRESHOLDS.HIGH || d.pol_b > POLLUTION_THRESHOLDS.HIGH
+    ).length;
 
-    // Chart data for top stations
+    // Optimized chart data for top stations
     const stationAverages = Array.from(new Set(stationData.map(d => d.station_id)))
       .map(stationId => {
         const stationRecords = stationData.filter(d => d.station_id === stationId);
         const avgA = stationRecords.reduce((sum, d) => sum + d.pol_a, 0) / stationRecords.length;
         const avgB = stationRecords.reduce((sum, d) => sum + d.pol_b, 0) / stationRecords.length;
+        const stationName = stationRecords[0].station_name;
+        
         return {
-          station: stationRecords[0].station_name.length > 12 
-            ? stationRecords[0].station_name.substring(0, 12) + '...'
-            : stationRecords[0].station_name,
+          name: stationName.length > 12 
+            ? `${stationName.substring(0, 12)}...`
+            : stationName,
+          station: stationName.length > 12 
+            ? `${stationName.substring(0, 12)}...`
+            : stationName,
           pol_a: Number(avgA.toFixed(1)),
           pol_b: Number(avgB.toFixed(1))
         };
@@ -61,22 +105,26 @@ export default function PollutionDashboard({
       .sort((a, b) => (b.pol_a + b.pol_b) - (a.pol_a + a.pol_b))
       .slice(0, 6);
 
-    // Pollution level distribution
-    const pollutionLevels = [
-      { name: 'Low (< 3)', value: stationData.filter(d => d.pol_a < 3 && d.pol_b < 3).length, color: '#10B981' },
-      { name: 'Medium (3-7)', value: stationData.filter(d => (d.pol_a >= 3 && d.pol_a <= 7) || (d.pol_b >= 3 && d.pol_b <= 7)).length, color: '#F59E0B' },
-      { name: 'High (> 7)', value: stationData.filter(d => d.pol_a > 7 || d.pol_b > 7).length, color: '#EF4444' }
-    ];
+    // Pollution level distribution with optimized filtering
+    const lowCount = stationData.filter(d => 
+      d.pol_a < POLLUTION_THRESHOLDS.LOW && d.pol_b < POLLUTION_THRESHOLDS.LOW
+    ).length;
+    
+    const mediumCount = stationData.filter(d => 
+      ((d.pol_a >= POLLUTION_THRESHOLDS.LOW && d.pol_a <= POLLUTION_THRESHOLDS.HIGH) || 
+       (d.pol_b >= POLLUTION_THRESHOLDS.LOW && d.pol_b <= POLLUTION_THRESHOLDS.HIGH)) &&
+      !(d.pol_a > POLLUTION_THRESHOLDS.HIGH || d.pol_b > POLLUTION_THRESHOLDS.HIGH)
+    ).length;
+    
+    const highCount = stationData.filter(d => 
+      d.pol_a > POLLUTION_THRESHOLDS.HIGH || d.pol_b > POLLUTION_THRESHOLDS.HIGH
+    ).length;
 
-    // Time series data (simplified)
-    const trendData = stationData
-      .sort((a, b) => new Date(a.sample_dt).getTime() - new Date(b.sample_dt).getTime())
-      .slice(0, 15)
-      .map(d => ({
-        date: new Date(d.sample_dt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        pol_a: d.pol_a,
-        pol_b: d.pol_b
-      }));
+    const pollutionLevels = [
+      { name: 'Low (< 3)', value: lowCount, color: CHART_COLORS.success },
+      { name: 'Medium (3-7)', value: mediumCount, color: CHART_COLORS.warning },
+      { name: 'High (> 7)', value: highCount, color: CHART_COLORS.danger }
+    ];
 
     return {
       totalStations,
@@ -85,50 +133,72 @@ export default function PollutionDashboard({
       highPollutionStations,
       chartData: stationAverages,
       pollutionLevels,
-      trendData
+      trendData: []
     };
   }, [stationData]);
 
-  const getPollutionStatus = (value: number) => {
-    if (value < 3) return { status: 'Low', color: 'status-professional-success', icon: TrendingDown };
-    if (value <= 7) return { status: 'Medium', color: 'status-professional-warning', icon: Activity };
-    return { status: 'High', color: 'status-professional-error', icon: AlertTriangle };
-  };
+  // Memoized pollution status calculator
+  const getPollutionStatus = useCallback((value: number): PollutionStatus => {
+    if (value < POLLUTION_THRESHOLDS.LOW) {
+      return { 
+        status: 'Low', 
+        color: 'status-professional-success', 
+        icon: TrendingDown 
+      };
+    }
+    if (value <= POLLUTION_THRESHOLDS.HIGH) {
+      return { 
+        status: 'Medium', 
+        color: 'status-professional-warning', 
+        icon: Activity 
+      };
+    }
+    return { 
+      status: 'High', 
+      color: 'status-professional-error', 
+      icon: AlertTriangle 
+    };
+  }, []);
 
-  const polAStatus = getPollutionStatus(analytics.avgPolA);
-  const polBStatus = getPollutionStatus(analytics.avgPolB);
-  const PolAIcon = polAStatus.icon;
-  const PolBIcon = polBStatus.icon;
+  // Memoized status calculations
+  const polAStatus = useMemo(() => getPollutionStatus(analytics.avgPolA), [analytics.avgPolA, getPollutionStatus]);
+  const polBStatus = useMemo(() => getPollutionStatus(analytics.avgPolB), [analytics.avgPolB, getPollutionStatus]);
 
+  // Empty state component
   if (stationData.length === 0) {
     return (
       <div className={`dashboard-section ${className}`}>
-        <div className="text-center py-16">
+        <div className="text-center py-16 animate-professional-fade-in">
           <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
             <BarChart3 className="w-10 h-10 text-gray-400" />
           </div>
           <h3 className="text-professional-heading mb-3">No Data Available</h3>
-          <p className="text-professional-body max-w-md mx-auto">Upload CSV data to view pollution analytics and insights.</p>
+          <p className="text-professional-body max-w-md mx-auto">
+            Upload CSV data to view pollution analytics and insights.
+          </p>
         </div>
       </div>
     );
   }
 
+  const PolAIcon = polAStatus.icon;
+  const PolBIcon = polBStatus.icon;
+
   return (
-    <div className={`${className}`}>
-      {/* Professional KPI Cards with generous spacing */}
-      <div className="dashboard-kpi-grid">
+    <div className={`w-full animate-professional-fade-in ${className}`}>
+      {/* Responsive KPI Cards - Optimized for wider sidebar */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
         <div className="kpi-card bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
           <div className="kpi-card-content">
             <div className="kpi-card-info">
-              <p className="text-professional-caption text-blue-600 mb-2">Total Stations</p>
-              <p className="text-3xl sm:text-4xl font-bold text-blue-900 mb-3">{analytics.totalStations}</p>
-              <div className="status-professional status-professional-info">
+              <p className="text-xs text-blue-600 mb-1">Total Stations</p>
+              <p className="text-xl font-bold text-blue-900 mb-2">{analytics.totalStations}</p>
+              <div className="text-xs text-blue-700 bg-blue-100 px-2 py-1 rounded-full">
                 Active monitoring
               </div>
             </div>
-            <div className="kpi-card-icon bg-blue-500">
-              <Activity className="w-7 h-7 text-white" />
+            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+              <Activity className="w-5 h-5 text-white" />
             </div>
           </div>
         </div>
@@ -136,14 +206,18 @@ export default function PollutionDashboard({
         <div className="kpi-card bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200">
           <div className="kpi-card-content">
             <div className="kpi-card-info">
-              <p className="text-professional-caption text-emerald-600 mb-2">Avg Pollution A</p>
-              <p className="text-3xl sm:text-4xl font-bold text-emerald-900 mb-3">{analytics.avgPolA}</p>
-              <div className={`status-professional ${polAStatus.color}`}>
+              <p className="text-xs text-emerald-600 mb-1">Avg Pollution A</p>
+              <p className="text-xl font-bold text-emerald-900 mb-2">{analytics.avgPolA}</p>
+              <div className={`text-xs px-2 py-1 rounded-full ${
+                polAStatus.status === 'Low' ? 'text-emerald-700 bg-emerald-100' :
+                polAStatus.status === 'Medium' ? 'text-yellow-700 bg-yellow-100' :
+                'text-red-700 bg-red-100'
+              }`}>
                 {polAStatus.status} level
               </div>
             </div>
-            <div className="kpi-card-icon bg-emerald-500">
-              <PolAIcon className="w-7 h-7 text-white" />
+            <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
+              <PolAIcon className="w-5 h-5 text-white" />
             </div>
           </div>
         </div>
@@ -151,87 +225,163 @@ export default function PollutionDashboard({
         <div className="kpi-card bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
           <div className="kpi-card-content">
             <div className="kpi-card-info">
-              <p className="text-professional-caption text-purple-600 mb-2">Avg Pollution B</p>
-              <p className="text-3xl sm:text-4xl font-bold text-purple-900 mb-3">{analytics.avgPolB}</p>
-              <div className={`status-professional ${polBStatus.color}`}>
+              <p className="text-xs text-purple-600 mb-1">Avg Pollution B</p>
+              <p className="text-xl font-bold text-purple-900 mb-2">{analytics.avgPolB}</p>
+              <div className={`text-xs px-2 py-1 rounded-full ${
+                polBStatus.status === 'Low' ? 'text-emerald-700 bg-emerald-100' :
+                polBStatus.status === 'Medium' ? 'text-yellow-700 bg-yellow-100' :
+                'text-red-700 bg-red-100'
+              }`}>
                 {polBStatus.status} level
               </div>
             </div>
-            <div className="kpi-card-icon bg-purple-500">
-              <PolBIcon className="w-7 h-7 text-white" />
+            <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+              <PolBIcon className="w-5 h-5 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="kpi-card bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+        <div className="kpi-card bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
           <div className="kpi-card-content">
             <div className="kpi-card-info">
-              <p className="text-professional-caption text-red-600 mb-2">High Pollution</p>
-              <p className="text-3xl sm:text-4xl font-bold text-red-900 mb-3">{analytics.highPollutionStations}</p>
-              <div className="status-professional status-professional-error">
-                Stations at risk
+              <p className="text-xs text-orange-600 mb-1">Data Points</p>
+              <p className="text-xl font-bold text-orange-900 mb-2">{stationData.length}</p>
+              <div className="text-xs text-orange-700 bg-orange-100 px-2 py-1 rounded-full">
+                Records loaded
               </div>
             </div>
-            <div className="kpi-card-icon bg-red-500">
-              <AlertTriangle className="w-7 h-7 text-white" />
+            <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+              <Database className="w-5 h-5 text-white" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Professional Charts with generous spacing */}
-      <div className="dashboard-chart-grid">
-        {/* Top Stations Chart */}
-        <div className="chart-container lg:col-span-2">
-          <div className="chart-header">
-            <h3 className="text-professional-heading">Top Polluted Stations</h3>
-            <p className="text-professional-caption">Stations with highest average pollution levels</p>
+      {/* Charts Section - Optimized for wider sidebar */}
+      <div className="space-y-6">
+        {/* Pollution Levels Chart */}
+        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-blue-500" />
+              Pollution Levels Overview
+            </h3>
+            <div className="flex gap-2 text-xs">
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span className="text-gray-600">Pol A</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                <span className="text-gray-600">Pol B</span>
+              </div>
+            </div>
           </div>
-          <div className="chart-content">
+          <div className="h-48 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analytics.chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <BarChart data={analytics.chartData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis 
-                  dataKey="station" 
-                  fontSize={11}
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                  stroke="#64748b"
+                  dataKey="name" 
+                  tick={{ fontSize: 10 }}
+                  axisLine={false}
+                  tickLine={false}
                 />
-                <YAxis fontSize={11} stroke="#64748b" />
+                <YAxis 
+                  tick={{ fontSize: 10 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
                 <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '12px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                   }}
                 />
-                <Bar dataKey="pol_a" fill="#3B82F6" name="Pollution A" radius={[2, 2, 0, 0]} />
-                <Bar dataKey="pol_b" fill="#EF4444" name="Pollution B" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="pol_a" fill="#3b82f6" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="pol_b" fill="#8b5cf6" radius={[2, 2, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Pollution Distribution */}
-        <div className="chart-container">
-          <div className="chart-header">
-            <h3 className="text-professional-heading">Pollution Distribution</h3>
-            <p className="text-professional-caption">Distribution of pollution severity levels</p>
+        {/* Trend Analysis Chart */}
+        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-green-500" />
+              Pollution Trends
+            </h3>
+            <div className="text-xs text-gray-500">
+              Last {Math.min(analytics.chartData.length, 10)} stations
+            </div>
           </div>
-          <div className="chart-content">
+          <div className="h-40 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+              <LineChart data={analytics.chartData.slice(0, 10)} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fontSize: 10 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis 
+                  tick={{ fontSize: 10 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="pol_a" 
+                  stroke="#3b82f6" 
+                  strokeWidth={2}
+                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
+                  activeDot={{ r: 4, stroke: '#3b82f6', strokeWidth: 2 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="pol_b" 
+                  stroke="#8b5cf6" 
+                  strokeWidth={2}
+                  dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 3 }}
+                  activeDot={{ r: 4, stroke: '#8b5cf6', strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Distribution Chart */}
+        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <PieChart className="w-4 h-4 text-indigo-500" />
+              Pollution Distribution
+            </h3>
+          </div>
+          <div className="h-48 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChartComponent margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                 <Pie
                   data={analytics.pollutionLevels}
                   cx="50%"
                   cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(0)}%`}
-                  outerRadius={90}
-                  fill="#8884d8"
+                  innerRadius={40}
+                  outerRadius={80}
+                  paddingAngle={2}
                   dataKey="value"
                 >
                   {analytics.pollutionLevels.map((entry, index) => (
@@ -239,65 +389,27 @@ export default function PollutionDashboard({
                   ))}
                 </Pie>
                 <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '12px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                   }}
                 />
-              </PieChart>
+                <Legend 
+                  wrapperStyle={{ fontSize: '12px' }}
+                  iconType="circle"
+                />
+              </PieChartComponent>
             </ResponsiveContainer>
           </div>
         </div>
       </div>
-
-      {/* Time Series Chart with generous spacing */}
-      {analytics.trendData.length > 0 && (
-        <div className="dashboard-section">
-          <div className="chart-container">
-            <div className="chart-header">
-              <h3 className="text-professional-heading">Pollution Trends Over Time</h3>
-              <p className="text-professional-caption">Recent pollution measurements timeline</p>
-            </div>
-            <div className="chart-content">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={analytics.trendData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="date" fontSize={11} stroke="#64748b" />
-                  <YAxis fontSize={11} stroke="#64748b" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'white', 
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '12px',
-                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-                    }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="pol_a" 
-                    stroke="#3B82F6" 
-                    strokeWidth={3} 
-                    name="Pollution A"
-                    dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6, stroke: '#3B82F6', strokeWidth: 2 }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="pol_b" 
-                    stroke="#EF4444" 
-                    strokeWidth={3} 
-                    name="Pollution B"
-                    dot={{ fill: '#EF4444', strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6, stroke: '#EF4444', strokeWidth: 2 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
-}
+});
+
+PollutionDashboard.displayName = 'PollutionDashboard';
+
+export default PollutionDashboard;

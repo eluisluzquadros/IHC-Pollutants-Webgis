@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo, useCallback, useMemo, useRef, useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,56 +14,92 @@ import ProfessionalHeader from "./ProfessionalHeader";
 import { importCSVFile, downloadCSV, StationData } from "@/utils/csvImporter";
 import { toast } from "sonner";
 
+/**
+ * Professional WebGIS Home Component
+ * 
+ * Main application component that orchestrates the entire WebGIS platform
+ * for environmental data visualization. Features include:
+ * - Interactive map with pollution data visualization
+ * - Professional sidebar with data management and analytics
+ * - Real-time filtering and data export capabilities
+ * - Responsive design optimized for all devices
+ * 
+ * @component
+ */
+
 interface HomeProps {
-  // Add any props if needed
+  /** Optional CSS class name for styling */
+  className?: string;
 }
 
-const Home: React.FC<HomeProps> = () => {
-  const [stationData, setStationData] = React.useState<StationData[]>([]);
-  const [filteredData, setFilteredData] = React.useState<StationData[]>([]);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-  const [showAbout, setShowAbout] = React.useState(false);
-  const [filters, setFilters] = React.useState<StationFilters>({
-    stationQuery: "",
-    dateFrom: null,
-    dateTo: null,
-    polAMin: 0,
-    polBMin: 0,
-  });
+interface TooltipState {
+  station: {
+    id: string;
+    name: string;
+    lat: number;
+    lon: number;
+    sampleDate: string;
+    polA: number;
+    polB: number;
+    unit: string;
+  };
+  x: number;
+  y: number;
+}
+
+interface MapSettings {
+  showStations: boolean;
+  showHeatmap: boolean;
+  heatmapOpacity: number;
+  heatmapRadius: number;
+  enableClustering: boolean;
+}
+
+const DEFAULT_FILTERS: StationFilters = {
+  stationQuery: "",
+  dateFrom: null,
+  dateTo: null,
+  polAMin: 0,
+  polBMin: 0,
+};
+
+const DEFAULT_MAP_SETTINGS: MapSettings = {
+  showStations: true,
+  showHeatmap: true,
+  heatmapOpacity: 0.7,
+  heatmapRadius: 25,
+  enableClustering: false,
+};
+
+const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
+  // Core state management
+  const [stationData, setStationData] = useState<StationData[]>([]);
+  const [filteredData, setFilteredData] = useState<StationData[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showAbout, setShowAbout] = useState(false);
+  const [filters, setFilters] = useState<StationFilters>(DEFAULT_FILTERS);
+  const [activeTooltip, setActiveTooltip] = useState<TooltipState | null>(null);
+  const [mapSettings, setMapSettings] = useState<MapSettings>(DEFAULT_MAP_SETTINGS);
   
-  const [activeTooltip, setActiveTooltip] = React.useState<{
-    station: {
-      id: string;
-      name: string;
-      lat: number;
-      lon: number;
-      sampleDate: string;
-      polA: number;
-      polB: number;
-      unit: string;
-    };
-    x: number;
-    y: number;
-  } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [mapSettings, setMapSettings] = React.useState({
-    showStations: true,
-    showHeatmap: true,
-    heatmapOpacity: 0.7,
-    heatmapRadius: 25,
-    enableClustering: false,
-  });
+  // Memoized calculations for performance
+  const stationStats = useMemo(() => ({
+    totalStations: new Set(stationData.map(d => d.station_id)).size,
+    totalRecords: stationData.length,
+    filteredRecords: filteredData.length,
+    lastUpdated: stationData.length > 0 ? stationData[0]?.sample_dt : undefined,
+  }), [stationData, filteredData]);
 
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-
-  // Apply filters to station data
-  React.useEffect(() => {
+  // Apply filters to station data with optimized filtering
+  useEffect(() => {
     let filtered = stationData;
 
     if (filters.stationQuery) {
+      const query = filters.stationQuery.toLowerCase();
       filtered = filtered.filter(station =>
-        station.station_name.toLowerCase().includes(filters.stationQuery.toLowerCase())
+        station.station_name.toLowerCase().includes(query)
       );
     }
 
@@ -86,7 +122,8 @@ const Home: React.FC<HomeProps> = () => {
     setFilteredData(filtered);
   }, [stationData, filters]);
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Optimized file upload handler
+  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -119,9 +156,10 @@ const Home: React.FC<HomeProps> = () => {
         fileInputRef.current.value = '';
       }
     }
-  };
+  }, []);
 
-  const handleExportData = () => {
+  // Optimized export handler
+  const handleExportData = useCallback(() => {
     if (filteredData.length === 0) {
       toast.error('No data to export');
       return;
@@ -134,48 +172,49 @@ const Home: React.FC<HomeProps> = () => {
       toast.error('Failed to export data');
       console.error('Export error:', err);
     }
-  };
+  }, [filteredData]);
 
-  const handleStationHover = (station: any, x: number, y: number) => {
+  // Optimized tooltip handlers
+  const handleStationHover = useCallback((station: any, x: number, y: number) => {
     setActiveTooltip({ station, x, y });
-  };
+  }, []);
 
-  const handleStationLeave = () => {
+  const handleStationLeave = useCallback(() => {
     setActiveTooltip(null);
-  };
+  }, []);
 
-  // Layer control handlers
-  const handleToggleStationMarkers = (enabled: boolean) => {
+  // Optimized layer control handlers
+  const handleToggleStationMarkers = useCallback((enabled: boolean) => {
     setMapSettings(prev => ({ ...prev, showStations: enabled }));
-  };
+  }, []);
 
-  const handleToggleHeatmap = (enabled: boolean) => {
+  const handleToggleHeatmap = useCallback((enabled: boolean) => {
     setMapSettings(prev => ({ ...prev, showHeatmap: enabled }));
-  };
+  }, []);
 
-  const handleHeatmapOpacityChange = (opacity: number) => {
+  const handleHeatmapOpacityChange = useCallback((opacity: number) => {
     setMapSettings(prev => ({ ...prev, heatmapOpacity: opacity }));
-  };
+  }, []);
 
-  const handleHeatmapRadiusChange = (radius: number) => {
+  const handleHeatmapRadiusChange = useCallback((radius: number) => {
     setMapSettings(prev => ({ ...prev, heatmapRadius: radius }));
-  };
+  }, []);
 
-  const handleToggleClustering = (enabled: boolean) => {
+  const handleToggleClustering = useCallback((enabled: boolean) => {
     setMapSettings(prev => ({ ...prev, enableClustering: enabled }));
-  };
+  }, []);
 
-  const handleResetView = () => {
+  const handleResetView = useCallback(() => {
     if ((window as any).resetMapView) {
       (window as any).resetMapView();
     } else {
       console.log('Reset view function not available yet');
     }
-  };
+  }, []);
 
-  // Professional Data Management Content
-  const dataManagementContent = (
-    <div className="space-y-8">
+  // Memoized content components for better performance
+  const dataManagementContent = useMemo(() => (
+    <div className="space-y-8 animate-professional-fade-in">
       <div className="text-center">
         <h3 className="text-professional-heading">Data Management</h3>
         <p className="text-professional-body">Import and export pollution monitoring data</p>
@@ -192,11 +231,13 @@ const Home: React.FC<HomeProps> = () => {
             disabled={isLoading}
             className="hidden"
             id="csv-upload"
+            aria-label="Upload CSV file"
           />
           <Button
             onClick={() => fileInputRef.current?.click()}
             disabled={isLoading}
             className="btn-professional btn-professional-primary w-full"
+            aria-label={isLoading ? "Importing CSV file..." : "Import CSV data file"}
           >
             {isLoading ? (
               <>
@@ -217,6 +258,7 @@ const Home: React.FC<HomeProps> = () => {
           onClick={handleExportData}
           disabled={filteredData.length === 0}
           className="btn-professional btn-professional-outline w-full"
+          aria-label={`Export ${filteredData.length} filtered records`}
         >
           <Download className="w-4 h-4 mr-2" />
           Export Filtered Data
@@ -228,16 +270,16 @@ const Home: React.FC<HomeProps> = () => {
           <div className="space-y-4 mt-4">
             <div className="flex justify-between items-center">
               <span className="text-professional-body">Total Records:</span>
-              <span className="font-semibold text-blue-600 text-sm">{stationData.length.toLocaleString()}</span>
+              <span className="font-semibold text-blue-600 text-sm">{stationStats.totalRecords.toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-professional-body">Filtered Records:</span>
-              <span className="font-semibold text-emerald-600 text-sm">{filteredData.length.toLocaleString()}</span>
+              <span className="font-semibold text-emerald-600 text-sm">{stationStats.filteredRecords.toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-professional-body">Unique Stations:</span>
               <span className="font-semibold text-purple-600 text-sm">
-                {new Set(stationData.map(d => d.station_id)).size}
+                {stationStats.totalStations}
               </span>
             </div>
           </div>
@@ -245,7 +287,7 @@ const Home: React.FC<HomeProps> = () => {
 
         {/* Professional Status Messages */}
         {stationData.length > 0 && !error && (
-          <div className="card-professional-compact bg-emerald-50 border-emerald-200">
+          <div className="card-professional-compact bg-emerald-50 border-emerald-200 animate-professional-fade-in">
             <div className="flex items-start gap-3">
               <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
               <div>
@@ -259,7 +301,7 @@ const Home: React.FC<HomeProps> = () => {
         )}
 
         {error && (
-          <div className="card-professional-compact bg-red-50 border-red-200">
+          <div className="card-professional-compact bg-red-50 border-red-200 animate-professional-fade-in">
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
               <div>
@@ -271,10 +313,9 @@ const Home: React.FC<HomeProps> = () => {
         )}
       </div>
     </div>
-  );
+  ), [isLoading, filteredData.length, stationStats, stationData.length, error, handleFileUpload, handleExportData]);
 
-  // Professional Layer Control Content
-  const layerControlContent = (
+  const layerControlContent = useMemo(() => (
     <LayerControlPanel
       onToggleStationMarkers={handleToggleStationMarkers}
       onToggleHeatmap={handleToggleHeatmap}
@@ -284,15 +325,23 @@ const Home: React.FC<HomeProps> = () => {
       onExportData={handleExportData}
       onResetView={handleResetView}
     />
-  );
+  ), [
+    handleToggleStationMarkers,
+    handleToggleHeatmap,
+    handleHeatmapOpacityChange,
+    handleHeatmapRadiusChange,
+    handleToggleClustering,
+    handleExportData,
+    handleResetView
+  ]);
 
   return (
-    <div className="layout-professional">
+    <div className={`layout-professional ${className}`}>
       {/* Professional Header */}
       <ProfessionalHeader
-        stationCount={new Set(stationData.map(d => d.station_id)).size}
-        recordCount={stationData.length}
-        lastUpdated={stationData.length > 0 ? stationData[0]?.sample_dt : undefined}
+        stationCount={stationStats.totalStations}
+        recordCount={stationStats.totalRecords}
+        lastUpdated={stationStats.lastUpdated}
         stationData={stationData}
         onInfoClick={() => setShowAbout(true)}
       />
@@ -307,8 +356,8 @@ const Home: React.FC<HomeProps> = () => {
             chatBotContent={<ChatBot stationData={filteredData} />}
             filterContent={<DataFilterPanel value={filters} onChange={setFilters} />}
             layerControlContent={layerControlContent}
-            stationCount={new Set(stationData.map(d => d.station_id)).size}
-            recordCount={stationData.length}
+            stationCount={stationStats.totalStations}
+            recordCount={stationStats.totalRecords}
           />
         </div>
 
@@ -335,6 +384,8 @@ const Home: React.FC<HomeProps> = () => {
             transform: "translate(-50%, -100%)",
             marginTop: "-12px",
           }}
+          role="tooltip"
+          aria-live="polite"
         >
           <StationTooltip station={activeTooltip.station} />
         </div>
@@ -342,15 +393,21 @@ const Home: React.FC<HomeProps> = () => {
 
       {/* About Modal */}
       {showAbout && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="about-title"
+        >
           <div className="card-professional-elevated max-w-2xl w-full animate-professional-scale-in">
             <div className="flex items-start justify-between mb-6">
-              <h2 className="text-professional-heading">About WebGIS Platform</h2>
+              <h2 id="about-title" className="text-professional-heading">About WebGIS Platform</h2>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowAbout(false)}
                 className="btn-professional btn-professional-ghost"
+                aria-label="Close about dialog"
               >
                 ×
               </Button>
@@ -389,6 +446,8 @@ const Home: React.FC<HomeProps> = () => {
       )}
     </div>
   );
-};
+});
+
+Home.displayName = 'Home';
 
 export default Home;
