@@ -114,7 +114,7 @@ const createStationIcon = (polA: number, polB: number, unit: string) => {
   });
 };
 
-// Function to group stations by distance for manual clustering
+// Function to group stations by distance for manual clustering (transitive clustering)
 const groupStationsByDistance = (stations: any[], threshold: number) => {
   const groups: any[][] = [];
   const processed = new Set<number>();
@@ -122,21 +122,29 @@ const groupStationsByDistance = (stations: any[], threshold: number) => {
   for (let i = 0; i < stations.length; i++) {
     if (processed.has(i)) continue;
     
+    // Use BFS to find all connected stations
     const group = [stations[i]];
+    const queue = [i];
     processed.add(i);
     
-    // Find nearby stations
-    for (let j = i + 1; j < stations.length; j++) {
-      if (processed.has(j)) continue;
+    while (queue.length > 0) {
+      const currentIndex = queue.shift()!;
+      const currentStation = stations[currentIndex];
       
-      const distance = Math.sqrt(
-        Math.pow(stations[i].lat - stations[j].lat, 2) +
-        Math.pow(stations[i].lon - stations[j].lon, 2)
-      );
-      
-      if (distance <= threshold) {
-        group.push(stations[j]);
-        processed.add(j);
+      // Find nearby unprocessed stations
+      for (let j = 0; j < stations.length; j++) {
+        if (processed.has(j)) continue;
+        
+        const distance = Math.sqrt(
+          Math.pow(currentStation.lat - stations[j].lat, 2) +
+          Math.pow(currentStation.lon - stations[j].lon, 2)
+        );
+        
+        if (distance <= threshold) {
+          group.push(stations[j]);
+          queue.push(j);
+          processed.add(j);
+        }
       }
     }
     
@@ -415,12 +423,21 @@ const MapContainer = ({
 
     // Create alternative heatmap using colored circles
     if (showHeatmap && heatmapLayerRef.current) {
+      const pollutionValues = validStations.map(s => (s.pol_a + s.pol_b) / 2);
+      const maxPollution = Math.max(...pollutionValues);
+      
       validStations.forEach(station => {
         const avgPollution = (station.pol_a + station.pol_b) / 2;
-        const maxPollution = Math.max(...validStations.map(s => (s.pol_a + s.pol_b) / 2));
-        const intensity = avgPollution / maxPollution;
         
-        // Calculate radius based on intensity
+        // Guard against division by zero
+        let intensity = 0.5; // Default intensity
+        if (maxPollution > 0) {
+          intensity = avgPollution / maxPollution;
+        } else if (avgPollution > 0) {
+          intensity = 0.7; // Show some intensity if all values are low but not zero
+        }
+        
+        // Calculate radius based on intensity (minimum 5, maximum based on heatmapRadius)
         const radius = Math.max(heatmapRadius * intensity, 5);
         
         // Color based on pollution level
@@ -493,10 +510,19 @@ const MapContainer = ({
           !isNaN(station.pol_a) && !isNaN(station.pol_b)
         );
         
+        const pollutionValues = validStations.map(s => (s.pol_a + s.pol_b) / 2);
+        const maxPollution = Math.max(...pollutionValues);
+        
         validStations.forEach(station => {
           const avgPollution = (station.pol_a + station.pol_b) / 2;
-          const maxPollution = Math.max(...validStations.map(s => (s.pol_a + s.pol_b) / 2));
-          const intensity = avgPollution / maxPollution;
+          
+          // Guard against division by zero
+          let intensity = 0.5; // Default intensity
+          if (maxPollution > 0) {
+            intensity = avgPollution / maxPollution;
+          } else if (avgPollution > 0) {
+            intensity = 0.7; // Show some intensity if all values are low but not zero
+          }
           
           const radius = Math.max(heatmapRadius * intensity, 5);
           const color = avgPollution < 3 ? '#2ECC71' : 
