@@ -114,15 +114,24 @@ const createStationIcon = (polA: number, polB: number, unit: string) => {
   });
 };
 
-// Function to group stations by distance for manual clustering (transitive clustering)
-const groupStationsByDistance = (stations: any[], threshold: number) => {
+// Dynamic clustering based on zoom level
+const createDynamicClusters = (stations: any[], zoomLevel: number) => {
+  // Calculate clustering radius based on zoom level
+  // Higher zoom = smaller radius (more individual markers)
+  // Lower zoom = larger radius (more clustering)
+  const baseRadius = 0.1; // Base radius in degrees
+  const zoomFactor = Math.max(1, 18 - zoomLevel); // Zoom levels typically 1-18
+  const clusterRadius = baseRadius * (zoomFactor / 10);
+  
+  console.log(`Clustering at zoom ${zoomLevel} with radius ${clusterRadius.toFixed(4)}`);
+  
   const groups: any[][] = [];
   const processed = new Set<number>();
   
   for (let i = 0; i < stations.length; i++) {
     if (processed.has(i)) continue;
     
-    // Use BFS to find all connected stations
+    // Use BFS to find all connected stations within dynamic radius
     const group = [stations[i]];
     const queue = [i];
     processed.add(i);
@@ -131,7 +140,7 @@ const groupStationsByDistance = (stations: any[], threshold: number) => {
       const currentIndex = queue.shift()!;
       const currentStation = stations[currentIndex];
       
-      // Find nearby unprocessed stations
+      // Find nearby unprocessed stations within dynamic radius
       for (let j = 0; j < stations.length; j++) {
         if (processed.has(j)) continue;
         
@@ -140,7 +149,7 @@ const groupStationsByDistance = (stations: any[], threshold: number) => {
           Math.pow(currentStation.lon - stations[j].lon, 2)
         );
         
-        if (distance <= threshold) {
+        if (distance <= clusterRadius) {
           group.push(stations[j]);
           queue.push(j);
           processed.add(j);
@@ -152,6 +161,53 @@ const groupStationsByDistance = (stations: any[], threshold: number) => {
   }
   
   return groups;
+};
+
+// Create cluster marker with dynamic styling based on density
+const createClusterMarker = (stationGroup: any[], lat: number, lon: number) => {
+  const stationCount = stationGroup.length;
+  const totalReadings = stationGroup.reduce((sum, station) => sum + 1, 0); // Assuming 1 reading per station
+  
+  // Dynamic size based on station count
+  let size = 30;
+  let bgColor = '#3B82F6';
+  let textColor = 'white';
+  
+  if (stationCount >= 20) {
+    size = 60;
+    bgColor = '#DC2626'; // Red for high density
+  } else if (stationCount >= 10) {
+    size = 50;
+    bgColor = '#EA580C'; // Orange for medium density
+  } else if (stationCount >= 5) {
+    size = 40;
+    bgColor = '#D97706'; // Yellow-orange for low-medium density
+  }
+  
+  const clusterIcon = L.divIcon({
+    html: `<div style="
+             background: ${bgColor}; 
+             color: ${textColor}; 
+             border-radius: 50%; 
+             width: ${size}px; 
+             height: ${size}px; 
+             display: flex; 
+             align-items: center; 
+             justify-content: center; 
+             font-weight: bold; 
+             font-size: ${Math.max(10, size / 4)}px;
+             border: 3px solid white; 
+             box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+             cursor: pointer;
+           ">
+             ${stationCount}
+           </div>`,
+    className: 'dynamic-cluster-marker',
+    iconSize: [size, size],
+    iconAnchor: [size/2, size/2]
+  });
+  
+  return L.marker([lat, lon], { icon: clusterIcon });
 };
 
 const MapContainer = ({
@@ -166,6 +222,7 @@ const MapContainer = ({
   const map = useRef<L.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
+  const [currentZoom, setCurrentZoom] = useState(6);
   const markersRef = useRef<L.Marker[]>([]);
   const heatmapLayerRef = useRef<L.LayerGroup | null>(null);
   const clusterGroupRef = useRef<L.LayerGroup | null>(null);
@@ -199,6 +256,16 @@ const MapContainer = ({
       
       // Initialize heatmap layer group
       heatmapLayerRef.current = L.layerGroup();
+      
+      // Add zoom event listener for dynamic clustering
+      map.current.on('zoomend', () => {
+        const newZoom = map.current!.getZoom();
+        console.log('Zoom changed to:', newZoom);
+        setCurrentZoom(newZoom);
+      });
+      
+      // Set initial zoom
+      setCurrentZoom(map.current.getZoom());
 
       console.log('Leaflet map loaded successfully');
       setMapLoaded(true);
@@ -344,63 +411,57 @@ const MapContainer = ({
       map.current.addLayer(heatmapLayerRef.current);
     }
 
-    // 2. CREATE MARKERS AND CLUSTERING (TOGETHER)
+    // 2. CREATE DYNAMIC CLUSTERING AND MARKERS
     if (showStationMarkers || enableClustering) {
-      // Implement manual clustering
+      // Use dynamic clustering based on current zoom level
       const clusteredStations = enableClustering ? 
-        groupStationsByDistance(validStations, 0.01) : // 0.01 degree (~1km) clustering threshold
+        createDynamicClusters(validStations, currentZoom) :
         validStations.map(station => [station]); // Each station in its own group
 
-      console.log('Creating markers/clusters:', clusteredStations.length, 'groups');
+      console.log(`Creating markers/clusters: ${clusteredStations.length} groups at zoom ${currentZoom}`);
 
       clusteredStations.forEach((stationGroup, groupIndex) => {
         if (enableClustering && stationGroup.length > 1) {
-          // Multiple stations - create cluster marker
+          // Multiple stations - create dynamic cluster marker
           const centerLat = stationGroup.reduce((sum, s) => sum + s.lat, 0) / stationGroup.length;
           const centerLon = stationGroup.reduce((sum, s) => sum + s.lon, 0) / stationGroup.length;
           const avgPolA = stationGroup.reduce((sum, s) => sum + s.pol_a, 0) / stationGroup.length;
           const avgPolB = stationGroup.reduce((sum, s) => sum + s.pol_b, 0) / stationGroup.length;
           
-          const clusterIcon = L.divIcon({
-            html: `<div style="background: #3B82F6; color: white; border-radius: 50%; width: 40px; height: 40px; 
-                           display: flex; align-items: center; justify-content: center; font-weight: bold; 
-                           border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
-                     ${stationGroup.length}
-                   </div>`,
-            className: 'custom-cluster-marker',
-            iconSize: [40, 40],
-            iconAnchor: [20, 20]
-          });
+          const clusterMarker = createClusterMarker(stationGroup, centerLat, centerLon);
           
-          const clusterMarker = L.marker([centerLat, centerLon], { icon: clusterIcon });
-          
-          // Cluster popup with all stations
+          // Enhanced cluster popup with station count and pollution info
           const clusterPopupContent = `
-            <div style="color: #2C3E50; font-family: Arial, sans-serif; max-width: 300px;">
-              <h3 style="margin: 0 0 8px 0; color: #3B82F6;">Cluster of ${stationGroup.length} Stations</h3>
-              <p style="margin: 2px 0;"><strong>Average Pollution:</strong></p>
+            <div style="color: #2C3E50; font-family: Arial, sans-serif; max-width: 350px;">
+              <h3 style="margin: 0 0 8px 0; color: #DC2626;">Cluster: ${stationGroup.length} Stations</h3>
+              <p style="margin: 2px 0; font-size: 11px; color: #666;"><strong>Zoom level:</strong> ${currentZoom} | <strong>Total readings:</strong> ${stationGroup.length}</p>
+              <p style="margin: 6px 0 2px 0;"><strong>Average Pollution Levels:</strong></p>
               <div style="display: flex; gap: 15px; margin: 8px 0;">
                 <div style="text-align: center;">
-                  <div style="width: 20px; height: ${Math.max((avgPolA / Math.max(avgPolA, avgPolB, 10)) * 30, 2)}px; 
+                  <div style="width: 24px; height: ${Math.max((avgPolA / Math.max(avgPolA, avgPolB, 10)) * 30, 2)}px; 
                               background: ${avgPolA < 3 ? "#2ECC71" : avgPolA < 7 ? "#F39C12" : "#E74C3C"}; 
-                              margin: 0 auto 4px;"></div>
-                  <small><strong>Avg A:</strong><br>${avgPolA.toFixed(1)}</small>
+                              margin: 0 auto 4px; border: 1px solid #ccc;"></div>
+                  <small><strong>Pol A:</strong><br>${avgPolA.toFixed(2)}</small>
                 </div>
                 <div style="text-align: center;">
-                  <div style="width: 20px; height: ${Math.max((avgPolB / Math.max(avgPolA, avgPolB, 10)) * 30, 2)}px; 
+                  <div style="width: 24px; height: ${Math.max((avgPolB / Math.max(avgPolA, avgPolB, 10)) * 30, 2)}px; 
                               background: ${avgPolB < 3 ? "#2ECC71" : avgPolB < 7 ? "#F39C12" : "#E74C3C"}; 
-                              margin: 0 auto 4px;"></div>
-                  <small><strong>Avg B:</strong><br>${avgPolB.toFixed(1)}</small>
+                              margin: 0 auto 4px; border: 1px solid #ccc;"></div>
+                  <small><strong>Pol B:</strong><br>${avgPolB.toFixed(2)}</small>
                 </div>
               </div>
               <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
-              <div style="max-height: 150px; overflow-y: auto;">
-                ${stationGroup.map(station => 
-                  `<div style="margin: 4px 0; padding: 4px; background: #f8f9fa; border-radius: 4px;">
+              <p style="margin: 4px 0; font-size: 11px; color: #666;"><strong>Stations in this cluster:</strong></p>
+              <div style="max-height: 150px; overflow-y: auto; font-size: 11px;">
+                ${stationGroup.map((station, idx) => 
+                  `<div style="margin: 2px 0; padding: 3px 6px; background: ${idx % 2 === 0 ? '#f8f9fa' : '#ffffff'}; border-radius: 3px; border-left: 3px solid ${(station.pol_a + station.pol_b) / 2 < 3 ? '#2ECC71' : (station.pol_a + station.pol_b) / 2 < 7 ? '#F39C12' : '#E74C3C'};">
                      <strong>${station.station_name}</strong><br>
-                     <small>Pol A: ${station.pol_a}, Pol B: ${station.pol_b}</small>
+                     <span style="color: #666;">Pol A: ${station.pol_a} | Pol B: ${station.pol_b} | ${station.sample_dt}</span>
                    </div>`
                 ).join('')}
+              </div>
+              <div style="margin-top: 8px; font-size: 10px; color: #999; text-align: center;">
+                Zoom in for individual stations
               </div>
             </div>
           `;
@@ -409,7 +470,7 @@ const MapContainer = ({
           markersRef.current.push(clusterMarker);
           clusterMarker.addTo(map.current!);
         } else if (showStationMarkers) {
-          // Single station or individual markers - create normal marker
+          // Single station - create individual marker
           const station = stationGroup[0];
           const marker = L.marker([station.lat, station.lon], {
             icon: createStationIcon(station.pol_a, station.pol_b, station.unit)
@@ -424,7 +485,7 @@ const MapContainer = ({
             }
           });
 
-          // Add popup
+          // Individual station popup
           const popupContent = `
             <div style="color: #2C3E50; font-family: Arial, sans-serif; min-width: 200px;">
               <h3 style="margin: 0 0 8px 0; color: #E74C3C;">${station.station_name}</h3>
@@ -469,7 +530,7 @@ const MapContainer = ({
       }
     }
 
-  }, [mapLoaded, stationData, showStationMarkers, showHeatmap, heatmapOpacity, heatmapRadius, enableClustering, clearMapLayers]);
+  }, [mapLoaded, stationData, showStationMarkers, showHeatmap, heatmapOpacity, heatmapRadius, enableClustering, currentZoom, clearMapLayers]);
 
   // If there's a map error, show error state
   if (mapError) {
