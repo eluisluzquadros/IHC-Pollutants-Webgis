@@ -52,7 +52,8 @@ interface MapSettings {
   showHeatmap: boolean;
   heatmapOpacity: number;
   heatmapRadius: number;
-  enableClustering: boolean;
+  enableStationClustering: boolean;
+  enableRecordClustering: boolean;
 }
 
 const DEFAULT_FILTERS: StationFilters = {
@@ -68,7 +69,8 @@ const DEFAULT_MAP_SETTINGS: MapSettings = {
   showHeatmap: true,
   heatmapOpacity: 0.7,
   heatmapRadius: 25,
-  enableClustering: false,
+  enableStationClustering: false,
+  enableRecordClustering: false,
 };
 
 const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
@@ -200,8 +202,12 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
     setMapSettings(prev => ({ ...prev, heatmapRadius: radius }));
   }, []);
 
-  const handleToggleClustering = useCallback((enabled: boolean) => {
-    setMapSettings(prev => ({ ...prev, enableClustering: enabled }));
+  const handleToggleStationClustering = useCallback((enabled: boolean) => {
+    setMapSettings(prev => ({ ...prev, enableStationClustering: enabled }));
+  }, []);
+
+  const handleToggleRecordClustering = useCallback((enabled: boolean) => {
+    setMapSettings(prev => ({ ...prev, enableRecordClustering: enabled }));
   }, []);
 
   const handleResetView = useCallback(() => {
@@ -369,7 +375,8 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
             showHeatmap={mapSettings.showHeatmap}
             heatmapOpacity={mapSettings.heatmapOpacity}
             heatmapRadius={mapSettings.heatmapRadius}
-            enableClustering={mapSettings.enableClustering}
+            enableStationClustering={mapSettings.enableStationClustering}
+            enableRecordClustering={mapSettings.enableRecordClustering}
           />
         </div>
       </div>

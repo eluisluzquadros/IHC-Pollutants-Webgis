@@ -35,7 +35,8 @@ interface MapSettings {
   showHeatmap: boolean;
   heatmapOpacity: number;
   heatmapRadius: number;
-  enableClustering: boolean;
+  enableStationClustering: boolean;
+  enableRecordClustering: boolean;
   showRecordCount: boolean;
 }
 
@@ -52,7 +53,8 @@ const DEFAULT_MAP_SETTINGS: MapSettings = {
   showHeatmap: true,
   heatmapOpacity: 0.7,
   heatmapRadius: 25,
-  enableClustering: false,
+  enableStationClustering: false,
+  enableRecordClustering: false,
   showRecordCount: false,
 };
 
@@ -427,13 +429,30 @@ const ProfessionalWebGISApp: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm">Clustering</span>
+                <span className="text-sm">Station Clustering</span>
                 <Button
-                  variant={mapSettings.enableClustering ? "default" : "outline"}
+                  variant={mapSettings.enableStationClustering ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setMapSettings(prev => ({ ...prev, enableClustering: !prev.enableClustering }))}
+                  onClick={() => setMapSettings(prev => ({ 
+                    ...prev, 
+                    enableStationClustering: !prev.enableStationClustering
+                  }))}
                 >
-                  {mapSettings.enableClustering ? 'ON' : 'OFF'}
+                  {mapSettings.enableStationClustering ? 'ON' : 'OFF'}
+                </Button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Record Clustering</span>
+                <Button
+                  variant={mapSettings.enableRecordClustering ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setMapSettings(prev => ({ 
+                    ...prev, 
+                    enableRecordClustering: !prev.enableRecordClustering
+                  }))}
+                >
+                  {mapSettings.enableRecordClustering ? 'ON' : 'OFF'}
                 </Button>
               </div>
 
@@ -549,7 +568,8 @@ const ProfessionalWebGISApp: React.FC = () => {
               showHeatmap={mapSettings.showHeatmap}
               heatmapOpacity={mapSettings.heatmapOpacity}
               heatmapRadius={mapSettings.heatmapRadius}
-              enableClustering={mapSettings.enableClustering}
+              enableStationClustering={mapSettings.enableStationClustering}
+              enableRecordClustering={mapSettings.enableRecordClustering}
               showRecordCount={mapSettings.showRecordCount}
             />
           </Suspense>

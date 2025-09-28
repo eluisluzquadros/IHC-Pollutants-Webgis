@@ -40,7 +40,8 @@ interface MapContainerProps {
   showHeatmap?: boolean;
   heatmapOpacity?: number;
   heatmapRadius?: number;
-  enableClustering?: boolean;
+  enableStationClustering?: boolean;
+  enableRecordClustering?: boolean;
   showRecordCount?: boolean;
 }
 
@@ -115,16 +116,13 @@ const createStationIcon = (polA: number, polB: number, unit: string) => {
   });
 };
 
-// Dynamic clustering based on zoom level
-const createDynamicClusters = (stations: any[], zoomLevel: number) => {
-  // Calculate clustering radius based on zoom level
-  // Higher zoom = smaller radius (more individual markers)
-  // Lower zoom = larger radius (more clustering)
+// Station-based clustering: Groups stations by geographical proximity
+const createStationClusters = (stations: any[], zoomLevel: number) => {
   const baseRadius = 0.1; // Base radius in degrees
-  const zoomFactor = Math.max(1, 18 - zoomLevel); // Zoom levels typically 1-18
+  const zoomFactor = Math.max(1, 18 - zoomLevel);
   const clusterRadius = baseRadius * (zoomFactor / 10);
   
-  console.log(`Clustering at zoom ${zoomLevel} with radius ${clusterRadius.toFixed(4)}`);
+  console.log(`Station clustering at zoom ${zoomLevel} with radius ${clusterRadius.toFixed(4)}`);
   
   const groups: any[][] = [];
   const processed = new Set<number>();
@@ -132,7 +130,6 @@ const createDynamicClusters = (stations: any[], zoomLevel: number) => {
   for (let i = 0; i < stations.length; i++) {
     if (processed.has(i)) continue;
     
-    // Use BFS to find all connected stations within dynamic radius
     const group = [stations[i]];
     const queue = [i];
     processed.add(i);
@@ -141,7 +138,6 @@ const createDynamicClusters = (stations: any[], zoomLevel: number) => {
       const currentIndex = queue.shift()!;
       const currentStation = stations[currentIndex];
       
-      // Find nearby unprocessed stations within dynamic radius
       for (let j = 0; j < stations.length; j++) {
         if (processed.has(j)) continue;
         
@@ -160,6 +156,24 @@ const createDynamicClusters = (stations: any[], zoomLevel: number) => {
     
     groups.push(group);
   }
+  
+  return groups;
+};
+
+// Record-based clustering: Groups all records from same station
+const createRecordClusters = (stations: any[]) => {
+  const stationGroups = new Map<string, any[]>();
+  
+  stations.forEach(station => {
+    const key = `${station.station_id}-${station.station_name}`;
+    if (!stationGroups.has(key)) {
+      stationGroups.set(key, []);
+    }
+    stationGroups.get(key)!.push(station);
+  });
+  
+  const groups = Array.from(stationGroups.values());
+  console.log(`Record clustering: ${groups.length} station groups from ${stations.length} records`);
   
   return groups;
 };
@@ -285,7 +299,8 @@ const MapContainer = ({
   showHeatmap = true,
   heatmapOpacity = 0.7,
   heatmapRadius = 25,
-  enableClustering = false,
+  enableStationClustering = false,
+  enableRecordClustering = false,
   showRecordCount = false,
 }: MapContainerProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -442,42 +457,63 @@ const MapContainer = ({
       return;
     }
 
-    // 1. CREATE HEATMAP (INDEPENDENT)
+    // 1. CREATE REAL HEATMAP WITH INTERPOLATION
     if (showHeatmap) {
-      console.log('Creating heatmap with', validStations.length, 'stations');
-      const pollutionValues = validStations.map(s => (s.pol_a + s.pol_b) / 2);
-      const maxPollution = Math.max(...pollutionValues);
+      console.log('Creating interpolated heatmap with', validStations.length, 'stations');
       
-      validStations.forEach(station => {
+      // Calculate pollution values and normalize
+      const pollutionValues = validStations.map(s => (s.pol_a + s.pol_b) / 2);
+      const maxPollution = Math.max(...pollutionValues, 1); // Prevent division by zero
+      
+      // Create heatmap data points with geographic coordinates
+      const heatmapData = validStations.map(station => {
         const avgPollution = (station.pol_a + station.pol_b) / 2;
+        const intensity = Math.min(avgPollution / maxPollution, 1);
         
-        // Guard against division by zero
-        let intensity = 0.5; // Default intensity
-        if (maxPollution > 0) {
-          intensity = avgPollution / maxPollution;
-        } else if (avgPollution > 0) {
-          intensity = 0.7; // Show some intensity if all values are low but not zero
-        }
-        
-        // Calculate radius based on intensity (minimum 5, maximum based on heatmapRadius)
-        const radius = Math.max(heatmapRadius * intensity, 5);
-        
-        // Color based on pollution level
-        const color = avgPollution < 3 ? '#2ECC71' : 
-                     avgPollution < 7 ? '#F39C12' : '#E74C3C';
-        
-        const heatCircle = L.circle([station.lat, station.lon], {
-          radius: radius * 20, // Scale for visibility
-          fillColor: color,
-          color: color,
-          weight: 1,
-          opacity: heatmapOpacity,
-          fillOpacity: heatmapOpacity * 0.6
-        });
-        
-        heatmapLayerRef.current!.addLayer(heatCircle);
+        return {
+          lat: station.lat,
+          lng: station.lon,
+          intensity: intensity,
+          pollution: avgPollution
+        };
       });
       
+      // Create multiple overlapping circles with gradients for interpolation effect
+      heatmapData.forEach(point => {
+        // Dynamic radius based on heatmapRadius setting and pollution level
+        const baseRadius = heatmapRadius * 100; // Convert to meters
+        const dynamicRadius = baseRadius * (0.5 + point.intensity * 1.5); // Scale with intensity
+        
+        // Create multiple concentric circles for smooth gradient effect
+        for (let i = 0; i < 4; i++) {
+          const radiusStep = dynamicRadius * (1 - i * 0.25);
+          const opacityStep = heatmapOpacity * (0.6 - i * 0.15) * point.intensity;
+          
+          // Color interpolation based on pollution level
+          let color = '#10B981'; // Green for low
+          if (point.pollution >= 7) {
+            color = '#EF4444'; // Red for high
+          } else if (point.pollution >= 4) {
+            color = '#F59E0B'; // Orange for medium-high
+          } else if (point.pollution >= 2) {
+            color = '#84CC16'; // Yellow-green for medium
+          }
+          
+          const heatCircle = L.circle([point.lat, point.lng], {
+            radius: Math.max(radiusStep, 50), // Minimum radius for visibility
+            fillColor: color,
+            color: color,
+            weight: 0,
+            opacity: 0,
+            fillOpacity: Math.max(opacityStep, 0.05),
+            interactive: false // Don't interfere with map interactions
+          });
+          
+          heatmapLayerRef.current!.addLayer(heatCircle);
+        }
+      });
+      
+      console.log(`Heatmap created with radius ${heatmapRadius}, opacity ${heatmapOpacity}, ${heatmapData.length} points`);
       map.current.addLayer(heatmapLayerRef.current);
     }
 
@@ -579,17 +615,36 @@ const MapContainer = ({
       });
     }
     
-    // 3. CREATE DYNAMIC CLUSTERING AND MARKERS
-    if (showStationMarkers || enableClustering) {
-      // Use dynamic clustering based on current zoom level
-      const clusteredStations = enableClustering ? 
-        createDynamicClusters(validStations, currentZoom) :
-        validStations.map(station => [station]); // Each station in its own group
-
-      console.log(`Creating markers/clusters: ${clusteredStations.length} groups at zoom ${currentZoom}`);
+    // 3. CREATE CLUSTERING AND MARKERS (TWO SEPARATE OPTIONS)
+    const enableAnyClustering = enableStationClustering || enableRecordClustering;
+    
+    if (showStationMarkers || enableAnyClustering) {
+      let clusteredStations: any[][] = [];
+      
+      // Handle both clustering types - they can work simultaneously
+      if (enableStationClustering && enableRecordClustering) {
+        // Both types active: First group by station (records), then by geography
+        const recordGroups = createRecordClusters(validStations);
+        // Flatten back to individual stations for geographical clustering
+        const flatStations = recordGroups.flatMap(group => group);
+        clusteredStations = createStationClusters(flatStations, currentZoom);
+        console.log(`Combined clustering: ${recordGroups.length} record groups -> ${clusteredStations.length} geographical groups`);
+      } else if (enableStationClustering) {
+        // Station-based clustering only: geographical proximity
+        clusteredStations = createStationClusters(validStations, currentZoom);
+        console.log(`Station clustering: ${clusteredStations.length} geographical groups`);
+      } else if (enableRecordClustering) {
+        // Record-based clustering only: same station, multiple records
+        clusteredStations = createRecordClusters(validStations);
+        console.log(`Record clustering: ${clusteredStations.length} station groups`);
+      } else {
+        // No clustering - each station in its own group
+        clusteredStations = validStations.map(station => [station]);
+        console.log(`Individual markers: ${clusteredStations.length} stations`);
+      }
 
       clusteredStations.forEach((stationGroup, groupIndex) => {
-        if (enableClustering && stationGroup.length > 1) {
+        if (enableAnyClustering && stationGroup.length > 1) {
           // Multiple stations - create dynamic cluster marker
           const centerLat = stationGroup.reduce((sum, s) => sum + s.lat, 0) / stationGroup.length;
           const centerLon = stationGroup.reduce((sum, s) => sum + s.lon, 0) / stationGroup.length;
@@ -598,11 +653,25 @@ const MapContainer = ({
           
           const clusterMarker = createClusterMarker(stationGroup, centerLat, centerLon);
           
-          // Enhanced cluster popup with station count and pollution info
+          // Enhanced cluster popup - different content based on clustering type
+          let clusterType = 'Cluster';
+          let clusterDescription = `${stationGroup.length} items`;
+          
+          if (enableStationClustering && enableRecordClustering) {
+            clusterType = 'Combined Cluster';
+            clusterDescription = `${stationGroup.length} stations/records with combined grouping`;
+          } else if (enableStationClustering) {
+            clusterType = 'Station Cluster';
+            clusterDescription = `Geographical cluster of ${stationGroup.length} nearby stations`;
+          } else if (enableRecordClustering) {
+            clusterType = 'Record Cluster';
+            clusterDescription = `${stationGroup.length} readings from same station location`;
+          }
+          
           const clusterPopupContent = `
             <div style="color: #2C3E50; font-family: Arial, sans-serif; max-width: 350px;">
-              <h3 style="margin: 0 0 8px 0; color: #DC2626;">Cluster: ${stationGroup.length} Stations</h3>
-              <p style="margin: 2px 0; font-size: 11px; color: #666;"><strong>Zoom level:</strong> ${currentZoom} | <strong>Total readings:</strong> ${stationGroup.length}</p>
+              <h3 style="margin: 0 0 8px 0; color: #DC2626;">${clusterType}: ${stationGroup.length} ${enableStationClustering ? 'Stations' : 'Records'}</h3>
+              <p style="margin: 2px 0; font-size: 11px; color: #666;">${clusterDescription}</p>
               <p style="margin: 6px 0 2px 0;"><strong>Average Pollution Levels:</strong></p>
               <div style="display: flex; gap: 15px; margin: 8px 0;">
                 <div style="text-align: center;">
@@ -698,7 +767,7 @@ const MapContainer = ({
       }
     }
 
-  }, [mapLoaded, stationData, showStationMarkers, showHeatmap, heatmapOpacity, heatmapRadius, enableClustering, showRecordCount, currentZoom, clearMapLayers]);
+  }, [mapLoaded, stationData, showStationMarkers, showHeatmap, heatmapOpacity, heatmapRadius, enableStationClustering, enableRecordClustering, showRecordCount, currentZoom, clearMapLayers]);
 
   // If there's a map error, show error state
   if (mapError) {
