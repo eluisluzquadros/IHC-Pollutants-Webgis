@@ -6,7 +6,7 @@ import { MapPin, Loader2 } from "lucide-react";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 // Import heatmap.js for proper heatmap implementation
-import 'leaflet.heat';
+// Leaflet.heat removed - using native Leaflet circles instead
 
 // Fix for default Leaflet markers in bundlers
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -422,6 +422,9 @@ const MapContainer = ({
     // Clear heatmap layer
     if (heatmapLayerRef.current) {
       try {
+        if (heatmapLayerRef.current instanceof L.LayerGroup) {
+          heatmapLayerRef.current.clearLayers();
+        }
         map.current.removeLayer(heatmapLayerRef.current);
       } catch (e) {
         // Layer might not be on the map
@@ -438,9 +441,11 @@ const MapContainer = ({
 
   // Update map data when stationData or settings change
   useEffect(() => {
-    if (!mapLoaded || !map.current || !heatmapLayerRef.current || !clusterGroupRef.current) return;
+    if (!mapLoaded || !map.current || !clusterGroupRef.current) return;
 
     console.log('Processing station data for Leaflet map:', stationData.length, 'records');
+    console.log('Map settings - showHeatmap:', showHeatmap, 'showStationMarkers:', showStationMarkers, 'showRecordCount:', showRecordCount);
+    console.log('Clustering settings - enableStationClustering:', enableStationClustering, 'enableRecordClustering:', enableRecordClustering);
 
     // Clear existing layers
     clearMapLayers();
@@ -469,9 +474,9 @@ const MapContainer = ({
       return;
     }
 
-    // 1. CREATE PROPER HEATMAP WITH LEAFLET.HEAT
+    // 1. CREATE HEATMAP WITH COLORED CIRCLES
     if (showHeatmap && heatmapOpacity > 0) {
-      console.log('Creating leaflet.heat heatmap with', validStations.length, 'stations');
+      console.log('Creating heatmap with colored circles:', validStations.length, 'stations');
       
       // Calculate pollution values and normalize
       const pollutionValues = validStations.map(s => (s.pol_a + s.pol_b) / 2);
@@ -492,37 +497,77 @@ const MapContainer = ({
         heatmapLayerRef.current = null;
       }
       
-      // Create heatmap layer with leaflet.heat
-      // @ts-ignore - leaflet.heat doesn't have TypeScript definitions
-      heatmapLayerRef.current = L.heatLayer(heatmapData, {
-        radius: Math.max(heatmapRadius, 15), // Use user-controlled radius with minimum
-        blur: 15, // Smooth blending
-        maxZoom: 17,
-        max: 1.0,
-        minOpacity: 0.1,
-        gradient: {
-          // Custom gradient for pollution visualization
-          0.0: '#00ff00',  // Green for low pollution
-          0.2: '#adff2f',  // Yellow-green
-          0.4: '#ffff00',  // Yellow
-          0.6: '#ffa500',  // Orange
-          0.8: '#ff4500',  // Orange-red
-          1.0: '#ff0000'   // Red for high pollution
+      // Create colored circles directly on the map
+      console.log('Adding heatmap circles directly to map...');
+      
+      validStations.forEach((station, index) => {
+        const avgPollution = (station.pol_a + station.pol_b) / 2;
+        const intensity = Math.min(avgPollution / maxPollution, 1);
+        
+        // Color gradient based on pollution intensity
+        let color = '#00ff00'; // Green for low
+        if (intensity > 0.8) color = '#ff0000'; // Red for very high
+        else if (intensity > 0.6) color = '#ff4500'; // Orange-red for high
+        else if (intensity > 0.4) color = '#ffa500'; // Orange for medium-high
+        else if (intensity > 0.2) color = '#ffff00'; // Yellow for medium
+        
+        // Create circle with proper radius
+        const radiusInMeters = heatmapRadius * 300; // Scale radius to meters
+        
+        try {
+          const circle = L.circle([station.lat, station.lon], {
+            radius: radiusInMeters,
+            fillColor: color,
+            fillOpacity: heatmapOpacity * intensity * 0.6,
+            weight: 1,
+            color: color,
+            opacity: 0.2
+          });
+          
+          // Add popup for debugging
+          circle.bindPopup(`Station: ${station.station_name}<br>Pol A: ${station.pol_a}<br>Pol B: ${station.pol_b}`);
+          
+          // Add directly to map
+          circle.addTo(map.current!);
+          
+          // Store reference for cleanup
+          markersRef.current.push(circle as any);
+          
+          if (index < 5) {
+            console.log(`Added circle ${index + 1} at [${station.lat}, ${station.lon}] with color ${color}`);
+          }
+        } catch (error) {
+          console.error('Error adding circle:', error);
         }
       });
       
-      // Set opacity based on user control
-      heatmapLayerRef.current.setOptions({ 
-        opacity: heatmapOpacity 
-      });
-      
-      // Add heatmap layer to the map
-      heatmapLayerRef.current.addTo(map.current!);
-      
-      console.log(`Leaflet.heat heatmap created: ${heatmapData.length} data points, radius: ${heatmapRadius}px, opacity: ${heatmapOpacity}`);
+      console.log(`Heatmap created with ${validStations.length} circles, radius: ${heatmapRadius * 300}m, opacity: ${heatmapOpacity}`);
     }
 
-    // 2. CREATE RECORD COUNT MARKERS (INDEPENDENT FEATURE)
+    // 2. CREATE STATION MARKERS (IF ENABLED)
+    if (showStationMarkers && !enableStationClustering && !enableRecordClustering) {
+      console.log('Creating individual station markers:', validStations.length);
+      validStations.forEach(station => {
+        const marker = L.marker([station.lat, station.lon], {
+          icon: createStationIcon(station.pol_a, station.pol_b, station.unit)
+        });
+        
+        marker.bindPopup(`
+          <div style="min-width: 200px;">
+            <h3>${station.station_name}</h3>
+            <p>Station ID: ${station.station_id}</p>
+            <p>Date: ${station.sample_dt}</p>
+            <p>Pol A: ${station.pol_a} ${station.unit}</p>
+            <p>Pol B: ${station.pol_b} ${station.unit}</p>
+          </div>
+        `);
+        
+        markersRef.current.push(marker);
+        marker.addTo(map.current!);
+      });
+    }
+    
+    // 3. CREATE RECORD COUNT MARKERS (INDEPENDENT FEATURE)
     if (showRecordCount) {
       const stationGroups = groupStationsByLocation(validStations);
       console.log(`Creating record count markers for ${stationGroups.length} unique stations`);
