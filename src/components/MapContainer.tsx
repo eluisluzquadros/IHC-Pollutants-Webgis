@@ -6,7 +6,7 @@ import { MapPin, Loader2 } from "lucide-react";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 // Import heatmap.js for proper heatmap implementation
-import h337 from 'heatmap.js';
+import 'leaflet.heat';
 
 // Fix for default Leaflet markers in bundlers
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -320,11 +320,8 @@ const MapContainer = ({
   const [mapError, setMapError] = useState<string | null>(null);
   const [currentZoom, setCurrentZoom] = useState(6);
   const markersRef = useRef<L.Marker[]>([]);
-  const heatmapLayerRef = useRef<L.LayerGroup | null>(null);
+  const heatmapLayerRef = useRef<any>(null);
   const clusterGroupRef = useRef<L.LayerGroup | null>(null);
-  const heatmapInstance = useRef<any>(null);
-  const heatmapContainer = useRef<HTMLDivElement | null>(null);
-  const updateHeatmapRef = useRef<(() => void) | null>(null);
   const [tooltip, setTooltip] = useState<TooltipState>({
     visible: false,
     position: { x: 0, y: 0 },
@@ -352,9 +349,6 @@ const MapContainer = ({
 
       // Initialize custom cluster group
       clusterGroupRef.current = L.layerGroup();
-      
-      // Initialize heatmap layer group
-      heatmapLayerRef.current = L.layerGroup();
       
       // Add zoom event listener for dynamic clustering
       map.current.on('zoomend', () => {
@@ -425,27 +419,20 @@ const MapContainer = ({
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
 
-    // Clear heatmap layer group
+    // Clear heatmap layer
     if (heatmapLayerRef.current) {
-      map.current.removeLayer(heatmapLayerRef.current);
-      heatmapLayerRef.current.clearLayers();
+      try {
+        map.current.removeLayer(heatmapLayerRef.current);
+      } catch (e) {
+        // Layer might not be on the map
+      }
+      heatmapLayerRef.current = null;
     }
 
     // Clear cluster group
     if (clusterGroupRef.current) {
       map.current.removeLayer(clusterGroupRef.current);
       clusterGroupRef.current.clearLayers();
-    }
-
-    // Clear heatmap.js instance and container
-    if (heatmapInstance.current && heatmapContainer.current) {
-      // Remove event listeners
-      map.current.off('zoom', updateHeatmapRef.current);
-      map.current.off('move', updateHeatmapRef.current);
-      // Remove container
-      heatmapContainer.current.remove();
-      heatmapInstance.current = null;
-      heatmapContainer.current = null;
     }
   }, []);
 
@@ -482,63 +469,37 @@ const MapContainer = ({
       return;
     }
 
-    // 1. CREATE PROPER HEATMAP WITH HEATMAP.JS
+    // 1. CREATE PROPER HEATMAP WITH LEAFLET.HEAT
     if (showHeatmap && heatmapOpacity > 0) {
-      console.log('Creating heatmap.js heatmap with', validStations.length, 'stations');
+      console.log('Creating leaflet.heat heatmap with', validStations.length, 'stations');
       
       // Calculate pollution values and normalize
       const pollutionValues = validStations.map(s => (s.pol_a + s.pol_b) / 2);
       const maxPollution = Math.max(...pollutionValues, 1);
       
-      // Create heatmap data in heatmap.js format
+      // Create heatmap data in leaflet.heat format
       const heatmapData = validStations.map(station => {
         const avgPollution = (station.pol_a + station.pol_b) / 2;
         const intensity = Math.min(avgPollution / maxPollution, 1);
         
-        // Convert lat/lng to pixel coordinates
-        const point = map.current!.latLngToContainerPoint([station.lat, station.lon]);
-        
-        return {
-          x: Math.round(point.x),
-          y: Math.round(point.y),
-          value: intensity * 100 // heatmap.js expects 0-100 range
-        };
+        // leaflet.heat expects: [lat, lng, intensity]
+        return [station.lat, station.lon, intensity];
       });
       
-      // Remove existing heatmap if present
-      if (heatmapInstance.current && heatmapContainer.current) {
-        // Remove event listeners
-        if (updateHeatmapRef.current) {
-          map.current!.off('zoom', updateHeatmapRef.current);
-          map.current!.off('move', updateHeatmapRef.current);
-        }
-        heatmapContainer.current.remove();
-        heatmapInstance.current = null;
-        heatmapContainer.current = null;
-        updateHeatmapRef.current = null;
+      // Remove existing heatmap layer if present
+      if (heatmapLayerRef.current) {
+        map.current!.removeLayer(heatmapLayerRef.current);
+        heatmapLayerRef.current = null;
       }
       
-      // Create heatmap container
-      const mapSize = map.current!.getSize();
-      heatmapContainer.current = document.createElement('div');
-      heatmapContainer.current.style.position = 'absolute';
-      heatmapContainer.current.style.top = '0';
-      heatmapContainer.current.style.left = '0';
-      heatmapContainer.current.style.width = mapSize.x + 'px';
-      heatmapContainer.current.style.height = mapSize.y + 'px';
-      heatmapContainer.current.style.pointerEvents = 'none';
-      heatmapContainer.current.style.zIndex = '200';
-      
-      // Add container to map
-      map.current!.getContainer().appendChild(heatmapContainer.current);
-      
-      // Create heatmap instance
-      heatmapInstance.current = h337.create({
-        container: heatmapContainer.current,
+      // Create heatmap layer with leaflet.heat
+      // @ts-ignore - leaflet.heat doesn't have TypeScript definitions
+      heatmapLayerRef.current = L.heatLayer(heatmapData, {
         radius: Math.max(heatmapRadius, 15), // Use user-controlled radius with minimum
-        maxOpacity: heatmapOpacity, // Use user-controlled opacity
-        minOpacity: 0,
-        blur: 0.75,
+        blur: 15, // Smooth blending
+        maxZoom: 17,
+        max: 1.0,
+        minOpacity: 0.1,
         gradient: {
           // Custom gradient for pollution visualization
           0.0: '#00ff00',  // Green for low pollution
@@ -550,47 +511,15 @@ const MapContainer = ({
         }
       });
       
-      // Set heatmap data
-      heatmapInstance.current.setData({
-        max: 100,
-        data: heatmapData
+      // Set opacity based on user control
+      heatmapLayerRef.current.setOptions({ 
+        opacity: heatmapOpacity 
       });
       
-      // Update heatmap on map events
-      const updateHeatmap = () => {
-        if (heatmapInstance.current && heatmapContainer.current && validStations.length > 0) {
-          const newMapSize = map.current!.getSize();
-          heatmapContainer.current.style.width = newMapSize.x + 'px';
-          heatmapContainer.current.style.height = newMapSize.y + 'px';
-          
-          // Recalculate positions
-          const updatedData = validStations.map(station => {
-            const avgPollution = (station.pol_a + station.pol_b) / 2;
-            const intensity = Math.min(avgPollution / maxPollution, 1);
-            const point = map.current!.latLngToContainerPoint([station.lat, station.lon]);
-            
-            return {
-              x: Math.round(point.x),
-              y: Math.round(point.y),
-              value: intensity * 100
-            };
-          });
-          
-          heatmapInstance.current.setData({
-            max: 100,
-            data: updatedData
-          });
-        }
-      };
+      // Add heatmap layer to the map
+      heatmapLayerRef.current.addTo(map.current!);
       
-      // Store update function reference for cleanup
-      updateHeatmapRef.current = updateHeatmap;
-      
-      // Bind update events
-      map.current!.on('zoom', updateHeatmap);
-      map.current!.on('move', updateHeatmap);
-      
-      console.log(`Heatmap.js heatmap created: ${heatmapData.length} data points, radius: ${heatmapRadius}px, opacity: ${heatmapOpacity}`);
+      console.log(`Leaflet.heat heatmap created: ${heatmapData.length} data points, radius: ${heatmapRadius}px, opacity: ${heatmapOpacity}`);
     }
 
     // 2. CREATE RECORD COUNT MARKERS (INDEPENDENT FEATURE)

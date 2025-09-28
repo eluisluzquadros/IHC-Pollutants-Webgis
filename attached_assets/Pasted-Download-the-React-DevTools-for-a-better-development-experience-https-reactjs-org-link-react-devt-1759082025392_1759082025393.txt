@@ -1,0 +1,29 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+2
+MapContainer.tsx:369 Leaflet map loaded successfully
+MapContainer.tsx:456 Processing station data for Leaflet map: 0 records
+MapContainer.tsx:462 No station data available
+MapContainer.tsx:456 Processing station data for Leaflet map: 259 records
+MapContainer.tsx:478 Filtered 259 stations to 259 valid stations
+MapContainer.tsx:487 Creating heatmap.js heatmap with 259 stations
+chunk-YFB5YCE7.js?v=8b6459fe:16718 Uncaught TypeError: Cannot assign to read only property 'data' of object '#<ImageData>'
+    at MapContainer.tsx:554:31
+chunk-YFB5YCE7.js?v=8b6459fe:14080 The above error occurred in the <MapContainer> component:
+
+    at MapContainer (https://6171eee4-df21-4832-ae4c-40bd1562f34e-00-6osxgaprsq2w.kirk.replit.dev/src/components/MapContainer.tsx:280:25)
+    at Suspense
+    at main
+    at div
+    at div
+    at ProfessionalWebGISApp (https://6171eee4-df21-4832-ae4c-40bd1562f34e-00-6osxgaprsq2w.kirk.replit.dev/src/components/ProfessionalWebGISApp.tsx:345:43)
+    at RenderedRoute (https://6171eee4-df21-4832-ae4c-40bd1562f34e-00-6osxgaprsq2w.kirk.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=8b6459fe:3989:5)
+    at Routes (https://6171eee4-df21-4832-ae4c-40bd1562f34e-00-6osxgaprsq2w.kirk.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=8b6459fe:4423:5)
+    at Suspense
+    at App
+    at Router (https://6171eee4-df21-4832-ae4c-40bd1562f34e-00-6osxgaprsq2w.kirk.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=8b6459fe:4366:15)
+    at BrowserRouter (https://6171eee4-df21-4832-ae4c-40bd1562f34e-00-6osxgaprsq2w.kirk.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=8b6459fe:5109:5)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+chunk-YFB5YCE7.js?v=8b6459fe:9176 Uncaught TypeError: Cannot assign to read only property 'data' of object '#<ImageData>'
+    at MapContainer.tsx:554:31
