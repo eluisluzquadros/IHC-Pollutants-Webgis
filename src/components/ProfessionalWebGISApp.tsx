@@ -24,10 +24,10 @@ const DataFilterPanel = lazy(() => import("./DataFilterPanel"));
 
 interface StationFilters {
   stationQuery: string;
-  dateFrom: string | null;
-  dateTo: string | null;
-  polAMin: number;
-  polBMin: number;
+  dateFrom?: string | null;
+  dateTo?: string | null;
+  polAMin?: number;
+  polBMin?: number;
 }
 
 interface MapSettings {
