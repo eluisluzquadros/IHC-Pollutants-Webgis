@@ -274,7 +274,7 @@ const MapContainer = ({
 
   // Update map data when stationData or settings change
   useEffect(() => {
-    if (!mapLoaded || !map.current || !clusterGroupRef.current) return;
+    if (!mapLoaded || !map.current || !heatmapLayerRef.current || !clusterGroupRef.current) return;
 
     console.log('Processing station data for Leaflet map:', stationData.length, 'records');
 
@@ -305,65 +305,56 @@ const MapContainer = ({
       return;
     }
 
-    // Implement manual clustering
-    const clusteredStations = enableClustering ? 
-      groupStationsByDistance(validStations, 0.01) : // 0.01 degree (~1km) clustering threshold
-      validStations.map(station => [station]); // Each station in its own group
+    // 1. CREATE HEATMAP (INDEPENDENT)
+    if (showHeatmap) {
+      console.log('Creating heatmap with', validStations.length, 'stations');
+      const pollutionValues = validStations.map(s => (s.pol_a + s.pol_b) / 2);
+      const maxPollution = Math.max(...pollutionValues);
+      
+      validStations.forEach(station => {
+        const avgPollution = (station.pol_a + station.pol_b) / 2;
+        
+        // Guard against division by zero
+        let intensity = 0.5; // Default intensity
+        if (maxPollution > 0) {
+          intensity = avgPollution / maxPollution;
+        } else if (avgPollution > 0) {
+          intensity = 0.7; // Show some intensity if all values are low but not zero
+        }
+        
+        // Calculate radius based on intensity (minimum 5, maximum based on heatmapRadius)
+        const radius = Math.max(heatmapRadius * intensity, 5);
+        
+        // Color based on pollution level
+        const color = avgPollution < 3 ? '#2ECC71' : 
+                     avgPollution < 7 ? '#F39C12' : '#E74C3C';
+        
+        const heatCircle = L.circle([station.lat, station.lon], {
+          radius: radius * 20, // Scale for visibility
+          fillColor: color,
+          color: color,
+          weight: 1,
+          opacity: heatmapOpacity,
+          fillOpacity: heatmapOpacity * 0.6
+        });
+        
+        heatmapLayerRef.current!.addLayer(heatCircle);
+      });
+      
+      map.current.addLayer(heatmapLayerRef.current);
+    }
 
-    // Create station markers
-    if (showStationMarkers) {
+    // 2. CREATE MARKERS AND CLUSTERING (TOGETHER)
+    if (showStationMarkers || enableClustering) {
+      // Implement manual clustering
+      const clusteredStations = enableClustering ? 
+        groupStationsByDistance(validStations, 0.01) : // 0.01 degree (~1km) clustering threshold
+        validStations.map(station => [station]); // Each station in its own group
+
+      console.log('Creating markers/clusters:', clusteredStations.length, 'groups');
+
       clusteredStations.forEach((stationGroup, groupIndex) => {
-        if (stationGroup.length === 1) {
-          // Single station - create normal marker
-          const station = stationGroup[0];
-          const marker = L.marker([station.lat, station.lon], {
-            icon: createStationIcon(station.pol_a, station.pol_b, station.unit)
-          });
-
-          // Connect tooltip events after marker is added to DOM
-          marker.on('add', () => {
-            const markerElement = marker.getElement();
-            if (markerElement) {
-              markerElement.addEventListener('mouseenter', (e) => handleStationHover(e as MouseEvent, station));
-              markerElement.addEventListener('mouseleave', handleStationLeave);
-            }
-          });
-
-          // Add popup
-          const popupContent = `
-            <div style="color: #2C3E50; font-family: Arial, sans-serif; min-width: 200px;">
-              <h3 style="margin: 0 0 8px 0; color: #E74C3C;">${station.station_name}</h3>
-              <p style="margin: 2px 0;"><strong>Station ID:</strong> ${station.station_id}</p>
-              <p style="margin: 2px 0;"><strong>Date:</strong> ${station.sample_dt}</p>
-              <div style="display: flex; gap: 15px; margin: 8px 0;">
-                <div style="text-align: center;">
-                  <div style="width: 20px; height: ${Math.max((station.pol_a / Math.max(station.pol_a, station.pol_b, 10)) * 30, 2)}px; 
-                              background: ${station.pol_a < 3 ? "#2ECC71" : station.pol_a < 7 ? "#F39C12" : "#E74C3C"}; 
-                              margin: 0 auto 4px;"></div>
-                  <small><strong>Pol A:</strong><br>${station.pol_a} ${station.unit}</small>
-                </div>
-                <div style="text-align: center;">
-                  <div style="width: 20px; height: ${Math.max((station.pol_b / Math.max(station.pol_a, station.pol_b, 10)) * 30, 2)}px; 
-                              background: ${station.pol_b < 3 ? "#2ECC71" : station.pol_b < 7 ? "#F39C12" : "#E74C3C"}; 
-                              margin: 0 auto 4px;"></div>
-                  <small><strong>Pol B:</strong><br>${station.pol_b} ${station.unit}</small>
-                </div>
-              </div>
-              <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; font-size: 11px; color: #666;">
-                <div style="display: flex; gap: 10px;">
-                  <span style="color: #2ECC71;">● Low (&lt;3)</span>
-                  <span style="color: #F39C12;">● Medium (3-7)</span>
-                  <span style="color: #E74C3C;">● High (&gt;7)</span>
-                </div>
-              </div>
-            </div>
-          `;
-
-          marker.bindPopup(popupContent);
-          markersRef.current.push(marker);
-          marker.addTo(map.current!);
-          
-        } else {
+        if (enableClustering && stationGroup.length > 1) {
           // Multiple stations - create cluster marker
           const centerLat = stationGroup.reduce((sum, s) => sum + s.lat, 0) / stationGroup.length;
           const centerLon = stationGroup.reduce((sum, s) => sum + s.lon, 0) / stationGroup.length;
@@ -417,49 +408,60 @@ const MapContainer = ({
           clusterMarker.bindPopup(clusterPopupContent);
           markersRef.current.push(clusterMarker);
           clusterMarker.addTo(map.current!);
+        } else if (showStationMarkers) {
+          // Single station or individual markers - create normal marker
+          const station = stationGroup[0];
+          const marker = L.marker([station.lat, station.lon], {
+            icon: createStationIcon(station.pol_a, station.pol_b, station.unit)
+          });
+
+          // Connect tooltip events after marker is added to DOM
+          marker.on('add', () => {
+            const markerElement = marker.getElement();
+            if (markerElement) {
+              markerElement.addEventListener('mouseenter', (e) => handleStationHover(e as MouseEvent, station));
+              markerElement.addEventListener('mouseleave', handleStationLeave);
+            }
+          });
+
+          // Add popup
+          const popupContent = `
+            <div style="color: #2C3E50; font-family: Arial, sans-serif; min-width: 200px;">
+              <h3 style="margin: 0 0 8px 0; color: #E74C3C;">${station.station_name}</h3>
+              <p style="margin: 2px 0;"><strong>Station ID:</strong> ${station.station_id}</p>
+              <p style="margin: 2px 0;"><strong>Date:</strong> ${station.sample_dt}</p>
+              <div style="display: flex; gap: 15px; margin: 8px 0;">
+                <div style="text-align: center;">
+                  <div style="width: 20px; height: ${Math.max((station.pol_a / Math.max(station.pol_a, station.pol_b, 10)) * 30, 2)}px; 
+                              background: ${station.pol_a < 3 ? "#2ECC71" : station.pol_a < 7 ? "#F39C12" : "#E74C3C"}; 
+                              margin: 0 auto 4px;"></div>
+                  <small><strong>Pol A:</strong><br>${station.pol_a} ${station.unit}</small>
+                </div>
+                <div style="text-align: center;">
+                  <div style="width: 20px; height: ${Math.max((station.pol_b / Math.max(station.pol_a, station.pol_b, 10)) * 30, 2)}px; 
+                              background: ${station.pol_b < 3 ? "#2ECC71" : station.pol_b < 7 ? "#F39C12" : "#E74C3C"}; 
+                              margin: 0 auto 4px;"></div>
+                  <small><strong>Pol B:</strong><br>${station.pol_b} ${station.unit}</small>
+                </div>
+              </div>
+              <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; font-size: 11px; color: #666;">
+                <div style="display: flex; gap: 10px;">
+                  <span style="color: #2ECC71;">● Low (&lt;3)</span>
+                  <span style="color: #F39C12;">● Medium (3-7)</span>
+                  <span style="color: #E74C3C;">● High (&gt;7)</span>
+                </div>
+              </div>
+            </div>
+          `;
+
+          marker.bindPopup(popupContent);
+          markersRef.current.push(marker);
+          marker.addTo(map.current!);
         }
       });
     }
 
-    // Create alternative heatmap using colored circles
-    if (showHeatmap && heatmapLayerRef.current) {
-      const pollutionValues = validStations.map(s => (s.pol_a + s.pol_b) / 2);
-      const maxPollution = Math.max(...pollutionValues);
-      
-      validStations.forEach(station => {
-        const avgPollution = (station.pol_a + station.pol_b) / 2;
-        
-        // Guard against division by zero
-        let intensity = 0.5; // Default intensity
-        if (maxPollution > 0) {
-          intensity = avgPollution / maxPollution;
-        } else if (avgPollution > 0) {
-          intensity = 0.7; // Show some intensity if all values are low but not zero
-        }
-        
-        // Calculate radius based on intensity (minimum 5, maximum based on heatmapRadius)
-        const radius = Math.max(heatmapRadius * intensity, 5);
-        
-        // Color based on pollution level
-        const color = avgPollution < 3 ? '#2ECC71' : 
-                     avgPollution < 7 ? '#F39C12' : '#E74C3C';
-        
-        const heatCircle = L.circle([station.lat, station.lon], {
-          radius: radius * 20, // Scale for visibility
-          fillColor: color,
-          color: color,
-          weight: 1,
-          opacity: heatmapOpacity,
-          fillOpacity: heatmapOpacity * 0.6
-        });
-        
-        heatmapLayerRef.current!.addLayer(heatCircle);
-      });
-      
-      map.current.addLayer(heatmapLayerRef.current);
-    }
-
-    // Fit map to show all stations
+    // 3. FIT MAP TO SHOW ALL STATIONS
     if (validStations.length > 0) {
       const group = new L.FeatureGroup(markersRef.current);
       if (group.getBounds().isValid()) {
@@ -468,88 +470,6 @@ const MapContainer = ({
     }
 
   }, [mapLoaded, stationData, showStationMarkers, showHeatmap, heatmapOpacity, heatmapRadius, enableClustering, clearMapLayers]);
-
-  // Update layer visibility when toggles change
-  useEffect(() => {
-    if (!map.current || !mapLoaded || stationData.length === 0) return;
-
-    // Clear all markers from map and cluster first
-    markersRef.current.forEach(marker => marker.remove());
-    if (clusterGroupRef.current) {
-      map.current.removeLayer(clusterGroupRef.current);
-      clusterGroupRef.current.clearLayers();
-    }
-
-    // Re-add markers based on current settings
-    if (showStationMarkers && markersRef.current.length > 0) {
-      markersRef.current.forEach(marker => {
-        if (enableClustering) {
-          clusterGroupRef.current?.addLayer(marker);
-        } else {
-          marker.addTo(map.current!);
-        }
-      });
-
-      // Add cluster group to map if clustering is enabled
-      if (enableClustering && clusterGroupRef.current) {
-        map.current.addLayer(clusterGroupRef.current);
-      }
-    }
-
-    // Toggle heatmap
-    if (heatmapLayerRef.current) {
-      if (showHeatmap) {
-        // Clear and recreate heatmap with new settings
-        heatmapLayerRef.current.clearLayers();
-        
-        // Recreate heatmap circles with updated settings
-        const validStations = stationData.filter(station => 
-          station.lat != null && station.lon != null && 
-          !isNaN(station.lat) && !isNaN(station.lon) &&
-          station.pol_a != null && station.pol_b != null &&
-          !isNaN(station.pol_a) && !isNaN(station.pol_b)
-        );
-        
-        const pollutionValues = validStations.map(s => (s.pol_a + s.pol_b) / 2);
-        const maxPollution = Math.max(...pollutionValues);
-        
-        validStations.forEach(station => {
-          const avgPollution = (station.pol_a + station.pol_b) / 2;
-          
-          // Guard against division by zero
-          let intensity = 0.5; // Default intensity
-          if (maxPollution > 0) {
-            intensity = avgPollution / maxPollution;
-          } else if (avgPollution > 0) {
-            intensity = 0.7; // Show some intensity if all values are low but not zero
-          }
-          
-          const radius = Math.max(heatmapRadius * intensity, 5);
-          const color = avgPollution < 3 ? '#2ECC71' : 
-                       avgPollution < 7 ? '#F39C12' : '#E74C3C';
-          
-          const heatCircle = L.circle([station.lat, station.lon], {
-            radius: radius * 20,
-            fillColor: color,
-            color: color,
-            weight: 1,
-            opacity: heatmapOpacity,
-            fillOpacity: heatmapOpacity * 0.6
-          });
-          
-          heatmapLayerRef.current!.addLayer(heatCircle);
-        });
-        
-        if (!map.current.hasLayer(heatmapLayerRef.current)) {
-          map.current.addLayer(heatmapLayerRef.current);
-        }
-      } else {
-        if (map.current.hasLayer(heatmapLayerRef.current)) {
-          map.current.removeLayer(heatmapLayerRef.current);
-        }
-      }
-    }
-  }, [showStationMarkers, showHeatmap, heatmapOpacity, heatmapRadius, enableClustering, mapLoaded]);
 
   // If there's a map error, show error state
   if (mapError) {
