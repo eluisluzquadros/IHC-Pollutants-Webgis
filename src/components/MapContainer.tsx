@@ -5,8 +5,22 @@ import { MapPin, Loader2 } from "lucide-react";
 // Import Leaflet with proper ES6 syntax
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-// Import heatmap.js for proper heatmap implementation
-// Leaflet.heat removed - using native Leaflet circles instead
+// Import leaflet.heat for proper heatmap interpolation
+import 'leaflet.heat';
+
+// Extend Leaflet interface for heatmap
+declare module 'leaflet' {
+  function heatLayer(
+    latlngs: Array<[number, number, number]>,
+    options?: {
+      radius?: number;
+      blur?: number;
+      maxZoom?: number;
+      max?: number;
+      gradient?: { [key: number]: string };
+    }
+  ): L.Layer;
+}
 
 // Fix for default Leaflet markers in bundlers
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -476,7 +490,7 @@ const MapContainer = ({
 
     // 1. CREATE HEATMAP WITH COLORED CIRCLES
     if (showHeatmap && heatmapOpacity > 0) {
-      console.log('Creating heatmap with colored circles:', validStations.length, 'stations');
+      console.log('Creating interpolated heatmap with leaflet.heat:', validStations.length, 'stations');
       
       // Calculate pollution values and normalize
       const pollutionValues = validStations.map(s => (s.pol_a + s.pol_b) / 2);
@@ -497,26 +511,47 @@ const MapContainer = ({
         heatmapLayerRef.current = null;
       }
       
-      // Create colored circles directly on the map
-      console.log('Adding heatmap circles directly to map...');
+      // Create real heatmap with interpolation
+      console.log('Creating interpolated heatmap with leaflet.heat...');
       
-      validStations.forEach((station, index) => {
-        const avgPollution = (station.pol_a + station.pol_b) / 2;
-        const intensity = Math.min(avgPollution / maxPollution, 1);
+      try {
+        // Create heatmap layer with proper interpolation and opacity control
+        heatmapLayerRef.current = L.heatLayer(heatmapData as [number, number, number][], {
+          radius: heatmapRadius,
+          blur: 15,
+          maxZoom: 17,
+          max: 1.0,
+          gradient: {
+            0.0: `rgba(0, 255, 0, ${heatmapOpacity})`,      // Verde com opacity
+            0.2: `rgba(128, 255, 0, ${heatmapOpacity})`,    // Verde-amarelo
+            0.4: `rgba(255, 255, 0, ${heatmapOpacity})`,    // Amarelo
+            0.6: `rgba(255, 128, 0, ${heatmapOpacity})`,    // Laranja
+            0.8: `rgba(255, 64, 0, ${heatmapOpacity})`,     // Vermelho-laranja
+            1.0: `rgba(255, 0, 0, ${heatmapOpacity})`       // Vermelho com opacity
+          }
+        });
         
-        // Color gradient based on pollution intensity
-        let color = '#00ff00'; // Green for low
-        if (intensity > 0.8) color = '#ff0000'; // Red for very high
-        else if (intensity > 0.6) color = '#ff4500'; // Orange-red for high
-        else if (intensity > 0.4) color = '#ffa500'; // Orange for medium-high
-        else if (intensity > 0.2) color = '#ffff00'; // Yellow for medium
+        // Add heatmap to map
+        heatmapLayerRef.current.addTo(map.current!);
         
-        // Create circle with proper radius
-        const radiusInMeters = heatmapRadius * 300; // Scale radius to meters
+        console.log(`✓ Interpolated heatmap created with ${validStations.length} data points, radius: ${heatmapRadius}, opacity: ${heatmapOpacity}`);
+      } catch (error) {
+        console.error('Error creating interpolated heatmap:', error);
+        console.log('Fallback: Using colored circles instead of heatmap interpolation...');
         
-        try {
+        // Fallback to circles if heatmap fails
+        validStations.forEach((station, index) => {
+          const avgPollution = (station.pol_a + station.pol_b) / 2;
+          const intensity = Math.min(avgPollution / maxPollution, 1);
+          
+          let color = '#00ff00';
+          if (intensity > 0.8) color = '#ff0000';
+          else if (intensity > 0.6) color = '#ff4500';
+          else if (intensity > 0.4) color = '#ffa500';
+          else if (intensity > 0.2) color = '#ffff00';
+          
           const circle = L.circle([station.lat, station.lon], {
-            radius: radiusInMeters,
+            radius: heatmapRadius * 300,
             fillColor: color,
             fillOpacity: heatmapOpacity * intensity * 0.6,
             weight: 1,
@@ -524,24 +559,10 @@ const MapContainer = ({
             opacity: 0.2
           });
           
-          // Add popup for debugging
-          circle.bindPopup(`Station: ${station.station_name}<br>Pol A: ${station.pol_a}<br>Pol B: ${station.pol_b}`);
-          
-          // Add directly to map
           circle.addTo(map.current!);
-          
-          // Store reference for cleanup
           markersRef.current.push(circle as any);
-          
-          if (index < 5) {
-            console.log(`Added circle ${index + 1} at [${station.lat}, ${station.lon}] with color ${color}`);
-          }
-        } catch (error) {
-          console.error('Error adding circle:', error);
-        }
-      });
-      
-      console.log(`Heatmap created with ${validStations.length} circles, radius: ${heatmapRadius * 300}m, opacity: ${heatmapOpacity}`);
+        });
+      }
     }
 
     // 2. CREATE STATION MARKERS (IF ENABLED)
