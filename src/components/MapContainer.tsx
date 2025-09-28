@@ -116,38 +116,49 @@ const createStationIcon = (polA: number, polB: number, unit: string) => {
   });
 };
 
-// Station-based clustering: Groups stations by geographical proximity
+// Station-based clustering: Groups unique stations by geographical proximity
 const createStationClusters = (stations: any[], zoomLevel: number) => {
+  // First, get unique stations (deduplicate by station_id + location)
+  const uniqueStations = new Map<string, any>();
+  stations.forEach(station => {
+    const key = `${station.station_id}-${station.lat}-${station.lon}`;
+    if (!uniqueStations.has(key)) {
+      uniqueStations.set(key, station);
+    }
+  });
+  
+  const stationArray = Array.from(uniqueStations.values());
+  
   const baseRadius = 0.1; // Base radius in degrees
   const zoomFactor = Math.max(1, 18 - zoomLevel);
   const clusterRadius = baseRadius * (zoomFactor / 10);
   
-  console.log(`Station clustering at zoom ${zoomLevel} with radius ${clusterRadius.toFixed(4)}`);
+  console.log(`Station clustering: ${stationArray.length} unique stations at zoom ${zoomLevel} with radius ${clusterRadius.toFixed(4)}`);
   
   const groups: any[][] = [];
   const processed = new Set<number>();
   
-  for (let i = 0; i < stations.length; i++) {
+  for (let i = 0; i < stationArray.length; i++) {
     if (processed.has(i)) continue;
     
-    const group = [stations[i]];
+    const group = [stationArray[i]];
     const queue = [i];
     processed.add(i);
     
     while (queue.length > 0) {
       const currentIndex = queue.shift()!;
-      const currentStation = stations[currentIndex];
+      const currentStation = stationArray[currentIndex];
       
-      for (let j = 0; j < stations.length; j++) {
+      for (let j = 0; j < stationArray.length; j++) {
         if (processed.has(j)) continue;
         
         const distance = Math.sqrt(
-          Math.pow(currentStation.lat - stations[j].lat, 2) +
-          Math.pow(currentStation.lon - stations[j].lon, 2)
+          Math.pow(currentStation.lat - stationArray[j].lat, 2) +
+          Math.pow(currentStation.lon - stationArray[j].lon, 2)
         );
         
         if (distance <= clusterRadius) {
-          group.push(stations[j]);
+          group.push(stationArray[j]);
           queue.push(j);
           processed.add(j);
         }
@@ -457,15 +468,15 @@ const MapContainer = ({
       return;
     }
 
-    // 1. CREATE REAL HEATMAP WITH LARGE AREA INTERPOLATION
-    if (showHeatmap) {
-      console.log('Creating large-area heatmap with', validStations.length, 'stations');
+    // 1. CREATE INTERPOLATED HEATMAP WITH CANVAS RENDERING
+    if (showHeatmap && heatmapOpacity > 0) {
+      console.log('Creating interpolated heatmap with', validStations.length, 'stations');
       
       // Calculate pollution values and normalize
       const pollutionValues = validStations.map(s => (s.pol_a + s.pol_b) / 2);
       const maxPollution = Math.max(...pollutionValues, 1);
       
-      // Create heatmap data points
+      // Create heatmap data points for interpolation
       const heatmapData = validStations.map(station => {
         const avgPollution = (station.pol_a + station.pol_b) / 2;
         const intensity = Math.min(avgPollution / maxPollution, 1);
@@ -478,47 +489,83 @@ const MapContainer = ({
         };
       });
       
-      // Create large overlapping circles for true heatmap effect
-      heatmapData.forEach(point => {
-        // Much larger base radius for wide area coverage like reference image
-        const baseRadiusKm = (heatmapRadius / 10) + 20; // 20-25km base for 50px radius
-        const intensityRadius = baseRadiusKm * (0.8 + point.intensity * 2); // Scale with intensity
-        
-        // Color based on pollution level
-        let color = '#10B981'; // Green for low
-        if (point.pollution >= 7) {
-          color = '#EF4444'; // Red for high
-        } else if (point.pollution >= 4) {
-          color = '#F59E0B'; // Orange for medium-high
-        } else if (point.pollution >= 2) {
-          color = '#FCD34D'; // Yellow for medium
-        }
-        
-        // Create large overlapping circles for wide area coverage
-        for (let i = 0; i < 3; i++) {
-          const radiusMultiplier = (3 - i) / 3; // 1.0, 0.67, 0.33
-          const currentRadiusKm = intensityRadius * radiusMultiplier;
-          const currentRadiusMeters = currentRadiusKm * 1000; // Convert km to meters
+      // Create interpolated heatmap using many small overlapping gradients
+      // This simulates kernel density estimation for smooth blending
+      const bounds = map.current.getBounds();
+      const padding = 0.5; // Degrees padding for coverage
+      
+      // Grid-based approach for true interpolation
+      const gridSize = Math.max(heatmapRadius * 2, 40); // Grid resolution based on radius
+      const latStep = (bounds.getNorth() - bounds.getSouth() + padding * 2) / gridSize;
+      const lngStep = (bounds.getEast() - bounds.getWest() + padding * 2) / gridSize;
+      
+      // Calculate influence radius properly scaled to grid
+      const influenceRadius = Math.max((heatmapRadius / 10) * (latStep + lngStep), latStep * 3); // Scale with grid and user control
+      
+      // Create interpolated heat points
+      for (let gridLat = bounds.getSouth() - padding; gridLat <= bounds.getNorth() + padding; gridLat += latStep) {
+        for (let gridLng = bounds.getWest() - padding; gridLng <= bounds.getEast() + padding; gridLng += lngStep) {
           
-          // Higher opacity for better visibility
-          const baseOpacity = Math.max(heatmapOpacity * 0.6, 0.4); // Ensure minimum visibility
-          const opacityStep = baseOpacity * (1 - i * 0.3) * Math.max(point.intensity, 0.3);
+          // Calculate weighted influence from all nearby stations
+          let totalWeight = 0;
+          let totalIntensity = 0;
+          let nearestPollution = 0;
           
-          const heatCircle = L.circle([point.lat, point.lng], {
-            radius: Math.max(currentRadiusMeters, 8000), // Minimum 8km radius for visibility
-            fillColor: color,
-            color: color,
-            weight: 0,
-            opacity: 0,
-            fillOpacity: Math.max(opacityStep, 0.15), // Higher minimum opacity
-            interactive: false
+          heatmapData.forEach(point => {
+            const distance = Math.sqrt(
+              Math.pow(gridLat - point.lat, 2) + 
+              Math.pow(gridLng - point.lng, 2)
+            );
+            
+            // Gaussian-like weight function for smooth falloff
+            if (distance <= influenceRadius) {
+              const weight = Math.exp(-(distance * distance) / (2 * (influenceRadius / 3) * (influenceRadius / 3)));
+              totalWeight += weight;
+              totalIntensity += point.intensity * weight;
+              nearestPollution = Math.max(nearestPollution, point.pollution);
+            }
           });
           
-          heatmapLayerRef.current!.addLayer(heatCircle);
+          // Only create heat point if there's significant influence
+          if (totalWeight > 0.1) {
+            const interpolatedIntensity = totalIntensity / totalWeight;
+            
+            // Color based on interpolated pollution level
+            let color = '#00FF00'; // Green for low
+            if (nearestPollution >= 8) {
+              color = '#FF0000'; // Red for very high
+            } else if (nearestPollution >= 6) {
+              color = '#FF4500'; // Orange-red for high
+            } else if (nearestPollution >= 4) {
+              color = '#FFA500'; // Orange for medium-high
+            } else if (nearestPollution >= 2) {
+              color = '#FFFF00'; // Yellow for medium
+            } else if (nearestPollution >= 1) {
+              color = '#ADFF2F'; // Yellow-green for low-medium
+            }
+            
+            // Calculate opacity respecting user control (no minimum)
+            const finalOpacity = heatmapOpacity * interpolatedIntensity * 0.8;
+            
+            if (finalOpacity > 0.01) { // Only render if visible
+              const heatPoint = L.circle([gridLat, gridLng], {
+                radius: Math.max(influenceRadius * 111000 / 2, 5000), // Half influence radius in meters, min 5km
+                fillColor: color,
+                color: color,
+                weight: 0,
+                opacity: 0,
+                fillOpacity: finalOpacity,
+                interactive: false,
+                bubblingMouseEvents: false
+              });
+              
+              heatmapLayerRef.current!.addLayer(heatPoint);
+            }
+          }
         }
-      });
+      }
       
-      console.log(`Large-area heatmap created: radius ${heatmapRadius}px -> ${(heatmapRadius / 10) + 20}km base coverage, opacity ${heatmapOpacity}`);
+      console.log(`Interpolated heatmap created: ${heatmapData.length} source points, radius: ${heatmapRadius}px, opacity: ${heatmapOpacity}`);
       map.current.addLayer(heatmapLayerRef.current);
     }
 
