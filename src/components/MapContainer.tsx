@@ -5,8 +5,8 @@ import { MapPin, Loader2 } from "lucide-react";
 // Import Leaflet with proper ES6 syntax
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-// Note: Heat and cluster plugins may not work in Vite environment
-// We'll implement alternative solutions
+// Import heatmap.js for proper heatmap implementation
+import h337 from 'heatmap.js';
 
 // Fix for default Leaflet markers in bundlers
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -322,6 +322,9 @@ const MapContainer = ({
   const markersRef = useRef<L.Marker[]>([]);
   const heatmapLayerRef = useRef<L.LayerGroup | null>(null);
   const clusterGroupRef = useRef<L.LayerGroup | null>(null);
+  const heatmapInstance = useRef<any>(null);
+  const heatmapContainer = useRef<HTMLDivElement | null>(null);
+  const updateHeatmapRef = useRef<(() => void) | null>(null);
   const [tooltip, setTooltip] = useState<TooltipState>({
     visible: false,
     position: { x: 0, y: 0 },
@@ -433,6 +436,17 @@ const MapContainer = ({
       map.current.removeLayer(clusterGroupRef.current);
       clusterGroupRef.current.clearLayers();
     }
+
+    // Clear heatmap.js instance and container
+    if (heatmapInstance.current && heatmapContainer.current) {
+      // Remove event listeners
+      map.current.off('zoom', updateHeatmapRef.current);
+      map.current.off('move', updateHeatmapRef.current);
+      // Remove container
+      heatmapContainer.current.remove();
+      heatmapInstance.current = null;
+      heatmapContainer.current = null;
+    }
   }, []);
 
   // Update map data when stationData or settings change
@@ -468,105 +482,115 @@ const MapContainer = ({
       return;
     }
 
-    // 1. CREATE INTERPOLATED HEATMAP WITH CANVAS RENDERING
+    // 1. CREATE PROPER HEATMAP WITH HEATMAP.JS
     if (showHeatmap && heatmapOpacity > 0) {
-      console.log('Creating interpolated heatmap with', validStations.length, 'stations');
+      console.log('Creating heatmap.js heatmap with', validStations.length, 'stations');
       
       // Calculate pollution values and normalize
       const pollutionValues = validStations.map(s => (s.pol_a + s.pol_b) / 2);
       const maxPollution = Math.max(...pollutionValues, 1);
       
-      // Create heatmap data points for interpolation
+      // Create heatmap data in heatmap.js format
       const heatmapData = validStations.map(station => {
         const avgPollution = (station.pol_a + station.pol_b) / 2;
         const intensity = Math.min(avgPollution / maxPollution, 1);
         
+        // Convert lat/lng to pixel coordinates
+        const point = map.current!.latLngToContainerPoint([station.lat, station.lon]);
+        
         return {
-          lat: station.lat,
-          lng: station.lon,
-          intensity: intensity,
-          pollution: avgPollution
+          x: Math.round(point.x),
+          y: Math.round(point.y),
+          value: intensity * 100 // heatmap.js expects 0-100 range
         };
       });
       
-      // Create interpolated heatmap using many small overlapping gradients
-      // This simulates kernel density estimation for smooth blending
-      const bounds = map.current.getBounds();
-      const padding = 0.5; // Degrees padding for coverage
-      
-      // Grid-based approach for true interpolation
-      const gridSize = Math.max(heatmapRadius * 2, 40); // Grid resolution based on radius
-      const latStep = (bounds.getNorth() - bounds.getSouth() + padding * 2) / gridSize;
-      const lngStep = (bounds.getEast() - bounds.getWest() + padding * 2) / gridSize;
-      
-      // Calculate influence radius properly scaled to grid
-      const influenceRadius = Math.max((heatmapRadius / 10) * (latStep + lngStep), latStep * 3); // Scale with grid and user control
-      
-      // Create interpolated heat points
-      for (let gridLat = bounds.getSouth() - padding; gridLat <= bounds.getNorth() + padding; gridLat += latStep) {
-        for (let gridLng = bounds.getWest() - padding; gridLng <= bounds.getEast() + padding; gridLng += lngStep) {
-          
-          // Calculate weighted influence from all nearby stations
-          let totalWeight = 0;
-          let totalIntensity = 0;
-          let nearestPollution = 0;
-          
-          heatmapData.forEach(point => {
-            const distance = Math.sqrt(
-              Math.pow(gridLat - point.lat, 2) + 
-              Math.pow(gridLng - point.lng, 2)
-            );
-            
-            // Gaussian-like weight function for smooth falloff
-            if (distance <= influenceRadius) {
-              const weight = Math.exp(-(distance * distance) / (2 * (influenceRadius / 3) * (influenceRadius / 3)));
-              totalWeight += weight;
-              totalIntensity += point.intensity * weight;
-              nearestPollution = Math.max(nearestPollution, point.pollution);
-            }
-          });
-          
-          // Only create heat point if there's significant influence
-          if (totalWeight > 0.1) {
-            const interpolatedIntensity = totalIntensity / totalWeight;
-            
-            // Color based on interpolated pollution level
-            let color = '#00FF00'; // Green for low
-            if (nearestPollution >= 8) {
-              color = '#FF0000'; // Red for very high
-            } else if (nearestPollution >= 6) {
-              color = '#FF4500'; // Orange-red for high
-            } else if (nearestPollution >= 4) {
-              color = '#FFA500'; // Orange for medium-high
-            } else if (nearestPollution >= 2) {
-              color = '#FFFF00'; // Yellow for medium
-            } else if (nearestPollution >= 1) {
-              color = '#ADFF2F'; // Yellow-green for low-medium
-            }
-            
-            // Calculate opacity respecting user control (no minimum)
-            const finalOpacity = heatmapOpacity * interpolatedIntensity * 0.8;
-            
-            if (finalOpacity > 0.01) { // Only render if visible
-              const heatPoint = L.circle([gridLat, gridLng], {
-                radius: Math.max(influenceRadius * 111000 / 2, 5000), // Half influence radius in meters, min 5km
-                fillColor: color,
-                color: color,
-                weight: 0,
-                opacity: 0,
-                fillOpacity: finalOpacity,
-                interactive: false,
-                bubblingMouseEvents: false
-              });
-              
-              heatmapLayerRef.current!.addLayer(heatPoint);
-            }
-          }
+      // Remove existing heatmap if present
+      if (heatmapInstance.current && heatmapContainer.current) {
+        // Remove event listeners
+        if (updateHeatmapRef.current) {
+          map.current!.off('zoom', updateHeatmapRef.current);
+          map.current!.off('move', updateHeatmapRef.current);
         }
+        heatmapContainer.current.remove();
+        heatmapInstance.current = null;
+        heatmapContainer.current = null;
+        updateHeatmapRef.current = null;
       }
       
-      console.log(`Interpolated heatmap created: ${heatmapData.length} source points, radius: ${heatmapRadius}px, opacity: ${heatmapOpacity}`);
-      map.current.addLayer(heatmapLayerRef.current);
+      // Create heatmap container
+      const mapSize = map.current!.getSize();
+      heatmapContainer.current = document.createElement('div');
+      heatmapContainer.current.style.position = 'absolute';
+      heatmapContainer.current.style.top = '0';
+      heatmapContainer.current.style.left = '0';
+      heatmapContainer.current.style.width = mapSize.x + 'px';
+      heatmapContainer.current.style.height = mapSize.y + 'px';
+      heatmapContainer.current.style.pointerEvents = 'none';
+      heatmapContainer.current.style.zIndex = '200';
+      
+      // Add container to map
+      map.current!.getContainer().appendChild(heatmapContainer.current);
+      
+      // Create heatmap instance
+      heatmapInstance.current = h337.create({
+        container: heatmapContainer.current,
+        radius: Math.max(heatmapRadius, 15), // Use user-controlled radius with minimum
+        maxOpacity: heatmapOpacity, // Use user-controlled opacity
+        minOpacity: 0,
+        blur: 0.75,
+        gradient: {
+          // Custom gradient for pollution visualization
+          0.0: '#00ff00',  // Green for low pollution
+          0.2: '#adff2f',  // Yellow-green
+          0.4: '#ffff00',  // Yellow
+          0.6: '#ffa500',  // Orange
+          0.8: '#ff4500',  // Orange-red
+          1.0: '#ff0000'   // Red for high pollution
+        }
+      });
+      
+      // Set heatmap data
+      heatmapInstance.current.setData({
+        max: 100,
+        data: heatmapData
+      });
+      
+      // Update heatmap on map events
+      const updateHeatmap = () => {
+        if (heatmapInstance.current && heatmapContainer.current && validStations.length > 0) {
+          const newMapSize = map.current!.getSize();
+          heatmapContainer.current.style.width = newMapSize.x + 'px';
+          heatmapContainer.current.style.height = newMapSize.y + 'px';
+          
+          // Recalculate positions
+          const updatedData = validStations.map(station => {
+            const avgPollution = (station.pol_a + station.pol_b) / 2;
+            const intensity = Math.min(avgPollution / maxPollution, 1);
+            const point = map.current!.latLngToContainerPoint([station.lat, station.lon]);
+            
+            return {
+              x: Math.round(point.x),
+              y: Math.round(point.y),
+              value: intensity * 100
+            };
+          });
+          
+          heatmapInstance.current.setData({
+            max: 100,
+            data: updatedData
+          });
+        }
+      };
+      
+      // Store update function reference for cleanup
+      updateHeatmapRef.current = updateHeatmap;
+      
+      // Bind update events
+      map.current!.on('zoom', updateHeatmap);
+      map.current!.on('move', updateHeatmap);
+      
+      console.log(`Heatmap.js heatmap created: ${heatmapData.length} data points, radius: ${heatmapRadius}px, opacity: ${heatmapOpacity}`);
     }
 
     // 2. CREATE RECORD COUNT MARKERS (INDEPENDENT FEATURE)
@@ -705,6 +729,9 @@ const MapContainer = ({
           
           const clusterMarker = createClusterMarker(stationGroup, centerLat, centerLon);
           
+          // Get unit from first station (all should have same unit)
+          const unit = stationGroup[0].unit || '';
+          
           // Enhanced cluster popup - different content based on clustering type
           let clusterType = 'Cluster';
           let clusterDescription = `${stationGroup.length} items`;
@@ -730,13 +757,13 @@ const MapContainer = ({
                   <div style="width: 24px; height: ${Math.max((avgPolA / Math.max(avgPolA, avgPolB, 10)) * 30, 2)}px; 
                               background: ${avgPolA < 3 ? "#2ECC71" : avgPolA < 7 ? "#F39C12" : "#E74C3C"}; 
                               margin: 0 auto 4px; border: 1px solid #ccc;"></div>
-                  <small><strong>Pol A:</strong><br>${avgPolA.toFixed(2)}</small>
+                  <small><strong>Pol A:</strong><br>${avgPolA.toFixed(2)} ${unit}</small>
                 </div>
                 <div style="text-align: center;">
                   <div style="width: 24px; height: ${Math.max((avgPolB / Math.max(avgPolA, avgPolB, 10)) * 30, 2)}px; 
                               background: ${avgPolB < 3 ? "#2ECC71" : avgPolB < 7 ? "#F39C12" : "#E74C3C"}; 
                               margin: 0 auto 4px; border: 1px solid #ccc;"></div>
-                  <small><strong>Pol B:</strong><br>${avgPolB.toFixed(2)}</small>
+                  <small><strong>Pol B:</strong><br>${avgPolB.toFixed(2)} ${unit}</small>
                 </div>
               </div>
               <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
@@ -759,7 +786,7 @@ const MapContainer = ({
           markersRef.current.push(clusterMarker);
           clusterMarker.addTo(map.current!);
         } else if (showStationMarkers) {
-          // Single station - create individual marker
+          // Single station OR clustering disabled - create individual marker
           const station = stationGroup[0];
           const marker = L.marker([station.lat, station.lon], {
             icon: createStationIcon(station.pol_a, station.pol_b, station.unit)
