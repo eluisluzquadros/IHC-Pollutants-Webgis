@@ -41,6 +41,7 @@ interface MapContainerProps {
   heatmapOpacity?: number;
   heatmapRadius?: number;
   enableClustering?: boolean;
+  showRecordCount?: boolean;
 }
 
 interface TooltipState {
@@ -210,6 +211,74 @@ const createClusterMarker = (stationGroup: any[], lat: number, lon: number) => {
   return L.marker([lat, lon], { icon: clusterIcon });
 };
 
+// Function to group station data by station for record counting
+const groupStationsByLocation = (stations: any[]) => {
+  const stationGroups = new Map<string, any[]>();
+  
+  stations.forEach(station => {
+    const key = `${station.station_id}-${station.station_name}`;
+    if (!stationGroups.has(key)) {
+      stationGroups.set(key, []);
+    }
+    stationGroups.get(key)!.push(station);
+  });
+  
+  return Array.from(stationGroups.values());
+};
+
+// Create record count marker with number of readings
+const createRecordCountMarker = (stationGroup: any[]) => {
+  const station = stationGroup[0]; // Use first record for position and basic info
+  const recordCount = stationGroup.length;
+  
+  // Dynamic size and color based on record count
+  let size = 30;
+  let bgColor = '#10B981'; // Green for few records
+  let borderColor = '#059669';
+  
+  if (recordCount >= 50) {
+    size = 50;
+    bgColor = '#DC2626'; // Red for many records
+    borderColor = '#B91C1C';
+  } else if (recordCount >= 20) {
+    size = 42;
+    bgColor = '#EA580C'; // Orange for medium records
+    borderColor = '#C2410C';
+  } else if (recordCount >= 10) {
+    size = 36;
+    bgColor = '#D97706'; // Yellow for some records
+    borderColor = '#B45309';
+  }
+  
+  const recordIcon = L.divIcon({
+    html: `<div style="
+             background: ${bgColor}; 
+             color: white; 
+             border: 3px solid ${borderColor};
+             border-radius: 8px; 
+             width: ${size}px; 
+             height: ${size}px; 
+             display: flex; 
+             flex-direction: column;
+             align-items: center; 
+             justify-content: center; 
+             font-weight: bold; 
+             font-size: ${Math.max(9, size / 5)}px;
+             box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+             cursor: pointer;
+             position: relative;
+           ">
+             <div style="font-size: ${Math.max(8, size / 6)}px; line-height: 1;">REC</div>
+             <div style="font-size: ${Math.max(10, size / 4)}px; line-height: 1; font-weight: 900;">${recordCount}</div>
+           </div>`,
+    className: 'record-count-marker',
+    iconSize: [size, size],
+    iconAnchor: [size/2, size/2]
+  });
+  
+  return L.marker([station.lat, station.lon], { icon: recordIcon });
+};
+
 const MapContainer = ({
   stationData = [],
   showStationMarkers = true,
@@ -217,6 +286,7 @@ const MapContainer = ({
   heatmapOpacity = 0.7,
   heatmapRadius = 25,
   enableClustering = false,
+  showRecordCount = false,
 }: MapContainerProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
@@ -411,7 +481,105 @@ const MapContainer = ({
       map.current.addLayer(heatmapLayerRef.current);
     }
 
-    // 2. CREATE DYNAMIC CLUSTERING AND MARKERS
+    // 2. CREATE RECORD COUNT MARKERS (INDEPENDENT FEATURE)
+    if (showRecordCount) {
+      const stationGroups = groupStationsByLocation(validStations);
+      console.log(`Creating record count markers for ${stationGroups.length} unique stations`);
+      
+      stationGroups.forEach(stationGroup => {
+        const station = stationGroup[0];
+        const recordCount = stationGroup.length;
+        
+        const recordMarker = createRecordCountMarker(stationGroup);
+        
+        // Enhanced popup showing all readings with dates
+        const allReadings = stationGroup
+          .sort((a, b) => new Date(b.sample_dt).getTime() - new Date(a.sample_dt).getTime())
+          .map((reading, idx) => {
+            const avgPollution = (reading.pol_a + reading.pol_b) / 2;
+            const status = avgPollution < 3 ? 'Low' : avgPollution < 7 ? 'Medium' : 'High';
+            const statusColor = avgPollution < 3 ? '#10B981' : avgPollution < 7 ? '#F59E0B' : '#EF4444';
+            
+            return `<div style="
+                       margin: 3px 0; 
+                       padding: 6px 8px; 
+                       background: ${idx % 2 === 0 ? '#F9FAFB' : '#FFFFFF'}; 
+                       border-radius: 4px; 
+                       border-left: 3px solid ${statusColor};
+                       font-size: 11px;
+                     ">
+                       <div style="display: flex; justify-content: space-between; align-items: center;">
+                         <strong style="color: #374151;">#${idx + 1} - ${reading.sample_dt}</strong>
+                         <span style="
+                           background: ${statusColor}; 
+                           color: white; 
+                           padding: 2px 6px; 
+                           border-radius: 12px; 
+                           font-size: 9px; 
+                           font-weight: bold;
+                         ">${status}</span>
+                       </div>
+                       <div style="color: #6B7280; margin-top: 2px;">
+                         Pol A: <strong>${reading.pol_a}</strong> | Pol B: <strong>${reading.pol_b}</strong> ${reading.unit}
+                       </div>
+                     </div>`;
+          }).join('');
+        
+        const recordPopupContent = `
+          <div style="color: #1F2937; font-family: Arial, sans-serif; max-width: 400px;">
+            <div style="
+              background: linear-gradient(135deg, #3B82F6, #1E40AF); 
+              color: white; 
+              padding: 12px; 
+              margin: -8px -8px 12px -8px; 
+              border-radius: 8px 8px 0 0;
+            ">
+              <h3 style="margin: 0 0 4px 0; font-size: 16px;">${station.station_name}</h3>
+              <p style="margin: 0; font-size: 12px; opacity: 0.9;">Station ID: ${station.station_id}</p>
+            </div>
+            
+            <div style="
+              background: #F3F4F6; 
+              padding: 8px 12px; 
+              border-radius: 6px; 
+              margin-bottom: 12px;
+              text-align: center;
+            ">
+              <div style="font-size: 24px; font-weight: bold; color: #1F2937;">${recordCount}</div>
+              <div style="font-size: 12px; color: #6B7280;">Total Records</div>
+            </div>
+            
+            <p style="margin: 8px 0 4px 0; font-weight: bold; color: #374151;">All Readings (Latest First):</p>
+            <div style="
+              max-height: 200px; 
+              overflow-y: auto; 
+              border: 1px solid #E5E7EB; 
+              border-radius: 6px; 
+              padding: 4px;
+            ">
+              ${allReadings}
+            </div>
+            
+            <div style="
+              margin-top: 12px; 
+              padding-top: 8px; 
+              border-top: 1px solid #E5E7EB; 
+              font-size: 10px; 
+              color: #9CA3AF;
+              text-align: center;
+            ">
+              💡 This view shows all individual readings for this station location
+            </div>
+          </div>
+        `;
+        
+        recordMarker.bindPopup(recordPopupContent, { maxWidth: 420 });
+        markersRef.current.push(recordMarker);
+        recordMarker.addTo(map.current!);
+      });
+    }
+    
+    // 3. CREATE DYNAMIC CLUSTERING AND MARKERS
     if (showStationMarkers || enableClustering) {
       // Use dynamic clustering based on current zoom level
       const clusteredStations = enableClustering ? 
@@ -530,7 +698,7 @@ const MapContainer = ({
       }
     }
 
-  }, [mapLoaded, stationData, showStationMarkers, showHeatmap, heatmapOpacity, heatmapRadius, enableClustering, currentZoom, clearMapLayers]);
+  }, [mapLoaded, stationData, showStationMarkers, showHeatmap, heatmapOpacity, heatmapRadius, enableClustering, showRecordCount, currentZoom, clearMapLayers]);
 
   // If there's a map error, show error state
   if (mapError) {

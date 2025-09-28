@@ -36,6 +36,7 @@ interface MapSettings {
   heatmapOpacity: number;
   heatmapRadius: number;
   enableClustering: boolean;
+  showRecordCount: boolean;
 }
 
 const DEFAULT_FILTERS: StationFilters = {
@@ -52,6 +53,7 @@ const DEFAULT_MAP_SETTINGS: MapSettings = {
   heatmapOpacity: 0.7,
   heatmapRadius: 25,
   enableClustering: false,
+  showRecordCount: false,
 };
 
 // Loading Component
@@ -434,6 +436,17 @@ const ProfessionalWebGISApp: React.FC = () => {
                   {mapSettings.enableClustering ? 'ON' : 'OFF'}
                 </Button>
               </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Record Count</span>
+                <Button
+                  variant={mapSettings.showRecordCount ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setMapSettings(prev => ({ ...prev, showRecordCount: !prev.showRecordCount }))}
+                >
+                  {mapSettings.showRecordCount ? 'ON' : 'OFF'}
+                </Button>
+              </div>
             </div>
 
             {/* Heatmap Settings */}
@@ -537,6 +550,7 @@ const ProfessionalWebGISApp: React.FC = () => {
               heatmapOpacity={mapSettings.heatmapOpacity}
               heatmapRadius={mapSettings.heatmapRadius}
               enableClustering={mapSettings.enableClustering}
+              showRecordCount={mapSettings.showRecordCount}
             />
           </Suspense>
         </main>
