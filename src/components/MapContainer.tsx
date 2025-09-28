@@ -364,8 +364,8 @@ const MapContainer = ({
       // Initialize custom cluster group
       clusterGroupRef.current = L.layerGroup();
       
-      // Add zoom event listener for dynamic clustering
-      map.current.on('zoomend', () => {
+      // Add zoom event listener for dynamic clustering - with proper event handling
+      map.current.on('zoomend', (e) => {
         const newZoom = map.current!.getZoom();
         console.log('Zoom changed to:', newZoom);
         setCurrentZoom(newZoom);
@@ -714,8 +714,17 @@ const MapContainer = ({
         console.log(`Individual markers: ${clusteredStations.length} stations`);
       }
 
+      console.log(`Station clustering: Processing ${clusteredStations.length} groups`);
+      
       clusteredStations.forEach((stationGroup, groupIndex) => {
+        // Log only significant events
+        if (stationGroup.length > 1) {
+          console.log(`Multi-station group: ${stationGroup.length} stations`);
+        }
+        
         if (enableAnyClustering && stationGroup.length > 1) {
+          console.log(`Creating cluster marker with ${stationGroup.length} stations`);
+          
           // Multiple stations - create dynamic cluster marker
           const centerLat = stationGroup.reduce((sum, s) => sum + s.lat, 0) / stationGroup.length;
           const centerLon = stationGroup.reduce((sum, s) => sum + s.lon, 0) / stationGroup.length;
@@ -780,8 +789,10 @@ const MapContainer = ({
           clusterMarker.bindPopup(clusterPopupContent);
           markersRef.current.push(clusterMarker);
           clusterMarker.addTo(map.current!);
-        } else if (showStationMarkers) {
-          // Single station OR clustering disabled - create individual marker
+        } else if (showStationMarkers || (enableAnyClustering && stationGroup.length === 1)) {
+          // Single station - create individual marker (when markers are enabled OR when clustering but only 1 station)
+          // Individual station marker created
+          
           const station = stationGroup[0];
           const marker = L.marker([station.lat, station.lon], {
             icon: createStationIcon(station.pol_a, station.pol_b, station.unit)
