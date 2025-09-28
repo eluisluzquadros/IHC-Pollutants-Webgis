@@ -37,15 +37,26 @@ This is a professional React + TypeScript application for visualizing environmen
 - **Build**: `npm run build`
 - **Run**: `npm run preview`
 
-## Known Issues
-- MapLibre GL JS integration temporarily disabled due to React component errors
-- MapContainer currently shows placeholder - needs MapLibre re-integration
+## Recent Improvements
+- **2025-09-28**: ✅ Implemented real heatmap interpolation using leaflet.heat
+- **2025-09-28**: ✅ Added smooth gradient transitions (green→yellow→orange→red)
+- **2025-09-28**: ✅ Fixed opacity control integration with UI slider
+- **2025-09-28**: ✅ Added fallback mechanism for heatmap errors
+
+## Current Features Status
+- ✅ **Heatmap**: Real interpolation with smooth gradients
+- ✅ **Station Markers**: Individual markers with pollution data
+- ✅ **Station Clustering**: Groups nearby stations dynamically
+- ✅ **Record Clustering**: Shows data density per location
+- ✅ **CSV Import/Export**: Full data management capabilities
+- ✅ **Analytics Dashboard**: KPIs, charts, and statistics
+- ✅ **Responsive Design**: Works on desktop, tablet, mobile
 
 ## Next Steps
-1. Fix MapLibre GL JS integration for full map functionality
-2. Test CSV data import/export features
-3. Verify all dashboard analytics work correctly
-4. Add proper error boundaries for production
+1. Test all visualization features with real datasets
+2. Optimize performance for large datasets (>1000 stations)  
+3. Add data filtering and time-series capabilities
+4. Implement user preferences and saved views
 
 ## User Preferences
 - Clean, professional interface preferred
