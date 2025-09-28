@@ -457,15 +457,15 @@ const MapContainer = ({
       return;
     }
 
-    // 1. CREATE REAL HEATMAP WITH INTERPOLATION
+    // 1. CREATE REAL HEATMAP WITH LARGE AREA INTERPOLATION
     if (showHeatmap) {
-      console.log('Creating interpolated heatmap with', validStations.length, 'stations');
+      console.log('Creating large-area heatmap with', validStations.length, 'stations');
       
       // Calculate pollution values and normalize
       const pollutionValues = validStations.map(s => (s.pol_a + s.pol_b) / 2);
-      const maxPollution = Math.max(...pollutionValues, 1); // Prevent division by zero
+      const maxPollution = Math.max(...pollutionValues, 1);
       
-      // Create heatmap data points with geographic coordinates
+      // Create heatmap data points
       const heatmapData = validStations.map(station => {
         const avgPollution = (station.pol_a + station.pol_b) / 2;
         const intensity = Math.min(avgPollution / maxPollution, 1);
@@ -478,42 +478,47 @@ const MapContainer = ({
         };
       });
       
-      // Create multiple overlapping circles with gradients for interpolation effect
+      // Create large overlapping circles for true heatmap effect
       heatmapData.forEach(point => {
-        // Dynamic radius based on heatmapRadius setting and pollution level
-        const baseRadius = heatmapRadius * 100; // Convert to meters
-        const dynamicRadius = baseRadius * (0.5 + point.intensity * 1.5); // Scale with intensity
+        // Much larger base radius for wide area coverage like reference image
+        const baseRadiusKm = (heatmapRadius / 10) + 20; // 20-25km base for 50px radius
+        const intensityRadius = baseRadiusKm * (0.8 + point.intensity * 2); // Scale with intensity
         
-        // Create multiple concentric circles for smooth gradient effect
-        for (let i = 0; i < 4; i++) {
-          const radiusStep = dynamicRadius * (1 - i * 0.25);
-          const opacityStep = heatmapOpacity * (0.6 - i * 0.15) * point.intensity;
+        // Color based on pollution level
+        let color = '#10B981'; // Green for low
+        if (point.pollution >= 7) {
+          color = '#EF4444'; // Red for high
+        } else if (point.pollution >= 4) {
+          color = '#F59E0B'; // Orange for medium-high
+        } else if (point.pollution >= 2) {
+          color = '#FCD34D'; // Yellow for medium
+        }
+        
+        // Create large overlapping circles for wide area coverage
+        for (let i = 0; i < 3; i++) {
+          const radiusMultiplier = (3 - i) / 3; // 1.0, 0.67, 0.33
+          const currentRadiusKm = intensityRadius * radiusMultiplier;
+          const currentRadiusMeters = currentRadiusKm * 1000; // Convert km to meters
           
-          // Color interpolation based on pollution level
-          let color = '#10B981'; // Green for low
-          if (point.pollution >= 7) {
-            color = '#EF4444'; // Red for high
-          } else if (point.pollution >= 4) {
-            color = '#F59E0B'; // Orange for medium-high
-          } else if (point.pollution >= 2) {
-            color = '#84CC16'; // Yellow-green for medium
-          }
+          // Higher opacity for better visibility
+          const baseOpacity = Math.max(heatmapOpacity * 0.6, 0.4); // Ensure minimum visibility
+          const opacityStep = baseOpacity * (1 - i * 0.3) * Math.max(point.intensity, 0.3);
           
           const heatCircle = L.circle([point.lat, point.lng], {
-            radius: Math.max(radiusStep, 50), // Minimum radius for visibility
+            radius: Math.max(currentRadiusMeters, 8000), // Minimum 8km radius for visibility
             fillColor: color,
             color: color,
             weight: 0,
             opacity: 0,
-            fillOpacity: Math.max(opacityStep, 0.05),
-            interactive: false // Don't interfere with map interactions
+            fillOpacity: Math.max(opacityStep, 0.15), // Higher minimum opacity
+            interactive: false
           });
           
           heatmapLayerRef.current!.addLayer(heatCircle);
         }
       });
       
-      console.log(`Heatmap created with radius ${heatmapRadius}, opacity ${heatmapOpacity}, ${heatmapData.length} points`);
+      console.log(`Large-area heatmap created: radius ${heatmapRadius}px -> ${(heatmapRadius / 10) + 20}km base coverage, opacity ${heatmapOpacity}`);
       map.current.addLayer(heatmapLayerRef.current);
     }
 
