@@ -5,10 +5,8 @@ import { MapPin, Loader2 } from "lucide-react";
 // Import Leaflet with proper ES6 syntax
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import 'leaflet.heat';
-import 'leaflet.markercluster';
-import 'leaflet.markercluster/dist/MarkerCluster.css';
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+// Note: Heat and cluster plugins may not work in Vite environment
+// We'll implement alternative solutions
 
 // Fix for default Leaflet markers in bundlers
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -116,6 +114,38 @@ const createStationIcon = (polA: number, polB: number, unit: string) => {
   });
 };
 
+// Function to group stations by distance for manual clustering
+const groupStationsByDistance = (stations: any[], threshold: number) => {
+  const groups: any[][] = [];
+  const processed = new Set<number>();
+  
+  for (let i = 0; i < stations.length; i++) {
+    if (processed.has(i)) continue;
+    
+    const group = [stations[i]];
+    processed.add(i);
+    
+    // Find nearby stations
+    for (let j = i + 1; j < stations.length; j++) {
+      if (processed.has(j)) continue;
+      
+      const distance = Math.sqrt(
+        Math.pow(stations[i].lat - stations[j].lat, 2) +
+        Math.pow(stations[i].lon - stations[j].lon, 2)
+      );
+      
+      if (distance <= threshold) {
+        group.push(stations[j]);
+        processed.add(j);
+      }
+    }
+    
+    groups.push(group);
+  }
+  
+  return groups;
+};
+
 const MapContainer = ({
   stationData = [],
   showStationMarkers = true,
@@ -129,8 +159,8 @@ const MapContainer = ({
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
-  const heatmapLayerRef = useRef<any>(null);
-  const clusterGroupRef = useRef<any>(null);
+  const heatmapLayerRef = useRef<L.LayerGroup | null>(null);
+  const clusterGroupRef = useRef<L.LayerGroup | null>(null);
   const [tooltip, setTooltip] = useState<TooltipState>({
     visible: false,
     position: { x: 0, y: 0 },
@@ -156,11 +186,11 @@ const MapContainer = ({
         maxZoom: 19,
       }).addTo(map.current);
 
-      // Initialize marker cluster group
-      clusterGroupRef.current = (L as any).markerClusterGroup({
-        disableClusteringAtZoom: 12,
-        maxClusterRadius: 45,
-      });
+      // Initialize custom cluster group
+      clusterGroupRef.current = L.layerGroup();
+      
+      // Initialize heatmap layer group
+      heatmapLayerRef.current = L.layerGroup();
 
       console.log('Leaflet map loaded successfully');
       setMapLoaded(true);
@@ -221,10 +251,10 @@ const MapContainer = ({
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
 
-    // Clear heatmap
+    // Clear heatmap layer group
     if (heatmapLayerRef.current) {
       map.current.removeLayer(heatmapLayerRef.current);
-      heatmapLayerRef.current = null;
+      heatmapLayerRef.current.clearLayers();
     }
 
     // Clear cluster group
@@ -267,78 +297,149 @@ const MapContainer = ({
       return;
     }
 
+    // Implement manual clustering
+    const clusteredStations = enableClustering ? 
+      groupStationsByDistance(validStations, 0.01) : // 0.01 degree (~1km) clustering threshold
+      validStations.map(station => [station]); // Each station in its own group
+
     // Create station markers
     if (showStationMarkers) {
-      validStations.forEach(station => {
-        const marker = L.marker([station.lat, station.lon], {
-          icon: createStationIcon(station.pol_a, station.pol_b, station.unit)
-        });
+      clusteredStations.forEach((stationGroup, groupIndex) => {
+        if (stationGroup.length === 1) {
+          // Single station - create normal marker
+          const station = stationGroup[0];
+          const marker = L.marker([station.lat, station.lon], {
+            icon: createStationIcon(station.pol_a, station.pol_b, station.unit)
+          });
 
-        // Add popup
-        const popupContent = `
-          <div style="color: #2C3E50; font-family: Arial, sans-serif; min-width: 200px;">
-            <h3 style="margin: 0 0 8px 0; color: #E74C3C;">${station.station_name}</h3>
-            <p style="margin: 2px 0;"><strong>Station ID:</strong> ${station.station_id}</p>
-            <p style="margin: 2px 0;"><strong>Date:</strong> ${station.sample_dt}</p>
-            <div style="display: flex; gap: 15px; margin: 8px 0;">
-              <div style="text-align: center;">
-                <div style="width: 20px; height: ${Math.max((station.pol_a / Math.max(station.pol_a, station.pol_b, 10)) * 30, 2)}px; 
-                            background: ${station.pol_a < 3 ? "#2ECC71" : station.pol_a < 7 ? "#F39C12" : "#E74C3C"}; 
-                            margin: 0 auto 4px;"></div>
-                <small><strong>Pol A:</strong><br>${station.pol_a} ${station.unit}</small>
+          // Connect tooltip events after marker is added to DOM
+          marker.on('add', () => {
+            const markerElement = marker.getElement();
+            if (markerElement) {
+              markerElement.addEventListener('mouseenter', (e) => handleStationHover(e as MouseEvent, station));
+              markerElement.addEventListener('mouseleave', handleStationLeave);
+            }
+          });
+
+          // Add popup
+          const popupContent = `
+            <div style="color: #2C3E50; font-family: Arial, sans-serif; min-width: 200px;">
+              <h3 style="margin: 0 0 8px 0; color: #E74C3C;">${station.station_name}</h3>
+              <p style="margin: 2px 0;"><strong>Station ID:</strong> ${station.station_id}</p>
+              <p style="margin: 2px 0;"><strong>Date:</strong> ${station.sample_dt}</p>
+              <div style="display: flex; gap: 15px; margin: 8px 0;">
+                <div style="text-align: center;">
+                  <div style="width: 20px; height: ${Math.max((station.pol_a / Math.max(station.pol_a, station.pol_b, 10)) * 30, 2)}px; 
+                              background: ${station.pol_a < 3 ? "#2ECC71" : station.pol_a < 7 ? "#F39C12" : "#E74C3C"}; 
+                              margin: 0 auto 4px;"></div>
+                  <small><strong>Pol A:</strong><br>${station.pol_a} ${station.unit}</small>
+                </div>
+                <div style="text-align: center;">
+                  <div style="width: 20px; height: ${Math.max((station.pol_b / Math.max(station.pol_a, station.pol_b, 10)) * 30, 2)}px; 
+                              background: ${station.pol_b < 3 ? "#2ECC71" : station.pol_b < 7 ? "#F39C12" : "#E74C3C"}; 
+                              margin: 0 auto 4px;"></div>
+                  <small><strong>Pol B:</strong><br>${station.pol_b} ${station.unit}</small>
+                </div>
               </div>
-              <div style="text-align: center;">
-                <div style="width: 20px; height: ${Math.max((station.pol_b / Math.max(station.pol_a, station.pol_b, 10)) * 30, 2)}px; 
-                            background: ${station.pol_b < 3 ? "#2ECC71" : station.pol_b < 7 ? "#F39C12" : "#E74C3C"}; 
-                            margin: 0 auto 4px;"></div>
-                <small><strong>Pol B:</strong><br>${station.pol_b} ${station.unit}</small>
+              <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; font-size: 11px; color: #666;">
+                <div style="display: flex; gap: 10px;">
+                  <span style="color: #2ECC71;">● Low (&lt;3)</span>
+                  <span style="color: #F39C12;">● Medium (3-7)</span>
+                  <span style="color: #E74C3C;">● High (&gt;7)</span>
+                </div>
               </div>
             </div>
-            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; font-size: 11px; color: #666;">
-              <div style="display: flex; gap: 10px;">
-                <span style="color: #2ECC71;">● Low (&lt;3)</span>
-                <span style="color: #F39C12;">● Medium (3-7)</span>
-                <span style="color: #E74C3C;">● High (&gt;7)</span>
-              </div>
-            </div>
-          </div>
-        `;
+          `;
 
-        marker.bindPopup(popupContent);
-        markersRef.current.push(marker);
-
-        // Add to cluster group or directly to map
-        if (enableClustering) {
-          clusterGroupRef.current!.addLayer(marker);
-        } else {
+          marker.bindPopup(popupContent);
+          markersRef.current.push(marker);
           marker.addTo(map.current!);
+          
+        } else {
+          // Multiple stations - create cluster marker
+          const centerLat = stationGroup.reduce((sum, s) => sum + s.lat, 0) / stationGroup.length;
+          const centerLon = stationGroup.reduce((sum, s) => sum + s.lon, 0) / stationGroup.length;
+          const avgPolA = stationGroup.reduce((sum, s) => sum + s.pol_a, 0) / stationGroup.length;
+          const avgPolB = stationGroup.reduce((sum, s) => sum + s.pol_b, 0) / stationGroup.length;
+          
+          const clusterIcon = L.divIcon({
+            html: `<div style="background: #3B82F6; color: white; border-radius: 50%; width: 40px; height: 40px; 
+                           display: flex; align-items: center; justify-content: center; font-weight: bold; 
+                           border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                     ${stationGroup.length}
+                   </div>`,
+            className: 'custom-cluster-marker',
+            iconSize: [40, 40],
+            iconAnchor: [20, 20]
+          });
+          
+          const clusterMarker = L.marker([centerLat, centerLon], { icon: clusterIcon });
+          
+          // Cluster popup with all stations
+          const clusterPopupContent = `
+            <div style="color: #2C3E50; font-family: Arial, sans-serif; max-width: 300px;">
+              <h3 style="margin: 0 0 8px 0; color: #3B82F6;">Cluster of ${stationGroup.length} Stations</h3>
+              <p style="margin: 2px 0;"><strong>Average Pollution:</strong></p>
+              <div style="display: flex; gap: 15px; margin: 8px 0;">
+                <div style="text-align: center;">
+                  <div style="width: 20px; height: ${Math.max((avgPolA / Math.max(avgPolA, avgPolB, 10)) * 30, 2)}px; 
+                              background: ${avgPolA < 3 ? "#2ECC71" : avgPolA < 7 ? "#F39C12" : "#E74C3C"}; 
+                              margin: 0 auto 4px;"></div>
+                  <small><strong>Avg A:</strong><br>${avgPolA.toFixed(1)}</small>
+                </div>
+                <div style="text-align: center;">
+                  <div style="width: 20px; height: ${Math.max((avgPolB / Math.max(avgPolA, avgPolB, 10)) * 30, 2)}px; 
+                              background: ${avgPolB < 3 ? "#2ECC71" : avgPolB < 7 ? "#F39C12" : "#E74C3C"}; 
+                              margin: 0 auto 4px;"></div>
+                  <small><strong>Avg B:</strong><br>${avgPolB.toFixed(1)}</small>
+                </div>
+              </div>
+              <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
+              <div style="max-height: 150px; overflow-y: auto;">
+                ${stationGroup.map(station => 
+                  `<div style="margin: 4px 0; padding: 4px; background: #f8f9fa; border-radius: 4px;">
+                     <strong>${station.station_name}</strong><br>
+                     <small>Pol A: ${station.pol_a}, Pol B: ${station.pol_b}</small>
+                   </div>`
+                ).join('')}
+              </div>
+            </div>
+          `;
+          
+          clusterMarker.bindPopup(clusterPopupContent);
+          markersRef.current.push(clusterMarker);
+          clusterMarker.addTo(map.current!);
         }
       });
-
-      // Add cluster group to map if clustering is enabled
-      if (enableClustering) {
-        map.current.addLayer(clusterGroupRef.current);
-      }
     }
 
-    // Create heatmap layer
-    if (showHeatmap && (L as any).heatLayer) {
-      const heatPoints = validStations.map(station => [
-        station.lat,
-        station.lon,
-        (station.pol_a + station.pol_b) / 2 // Average pollution as intensity
-      ]);
-
-      heatmapLayerRef.current = (L as any).heatLayer(heatPoints, {
-        radius: heatmapRadius,
-        opacity: heatmapOpacity,
-        maxZoom: 17,
-        gradient: {
-          0.4: '#2ECC71',
-          0.65: '#F39C12', 
-          1.0: '#E74C3C'
-        }
-      }).addTo(map.current);
+    // Create alternative heatmap using colored circles
+    if (showHeatmap && heatmapLayerRef.current) {
+      validStations.forEach(station => {
+        const avgPollution = (station.pol_a + station.pol_b) / 2;
+        const maxPollution = Math.max(...validStations.map(s => (s.pol_a + s.pol_b) / 2));
+        const intensity = avgPollution / maxPollution;
+        
+        // Calculate radius based on intensity
+        const radius = Math.max(heatmapRadius * intensity, 5);
+        
+        // Color based on pollution level
+        const color = avgPollution < 3 ? '#2ECC71' : 
+                     avgPollution < 7 ? '#F39C12' : '#E74C3C';
+        
+        const heatCircle = L.circle([station.lat, station.lon], {
+          radius: radius * 20, // Scale for visibility
+          fillColor: color,
+          color: color,
+          weight: 1,
+          opacity: heatmapOpacity,
+          fillOpacity: heatmapOpacity * 0.6
+        });
+        
+        heatmapLayerRef.current!.addLayer(heatCircle);
+      });
+      
+      map.current.addLayer(heatmapLayerRef.current);
     }
 
     // Fit map to show all stations
@@ -381,10 +482,38 @@ const MapContainer = ({
     // Toggle heatmap
     if (heatmapLayerRef.current) {
       if (showHeatmap) {
-        heatmapLayerRef.current.setOptions({
-          radius: heatmapRadius,
-          opacity: heatmapOpacity,
+        // Clear and recreate heatmap with new settings
+        heatmapLayerRef.current.clearLayers();
+        
+        // Recreate heatmap circles with updated settings
+        const validStations = stationData.filter(station => 
+          station.lat != null && station.lon != null && 
+          !isNaN(station.lat) && !isNaN(station.lon) &&
+          station.pol_a != null && station.pol_b != null &&
+          !isNaN(station.pol_a) && !isNaN(station.pol_b)
+        );
+        
+        validStations.forEach(station => {
+          const avgPollution = (station.pol_a + station.pol_b) / 2;
+          const maxPollution = Math.max(...validStations.map(s => (s.pol_a + s.pol_b) / 2));
+          const intensity = avgPollution / maxPollution;
+          
+          const radius = Math.max(heatmapRadius * intensity, 5);
+          const color = avgPollution < 3 ? '#2ECC71' : 
+                       avgPollution < 7 ? '#F39C12' : '#E74C3C';
+          
+          const heatCircle = L.circle([station.lat, station.lon], {
+            radius: radius * 20,
+            fillColor: color,
+            color: color,
+            weight: 1,
+            opacity: heatmapOpacity,
+            fillOpacity: heatmapOpacity * 0.6
+          });
+          
+          heatmapLayerRef.current!.addLayer(heatCircle);
         });
+        
         if (!map.current.hasLayer(heatmapLayerRef.current)) {
           map.current.addLayer(heatmapLayerRef.current);
         }
@@ -414,6 +543,56 @@ const MapContainer = ({
   return (
     <Card className="w-full h-full bg-[#2C3E50] overflow-hidden rounded-lg shadow-lg relative">
       <div ref={mapContainer} className="w-full h-full" />
+      
+      {/* Custom Tooltip */}
+      {tooltip.visible && tooltip.station && (
+        <div 
+          className="absolute bg-white border border-gray-300 rounded-lg shadow-lg p-3 pointer-events-none z-[1000]"
+          style={{
+            left: tooltip.position.x + 10,
+            top: tooltip.position.y - 10,
+            maxWidth: '250px',
+            fontSize: '12px'
+          }}
+        >
+          <div className="text-[#2C3E50]">
+            <h4 className="font-semibold text-sm mb-1 text-[#E74C3C]">{tooltip.station.name}</h4>
+            <p className="mb-1"><strong>ID:</strong> {tooltip.station.id}</p>
+            {tooltip.station.date && (
+              <p className="mb-2"><strong>Date:</strong> {tooltip.station.date}</p>
+            )}
+            <div className="flex gap-3 mb-2">
+              <div className="text-center">
+                <div 
+                  className="w-4 h-6 mx-auto mb-1"
+                  style={{
+                    backgroundColor: tooltip.station.pol_a < 3 ? '#2ECC71' : 
+                                   tooltip.station.pol_a < 7 ? '#F39C12' : '#E74C3C',
+                    height: `${Math.max((tooltip.station.pol_a / Math.max(tooltip.station.pol_a, tooltip.station.pol_b, 10)) * 24, 2)}px`
+                  }}
+                />
+                <small><strong>Pol A:</strong><br/>{tooltip.station.pol_a}</small>
+              </div>
+              <div className="text-center">
+                <div 
+                  className="w-4 h-6 mx-auto mb-1"
+                  style={{
+                    backgroundColor: tooltip.station.pol_b < 3 ? '#2ECC71' : 
+                                   tooltip.station.pol_b < 7 ? '#F39C12' : '#E74C3C',
+                    height: `${Math.max((tooltip.station.pol_b / Math.max(tooltip.station.pol_a, tooltip.station.pol_b, 10)) * 24, 2)}px`
+                  }}
+                />
+                <small><strong>Pol B:</strong><br/>{tooltip.station.pol_b}</small>
+              </div>
+            </div>
+            <div className="text-xs text-gray-600 border-t pt-1">
+              <span className="text-[#2ECC71] mr-2">● Low (&lt;3)</span>
+              <span className="text-[#F39C12] mr-2">● Med (3-7)</span>
+              <span className="text-[#E74C3C]">● High (&gt;7)</span>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Loading indicator */}
       {!mapLoaded && (
