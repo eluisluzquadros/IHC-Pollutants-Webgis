@@ -67,6 +67,8 @@ interface MapContainerProps {
   showRecordCount?: boolean;
   onStationHover?: (station: any, x: number, y: number) => void;
   onStationLeave?: () => void;
+  focusedStationId?: string | null;
+  highlightedStationIds?: string[];
 }
 
 
@@ -124,6 +126,45 @@ const createStationIcon = (polA: number, polB: number, unit: string) => {
     iconSize: [40, 40],
     iconAnchor: [20, 20],
     popupAnchor: [0, -20],
+  });
+};
+
+// Function to create focused station icon (larger with animation)
+const createFocusedStationIcon = (polA: number, polB: number, unit: string) => {
+  return L.divIcon({
+    html: `<div style="position: relative; animation: pulse 2s infinite;">
+             ${createStationMarkerSVG(polA, polB, unit)}
+             <div style="position: absolute; top: -5px; left: -5px; width: 50px; height: 50px; 
+                         border: 3px solid #3B82F6; border-radius: 50%; background: none; 
+                         box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);"></div>
+           </div>
+           <style>
+             @keyframes pulse {
+               0% { transform: scale(1); }
+               50% { transform: scale(1.1); }
+               100% { transform: scale(1); }
+             }
+           </style>`,
+    className: 'custom-station-marker focused-station',
+    iconSize: [50, 50],
+    iconAnchor: [25, 25],
+    popupAnchor: [0, -25],
+  });
+};
+
+// Function to create highlighted station icon (with glow effect)
+const createHighlightedStationIcon = (polA: number, polB: number, unit: string) => {
+  return L.divIcon({
+    html: `<div style="position: relative;">
+             ${createStationMarkerSVG(polA, polB, unit)}
+             <div style="position: absolute; top: -3px; left: -3px; width: 46px; height: 46px; 
+                         border: 2px solid #F59E0B; border-radius: 50%; background: none; 
+                         box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);"></div>
+           </div>`,
+    className: 'custom-station-marker highlighted-station',
+    iconSize: [46, 46],
+    iconAnchor: [23, 23],
+    popupAnchor: [0, -23],
   });
 };
 
@@ -209,6 +250,8 @@ const MapContainer = ({
   showRecordCount = false,
   onStationHover,
   onStationLeave,
+  focusedStationId,
+  highlightedStationIds = [],
 }: MapContainerProps) => {
   console.log(`🔍 MapContainer props received:`, {
     onStationHover: !!onStationHover,
@@ -226,6 +269,20 @@ const MapContainer = ({
   const clusterGroupRef = useRef<L.LayerGroup | null>(null);
   const stationClusterGroupRef = useRef<any>(null);
   const recordClusterGroupRef = useRef<any>(null);
+
+  // Handle focused station (auto-pan to focused station)
+  useEffect(() => {
+    if (focusedStationId && stationData.length > 0 && map.current) {
+      const focusedStation = stationData.find(station => station.station_id === focusedStationId);
+      if (focusedStation) {
+        console.log('🎯 Panning to focused station:', focusedStation.station_name);
+        map.current.setView([focusedStation.lat, focusedStation.lon], Math.max(currentZoom, 12), {
+          animate: true,
+          duration: 1.5
+        });
+      }
+    }
+  }, [focusedStationId, stationData, currentZoom]);
 
   // Initialize map when component mounts
   useEffect(() => {
@@ -726,9 +783,21 @@ const MapContainer = ({
             onStationLeave: !!onStationLeave
           });
           
-          const marker = L.marker([station.lat, station.lon], {
-            icon: createStationIcon(station.pol_a, station.pol_b, station.unit)
-          });
+          // Check if this station is focused or highlighted
+          const isFocused = focusedStationId === station.station_id;
+          const isHighlighted = highlightedStationIds.includes(station.station_id);
+          
+          // Create enhanced icon for focused/highlighted stations
+          let icon;
+          if (isFocused) {
+            icon = createFocusedStationIcon(station.pol_a, station.pol_b, station.unit);
+          } else if (isHighlighted) {
+            icon = createHighlightedStationIcon(station.pol_a, station.pol_b, station.unit);
+          } else {
+            icon = createStationIcon(station.pol_a, station.pol_b, station.unit);
+          }
+          
+          const marker = L.marker([station.lat, station.lon], { icon });
           
           const stationPopupContent = `
             <div style="color: #2C3E50; font-family: Arial, sans-serif; max-width: 300px;">

@@ -12,9 +12,12 @@ import {
   MapPin, 
   BarChart3,
   Lightbulb,
-  Activity
+  Activity,
+  Loader2
 } from 'lucide-react';
 import { StationData } from '@/utils/csvImporter';
+import { openaiService } from '@/services/openaiService';
+import { useMapCommands } from '@/contexts/MapCommandContext';
 
 interface ChatBotProps {
   stationData: StationData[];
@@ -33,6 +36,7 @@ export default function ChatBot({ stationData }: ChatBotProps) {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { executeCommands } = useMapCommands();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -48,7 +52,7 @@ export default function ChatBot({ stationData }: ChatBotProps) {
       const welcomeMessage: Message = {
         id: '1',
         type: 'bot',
-        content: `Hello! I'm your AI assistant for environmental data analysis. I can help you understand pollution patterns, identify trends, and provide insights from your ${stationData.length} data records across ${new Set(stationData.map(d => d.station_id)).size} monitoring stations.`,
+        content: `Hello! I'm your AI assistant for environmental data analysis. I have advanced knowledge of your pollution monitoring data and can interact with the map to show you insights. Ask me questions like "which station has the highest pollution?" or "show me pollution trends over time" and I'll analyze the data and help visualize the results on the map.`,
         timestamp: new Date()
       };
       setMessages([welcomeMessage]);
@@ -242,21 +246,46 @@ What specific aspect would you like to explore?`;
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = input;
     setInput('');
     setIsTyping(true);
 
-    // Simulate AI thinking time
-    setTimeout(() => {
+    try {
+      // Generate AI response using OpenAI
+      const response = await openaiService.generateResponse(currentInput, stationData);
+      
+      // Execute map commands if provided
+      if (response.mapCommands && response.mapCommands.length > 0) {
+        console.log('🎯 Executing map commands:', response.mapCommands);
+        executeCommands(response.mapCommands);
+      }
+      
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'bot',
-        content: generateResponse(input),
-        timestamp: new Date()
+        content: response.message,
+        timestamp: new Date(),
+        data: response.data
       };
 
       setMessages(prev => [...prev, botResponse]);
+    } catch (error) {
+      console.error('AI Service Error:', error);
+      
+      // Fallback response
+      const fallbackResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'bot',
+        content: stationData.length === 0 
+          ? "I don't have any data to analyze yet. Please import some CSV data first, and I'll be able to provide detailed insights about pollution patterns and trends."
+          : `I apologize, but I'm experiencing some technical difficulties with my AI analysis. However, I can tell you that you have ${stationData.length} records from ${new Set(stationData.map(d => d.station_id)).size} stations. Please try rephrasing your question, and I'll do my best to help.`,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, fallbackResponse]);
+    } finally {
       setIsTyping(false);
-    }, 1000 + Math.random() * 1000);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

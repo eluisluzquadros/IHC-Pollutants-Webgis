@@ -13,6 +13,8 @@ import ModernSidebar from "./ModernSidebar";
 import ProfessionalHeader from "./ProfessionalHeader";
 import { importCSVFile, downloadCSV, StationData } from "@/utils/csvImporter";
 import { toast } from "sonner";
+import { MapCommandProvider } from "@/contexts/MapCommandContext";
+import { MapCommand } from "@/services/openaiService";
 
 /**
  * Professional WebGIS Home Component
@@ -229,6 +231,71 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
     }
   }, []);
 
+  // Map command handler for AI interactions
+  const [focusedStationId, setFocusedStationId] = useState<string | null>(null);
+  const [highlightedStationIds, setHighlightedStationIds] = useState<string[]>([]);
+
+  const handleMapCommands = useCallback((commands: MapCommand[]) => {
+    commands.forEach(command => {
+      console.log('🎯 Executing map command:', command.type, command.data);
+      
+      switch (command.type) {
+        case 'focus_station':
+          if (command.data.stationId) {
+            setFocusedStationId(command.data.stationId);
+            // Also highlight this station
+            setHighlightedStationIds([command.data.stationId]);
+            toast.success(`Focusing on station ${command.data.stationId}`);
+          }
+          break;
+
+        case 'highlight_stations':
+          if (command.data.stationIds && Array.isArray(command.data.stationIds)) {
+            setHighlightedStationIds(command.data.stationIds);
+            toast.success(`Highlighting ${command.data.stationIds.length} stations`);
+          }
+          break;
+
+        case 'filter_data':
+          const newFilters: Partial<StationFilters> = {};
+          if (command.data.polA_min !== undefined) newFilters.polAMin = command.data.polA_min;
+          if (command.data.polB_min !== undefined) newFilters.polBMin = command.data.polB_min;
+          if (command.data.date_from) newFilters.dateFrom = command.data.date_from;
+          if (command.data.date_to) newFilters.dateTo = command.data.date_to;
+          if (command.data.stationQuery) newFilters.stationQuery = command.data.stationQuery;
+          
+          setFilters(prev => ({ ...prev, ...newFilters }));
+          toast.success('Filters applied automatically');
+          break;
+
+        case 'set_zoom':
+          // This will be handled by MapContainer when it receives the command
+          if ((window as any).setMapZoom) {
+            (window as any).setMapZoom(command.data.level, command.data.center);
+          }
+          break;
+
+        case 'apply_time_filter':
+          if (command.data.days) {
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(endDate.getDate() - command.data.days);
+            
+            setFilters(prev => ({
+              ...prev,
+              dateFrom: startDate.toISOString().split('T')[0],
+              dateTo: endDate.toISOString().split('T')[0]
+            }));
+            toast.success(`Filtered to last ${command.data.days} days`);
+          }
+          break;
+
+        default:
+          console.warn('Unknown map command type:', command.type);
+      }
+    });
+  }, []);
+
   // Memoized content components for better performance
   const dataManagementContent = useMemo(() => (
     <div className="space-y-8 animate-professional-fade-in">
@@ -353,55 +420,58 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
   ]);
 
   return (
-    <div className={`layout-professional ${className}`}>
-      {/* Professional Header */}
-      <ProfessionalHeader
-        stationCount={stationStats.totalStations}
-        recordCount={stationStats.totalRecords}
-        lastUpdated={stationStats.lastUpdated}
-        stationData={stationData}
-        onInfoClick={() => setShowAbout(true)}
-      />
+    <MapCommandProvider onExecuteCommands={handleMapCommands}>
+      <div className={`layout-professional ${className}`}>
+        {/* Professional Header */}
+        <ProfessionalHeader
+          stationCount={stationStats.totalStations}
+          recordCount={stationStats.totalRecords}
+          lastUpdated={stationStats.lastUpdated}
+          stationData={stationData}
+          onInfoClick={() => setShowAbout(true)}
+        />
 
-      {/* Main Layout */}
-      <div className="layout-main">
-        {/* Sidebar */}
-        <div className="layout-sidebar">
-          <ModernSidebar
-            dataManagementContent={dataManagementContent}
-            dashboardContent={<PollutionDashboard stationData={filteredData} />}
-            chatBotContent={<ChatBot stationData={filteredData} />}
-            filterContent={<DataFilterPanel value={filters} onChange={setFilters} />}
-            layerControlContent={layerControlContent}
-            stationCount={stationStats.totalStations}
-            recordCount={stationStats.totalRecords}
-          />
-        </div>
+        {/* Main Layout */}
+        <div className="layout-main">
+          {/* Sidebar */}
+          <div className="layout-sidebar">
+            <ModernSidebar
+              dataManagementContent={dataManagementContent}
+              dashboardContent={<PollutionDashboard stationData={filteredData} />}
+              chatBotContent={<ChatBot stationData={filteredData} />}
+              filterContent={<DataFilterPanel value={filters} onChange={setFilters} />}
+              layerControlContent={layerControlContent}
+              stationCount={stationStats.totalStations}
+              recordCount={stationStats.totalRecords}
+            />
+          </div>
 
-        {/* Map Content */}
-        <div className="layout-content">
-          {(() => {
-            console.log(`🔍 HOME: About to render MapContainer with handlers:`, {
-              handleStationHover: !!handleStationHover,
-              handleStationLeave: !!handleStationLeave,
-              handleStationHoverType: typeof handleStationHover,
-              handleStationLeaveType: typeof handleStationLeave
-            });
-            return null;
-          })()}
-          <MapContainer
-            stationData={filteredData}
-            showStationMarkers={mapSettings.showStations}
-            showHeatmap={mapSettings.showHeatmap}
-            heatmapOpacity={mapSettings.heatmapOpacity}
-            heatmapRadius={mapSettings.heatmapRadius}
-            enableStationClustering={mapSettings.enableStationClustering}
-            enableRecordClustering={mapSettings.enableRecordClustering}
-            onStationHover={handleStationHover}
-            onStationLeave={handleStationLeave}
-          />
+          {/* Map Content */}
+          <div className="layout-content">
+            {(() => {
+              console.log(`🔍 HOME: About to render MapContainer with handlers:`, {
+                handleStationHover: !!handleStationHover,
+                handleStationLeave: !!handleStationLeave,
+                handleStationHoverType: typeof handleStationHover,
+                handleStationLeaveType: typeof handleStationLeave
+              });
+              return null;
+            })()}
+            <MapContainer
+              stationData={filteredData}
+              showStationMarkers={mapSettings.showStations}
+              showHeatmap={mapSettings.showHeatmap}
+              heatmapOpacity={mapSettings.heatmapOpacity}
+              heatmapRadius={mapSettings.heatmapRadius}
+              enableStationClustering={mapSettings.enableStationClustering}
+              enableRecordClustering={mapSettings.enableRecordClustering}
+              onStationHover={handleStationHover}
+              onStationLeave={handleStationLeave}
+              focusedStationId={focusedStationId}
+              highlightedStationIds={highlightedStationIds}
+            />
+          </div>
         </div>
-      </div>
 
       {/* Professional Station Tooltip */}
       {activeTooltip && (
@@ -473,7 +543,8 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </MapCommandProvider>
   );
 });
 

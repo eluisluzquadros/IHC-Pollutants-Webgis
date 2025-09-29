@@ -1,8 +1,11 @@
-import OpenAI from "openai";
 import { StationData } from "@/utils/csvImporter";
 
-// the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Backend API configuration
+const API_BASE_URL = import.meta.env.DEV 
+  ? 'http://localhost:3001' 
+  : `https://${window.location.hostname.replace('5000', '3001')}`;
+
+console.log('🔗 AI Service API URL:', API_BASE_URL);
 
 export interface MapCommand {
   type: 'focus_station' | 'filter_data' | 'highlight_stations' | 'set_zoom' | 'apply_time_filter';
@@ -214,61 +217,43 @@ class OpenAIService {
   }
 
   async generateResponse(userQuery: string, stationData: StationData[]): Promise<AIResponse> {
-    const context = this.buildDataContext(stationData);
-    
-    const systemPrompt = `You are an expert environmental data analyst assistant. You have access to pollution monitoring data from ${context.totalStations} stations with ${context.totalRecords} records.
-
-CONTEXT:
-- Data range: ${context.dateRange.start} to ${context.dateRange.end}
-- Pollution A: avg=${context.pollutionStats.polA.avg.toFixed(2)}, max=${context.pollutionStats.polA.max}, high readings=${context.pollutionStats.polA.high_count}
-- Pollution B: avg=${context.pollutionStats.polB.avg.toFixed(2)}, max=${context.pollutionStats.polB.max}, high readings=${context.pollutionStats.polB.high_count}
-- Geographic insights: ${context.geographicInsights.clusters.length} pollution clusters, ${context.geographicInsights.outliers.length} isolated high-risk stations
-- Temporal patterns: ${context.temporalPatterns.trends.length} trends, ${context.temporalPatterns.anomalies.length} anomalies detected
-
-HIGH-RISK STATIONS (pollution >7):
-${context.stationSummary
-  .filter(s => s.riskLevel === 'high')
-  .map(s => `- ${s.name} (ID: ${s.id}): PolA=${s.avgPolA.toFixed(1)}, PolB=${s.avgPolB.toFixed(1)}`)
-  .join('\n')}
-
-You can interact with the map by including mapCommands in your response. Available commands:
-- focus_station: {stationId: "123"} - Focus map on specific station
-- highlight_stations: {stationIds: ["123", "456"]} - Highlight multiple stations
-- filter_data: {polA_min: 5, polB_min: 3, date_from: "2025-01-01"} - Apply data filters
-- set_zoom: {level: 10, center: {lat: -23.5, lon: -46.6}} - Set map zoom and center
-
-INSTRUCTIONS:
-1. Provide helpful, data-driven insights in a conversational tone
-2. Reference specific stations, dates, and values when possible
-3. When relevant, include mapCommands to visualize your response
-4. For questions about specific stations or geographic areas, always include map interactions
-5. Be proactive - suggest related insights the user might find interesting
-6. Use emojis sparingly and professionally
-
-Respond in JSON format: {"message": "your response", "mapCommands": [optional map commands]}`;
-
     try {
-      const response = await openai.chat.completions.create({
-        model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userQuery }
-        ],
-        response_format: { type: "json_object" },
+      console.log('🤖 Calling backend AI service with query:', userQuery);
+      
+      const response = await fetch(`${API_BASE_URL}/api/ai/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userQuery,
+          stationData: stationData
+        })
       });
 
-      const result = JSON.parse(response.choices[0].message.content || '{"message": "I apologize, but I encountered an error processing your request."}');
+      if (!response.ok) {
+        throw new Error(`Backend API error: ${response.status} ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('🤖 Backend AI response received:', result);
       
       return {
         message: result.message,
         mapCommands: result.mapCommands || [],
-        data: context
+        data: result.data
       };
     } catch (error) {
-      console.error('OpenAI Service Error:', error);
+      console.error('AI Service Error:', error);
+      
+      // Fallback response with basic data context
+      const context = this.buildDataContext(stationData);
       return {
-        message: `I apologize, but I encountered an error analyzing your data. However, I can tell you that you have ${context.totalRecords} records from ${context.totalStations} stations. The average pollution levels are ${context.pollutionStats.polA.avg.toFixed(2)} (Type A) and ${context.pollutionStats.polB.avg.toFixed(2)} (Type B). Please try rephrasing your question.`,
-        mapCommands: []
+        message: stationData.length === 0 
+          ? "I don't have any data to analyze yet. Please import some CSV data first, and I'll be able to provide detailed insights about pollution patterns and trends."
+          : `I apologize, but I'm experiencing some technical difficulties connecting to my AI analysis service. However, I can tell you that you have ${context.totalRecords} records from ${context.totalStations} stations. The average pollution levels are ${context.pollutionStats.polA.avg.toFixed(2)} (Type A) and ${context.pollutionStats.polB.avg.toFixed(2)} (Type B). Please try rephrasing your question.`,
+        mapCommands: [],
+        data: context
       };
     }
   }
