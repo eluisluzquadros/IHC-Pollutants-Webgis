@@ -6,8 +6,9 @@
 
 🔗 **Repository**: [github.com/eluisluzquadros/IHC-Pollutants-Webgis](https://github.com/eluisluzquadros/IHC-Pollutants-Webgis)
 
-🔗 **Demo**: [https://ihc-pollutants-webgis-eluzquadros.replit.app](https://ihc-pollutants-webgis-eluzquadros.replit.app)
+🔗 **Deploy Demo**: [https://ihc-pollutants-webgis-eluzquadros.replit.app](https://ihc-pollutants-webgis-eluzquadros.replit.app)
 
+🔗 **Dev Demo**: [https://6171eee4-df21-4832-ae4c-40bd1562f34e-00-6osxgaprsq2w.kirk.replit.dev/](https://6171eee4-df21-4832-ae4c-40bd1562f34e-00-6osxgaprsq2w.kirk.replit.dev/)
 ---
 
 ## 🚀 Key Features
