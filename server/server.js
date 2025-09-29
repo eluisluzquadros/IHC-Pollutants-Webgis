@@ -6,6 +6,11 @@ const express = require('express');
 const cors = require('cors');
 const OpenAI = require('openai').default;
 
+// Import database connection
+const { db } = require('./db.js');
+const { stations, pollutionRecords } = require('../shared/schema.js');
+const { eq, sql } = require('drizzle-orm');
+
 const app = express();
 // Use Replit's assigned PORT or fallback to 3001 for development
 const port = process.env.PORT || 3001;
@@ -483,6 +488,120 @@ Respond in JSON format: {"message": "your response", "mapCommands": [optional ma
       mapCommands: [],
       data: null
     });
+  }
+});
+
+// Database API endpoints
+
+// Import CSV data and save to database
+app.post('/api/data/import', async (req, res) => {
+  try {
+    const { csvData } = req.body;
+    
+    if (!csvData || !Array.isArray(csvData)) {
+      return res.status(400).json({ error: 'csvData array is required' });
+    }
+
+    // Clear existing data
+    await db.delete(pollutionRecords);
+    await db.delete(stations);
+
+    // Extract unique stations
+    const uniqueStations = new Map();
+    csvData.forEach(record => {
+      if (record.station_id && !uniqueStations.has(record.station_id)) {
+        uniqueStations.set(record.station_id, {
+          stationId: record.station_id,
+          stationName: record.station_name || `Station ${record.station_id}`,
+          latitude: parseFloat(record.latitude) || 0,
+          longitude: parseFloat(record.longitude) || 0,
+          location: record.location || ''
+        });
+      }
+    });
+
+    // Insert stations
+    if (uniqueStations.size > 0) {
+      await db.insert(stations).values(Array.from(uniqueStations.values()));
+    }
+
+    // Insert pollution records
+    const records = csvData
+      .filter(record => record.station_id && record.pol_a !== undefined && record.pol_b !== undefined)
+      .map(record => ({
+        stationId: record.station_id,
+        sampleDate: record.sample_dt ? new Date(record.sample_dt) : new Date(),
+        polA: parseFloat(record.pol_a) || 0,
+        polB: parseFloat(record.pol_b) || 0
+      }));
+
+    if (records.length > 0) {
+      await db.insert(pollutionRecords).values(records);
+    }
+
+    res.json({ 
+      success: true, 
+      message: `Imported ${uniqueStations.size} stations and ${records.length} pollution records`,
+      stationsCount: uniqueStations.size,
+      recordsCount: records.length
+    });
+
+  } catch (error) {
+    console.error('Database import error:', error);
+    res.status(500).json({ error: 'Failed to import data to database' });
+  }
+});
+
+// Get all data from database
+app.get('/api/data/records', async (req, res) => {
+  try {
+    // Fetch all records with station information
+    const records = await db
+      .select({
+        id: pollutionRecords.id,
+        station_id: pollutionRecords.stationId,
+        station_name: stations.stationName,
+        latitude: stations.latitude,
+        longitude: stations.longitude,
+        location: stations.location,
+        sample_dt: pollutionRecords.sampleDate,
+        pol_a: pollutionRecords.polA,
+        pol_b: pollutionRecords.polB,
+        created_at: pollutionRecords.createdAt
+      })
+      .from(pollutionRecords)
+      .leftJoin(stations, eq(pollutionRecords.stationId, stations.stationId))
+      .orderBy(pollutionRecords.sampleDate);
+
+    res.json({ 
+      success: true, 
+      data: records,
+      totalRecords: records.length,
+      totalStations: new Set(records.map(r => r.station_id)).size
+    });
+
+  } catch (error) {
+    console.error('Database fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch data from database' });
+  }
+});
+
+// Clear all data from database
+app.delete('/api/data/clear', async (req, res) => {
+  try {
+    const deletedRecords = await db.delete(pollutionRecords);
+    const deletedStations = await db.delete(stations);
+    
+    res.json({ 
+      success: true, 
+      message: 'All data cleared from database',
+      deletedRecords: deletedRecords,
+      deletedStations: deletedStations
+    });
+
+  } catch (error) {
+    console.error('Database clear error:', error);
+    res.status(500).json({ error: 'Failed to clear database' });
   }
 });
 
