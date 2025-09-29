@@ -161,7 +161,7 @@ export default function AppBar({
               variant="ghost"
               size="sm"
               className="text-white hover:bg-white/20"
-              onClick={() => window.open('https://github.com/eluisluzquadros/climate-eye-forecasting-now', '_blank')}
+              onClick={() => window.open('https://github.com/eluisluzquadros/IHC-Pollutants-Webgis/', '_blank')}
               title="View Source Code"
             >
               <Github className="w-4 h-4" />

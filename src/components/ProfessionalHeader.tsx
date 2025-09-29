@@ -81,7 +81,7 @@ export default function ProfessionalHeader({
               variant="ghost"
               size="sm"
               className="btn-professional btn-professional-ghost glass-professional"
-              onClick={() => window.open('https://github.com/eluisluzquadros/climate-eye-forecasting-now', '_blank')}
+              onClick={() => window.open('https://github.com/eluisluzquadros/IHC-Pollutants-Webgis/', '_blank')}
             >
               <Github className="w-4 h-4 mr-2" />
               Source
