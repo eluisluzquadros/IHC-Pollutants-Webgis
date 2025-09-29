@@ -1,9 +1,8 @@
 import { StationData } from "@/utils/csvImporter";
 
-// Backend API configuration
-const API_BASE_URL = import.meta.env.DEV 
-  ? 'http://localhost:3001' 
-  : `https://${window.location.hostname.replace('5000', '3001')}`;
+// Backend API configuration for Replit environment
+// In Replit, both frontend and backend run in the same container, so localhost works
+const API_BASE_URL = 'http://localhost:3001';
 
 console.log('🔗 AI Service API URL:', API_BASE_URL);
 
