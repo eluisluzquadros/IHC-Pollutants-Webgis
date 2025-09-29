@@ -55,6 +55,7 @@ interface MapSettings {
   heatmapRadius: number;
   enableStationClustering: boolean;
   enableRecordClustering: boolean;
+  showRecordCount: boolean;
 }
 
 const DEFAULT_FILTERS: StationFilters = {
@@ -72,6 +73,7 @@ const DEFAULT_MAP_SETTINGS: MapSettings = {
   heatmapRadius: 25,
   enableStationClustering: false,
   enableRecordClustering: false,
+  showRecordCount: false,
 };
 
 const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
@@ -221,6 +223,10 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
 
   const handleToggleRecordClustering = useCallback((enabled: boolean) => {
     setMapSettings(prev => ({ ...prev, enableRecordClustering: enabled }));
+  }, []);
+
+  const handleToggleRecordCount = useCallback((enabled: boolean) => {
+    setMapSettings(prev => ({ ...prev, showRecordCount: enabled }));
   }, []);
 
   const handleResetView = useCallback(() => {
@@ -406,6 +412,7 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
       onHeatmapOpacityChange={handleHeatmapOpacityChange}
       onHeatmapRadiusChange={handleHeatmapRadiusChange}
       onToggleClustering={handleToggleStationClustering}
+      onToggleRecordCount={handleToggleRecordCount}
       onExportData={handleExportData}
       onResetView={handleResetView}
     />
@@ -415,6 +422,7 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
     handleHeatmapOpacityChange,
     handleHeatmapRadiusChange,
     handleToggleStationClustering,
+    handleToggleRecordCount,
     handleExportData,
     handleResetView
   ]);
@@ -448,15 +456,6 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
 
           {/* Map Content */}
           <div className="layout-content">
-            {(() => {
-              console.log(`🔍 HOME: About to render MapContainer with handlers:`, {
-                handleStationHover: !!handleStationHover,
-                handleStationLeave: !!handleStationLeave,
-                handleStationHoverType: typeof handleStationHover,
-                handleStationLeaveType: typeof handleStationLeave
-              });
-              return null;
-            })()}
             <MapContainer
               stationData={filteredData}
               showStationMarkers={mapSettings.showStations}
@@ -465,6 +464,7 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
               heatmapRadius={mapSettings.heatmapRadius}
               enableStationClustering={mapSettings.enableStationClustering}
               enableRecordClustering={mapSettings.enableRecordClustering}
+              showRecordCount={mapSettings.showRecordCount}
               onStationHover={handleStationHover}
               onStationLeave={handleStationLeave}
               focusedStationId={focusedStationId}
