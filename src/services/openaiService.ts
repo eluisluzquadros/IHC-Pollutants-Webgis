@@ -1,7 +1,5 @@
 import { StationData } from "@/utils/csvImporter";
 
-console.log('🚀 OpenAI Service module loading...');
-
 // Backend API configuration 
 const getApiBaseUrl = (): string => {
   // Check for environment variable override first (production deployment)
@@ -229,33 +227,20 @@ class OpenAIService {
   async generateResponse(userQuery: string, stationData: StationData[]): Promise<AIResponse> {
     try {
       console.log('🤖 Calling backend AI service with query:', userQuery);
-      console.log('🔗 API_BASE_URL:', API_BASE_URL);
-      console.log('📊 Station data length:', stationData.length);
       
-      const url = `${API_BASE_URL}/api/ai/chat`;
-      console.log('🌐 Full URL:', url);
-      
-      const requestBody = {
-        message: userQuery,
-        stationData: stationData
-      };
-      console.log('📤 Request body:', requestBody);
-      
-      const response = await fetch(url, {
+      const response = await fetch(`${API_BASE_URL}/api/ai/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify({
+          message: userQuery,
+          stationData: stationData
+        })
       });
 
-      console.log('📥 Response status:', response.status);
-      console.log('📥 Response ok:', response.ok);
-
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Response error text:', errorText);
-        throw new Error(`Backend API error: ${response.status} ${response.statusText} - ${errorText}`);
+        throw new Error(`Backend API error: ${response.status} ${response.statusText}`);
       }
 
       const result = await response.json();
@@ -267,10 +252,7 @@ class OpenAIService {
         data: result.data
       };
     } catch (error) {
-      console.error('❌ AI Service Error details:', error);
-      console.error('❌ Error type:', typeof error);
-      console.error('❌ Error message:', error.message);
-      console.error('❌ Error stack:', error.stack);
+      console.error('AI Service Error:', error);
       
       // Fallback response with basic data context
       const context = this.buildDataContext(stationData);
