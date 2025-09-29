@@ -69,19 +69,6 @@ interface MapContainerProps {
   onStationLeave?: () => void;
 }
 
-interface TooltipState {
-  visible: boolean;
-  position: { x: number; y: number };
-  station: {
-    id: string;
-    name: string;
-    lat: number;
-    lon: number;
-    pol_a: number;
-    pol_b: number;
-    date?: string;
-  } | null;
-}
 
 // Function to create custom SVG marker with dual bar chart
 const createStationMarkerSVG = (polA: number, polB: number, unit: string) => {
