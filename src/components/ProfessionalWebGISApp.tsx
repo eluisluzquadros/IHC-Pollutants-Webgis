@@ -162,9 +162,9 @@ const ProfessionalSidebar: React.FC<{
       />
     )}
     
-    {/* Sidebar - Increased width from w-80 to w-96 */}
+    {/* Sidebar - Increased width to w-[450px] for better content visibility */}
     <aside className={`
-      fixed top-0 left-0 h-full w-96 bg-white border-r border-gray-200 shadow-xl z-50
+      fixed top-0 left-0 h-full w-[450px] bg-white border-r border-gray-200 shadow-xl z-50
       transform transition-transform duration-300 ease-in-out
       ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       lg:translate-x-0 lg:static lg:shadow-none
@@ -419,7 +419,7 @@ const ProfessionalWebGISApp: React.FC = () => {
     } else if (isTablet) {
       return { top: 70, left: 32, right: 32, bottom: 100 }; // Tablet spacing
     } else {
-      return { top: 80, left: 400, right: 16, bottom: 90 }; // Desktop with wider sidebar (was 460, now 400)
+      return { top: 80, left: 460, right: 16, bottom: 90 }; // Desktop with wider sidebar (450px + 10px margin)
     }
   }, []);
 
