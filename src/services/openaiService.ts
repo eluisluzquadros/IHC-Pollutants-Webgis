@@ -1,5 +1,7 @@
 import { StationData } from "@/utils/csvImporter";
 
+console.log('🚀 OpenAI Service module loading...');
+
 // Backend API configuration 
 const getApiBaseUrl = (): string => {
   // Check for environment variable override first (production deployment)
