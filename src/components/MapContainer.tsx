@@ -7,6 +7,10 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 // Import leaflet.heat for proper heatmap interpolation
 import 'leaflet.heat';
+// Import leaflet.markercluster for proper clustering
+import 'leaflet.markercluster';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 
 // Extend Leaflet interface for heatmap
 declare module 'leaflet' {
@@ -130,125 +134,8 @@ const createStationIcon = (polA: number, polB: number, unit: string) => {
   });
 };
 
-// Station-based clustering: Groups unique stations by geographical proximity
-const createStationClusters = (stations: any[], zoomLevel: number) => {
-  // First, get unique stations (deduplicate by station_id + location)
-  const uniqueStations = new Map<string, any>();
-  stations.forEach(station => {
-    const key = `${station.station_id}-${station.lat}-${station.lon}`;
-    if (!uniqueStations.has(key)) {
-      uniqueStations.set(key, station);
-    }
-  });
-  
-  const stationArray = Array.from(uniqueStations.values());
-  
-  const baseRadius = 0.1; // Base radius in degrees
-  const zoomFactor = Math.max(1, 18 - zoomLevel);
-  const clusterRadius = baseRadius * (zoomFactor / 10);
-  
-  console.log(`Station clustering: ${stationArray.length} unique stations at zoom ${zoomLevel} with radius ${clusterRadius.toFixed(4)}`);
-  
-  const groups: any[][] = [];
-  const processed = new Set<number>();
-  
-  for (let i = 0; i < stationArray.length; i++) {
-    if (processed.has(i)) continue;
-    
-    const group = [stationArray[i]];
-    const queue = [i];
-    processed.add(i);
-    
-    while (queue.length > 0) {
-      const currentIndex = queue.shift()!;
-      const currentStation = stationArray[currentIndex];
-      
-      for (let j = 0; j < stationArray.length; j++) {
-        if (processed.has(j)) continue;
-        
-        const distance = Math.sqrt(
-          Math.pow(currentStation.lat - stationArray[j].lat, 2) +
-          Math.pow(currentStation.lon - stationArray[j].lon, 2)
-        );
-        
-        if (distance <= clusterRadius) {
-          group.push(stationArray[j]);
-          queue.push(j);
-          processed.add(j);
-        }
-      }
-    }
-    
-    groups.push(group);
-  }
-  
-  return groups;
-};
 
-// Record-based clustering: Groups all records from same station
-const createRecordClusters = (stations: any[]) => {
-  const stationGroups = new Map<string, any[]>();
-  
-  stations.forEach(station => {
-    const key = `${station.station_id}-${station.station_name}`;
-    if (!stationGroups.has(key)) {
-      stationGroups.set(key, []);
-    }
-    stationGroups.get(key)!.push(station);
-  });
-  
-  const groups = Array.from(stationGroups.values());
-  console.log(`Record clustering: ${groups.length} station groups from ${stations.length} records`);
-  
-  return groups;
-};
 
-// Create cluster marker with dynamic styling based on density
-const createClusterMarker = (stationGroup: any[], lat: number, lon: number) => {
-  const stationCount = stationGroup.length;
-  const totalReadings = stationGroup.reduce((sum, station) => sum + 1, 0); // Assuming 1 reading per station
-  
-  // Dynamic size based on station count
-  let size = 30;
-  let bgColor = '#3B82F6';
-  let textColor = 'white';
-  
-  if (stationCount >= 20) {
-    size = 60;
-    bgColor = '#DC2626'; // Red for high density
-  } else if (stationCount >= 10) {
-    size = 50;
-    bgColor = '#EA580C'; // Orange for medium density
-  } else if (stationCount >= 5) {
-    size = 40;
-    bgColor = '#D97706'; // Yellow-orange for low-medium density
-  }
-  
-  const clusterIcon = L.divIcon({
-    html: `<div style="
-             background: ${bgColor}; 
-             color: ${textColor}; 
-             border-radius: 50%; 
-             width: ${size}px; 
-             height: ${size}px; 
-             display: flex; 
-             align-items: center; 
-             justify-content: center; 
-             font-weight: bold; 
-             font-size: ${Math.max(10, size / 4)}px;
-             border: 3px solid white; 
-             box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-             cursor: pointer;
-           ">
-             ${stationCount}
-           </div>`,
-    className: 'dynamic-cluster-marker',
-    iconSize: [size, size],
-    iconAnchor: [size/2, size/2]
-  });
-  
-  return L.marker([lat, lon], { icon: clusterIcon });
-};
 
 // Function to group station data by station for record counting
 const groupStationsByLocation = (stations: any[]) => {
