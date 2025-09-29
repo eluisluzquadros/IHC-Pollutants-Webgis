@@ -8,6 +8,7 @@ This is a professional React + TypeScript application for visualizing environmen
 - **2025-09-28**: Fixed Vite configuration for port 5000 and host settings
 - **2025-09-28**: Temporarily simplified MapContainer component due to MapLibre integration issues
 - **2025-09-28**: Configured deployment settings for production
+- **2025-09-29**: ✅ Fixed AI Assistant connectivity issues with improved CORS configuration
 
 ## Project Architecture
 - **Frontend Framework**: React 18 with TypeScript
