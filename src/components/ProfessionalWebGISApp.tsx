@@ -11,7 +11,7 @@ import { MapCommandProvider } from "@/contexts/MapCommandContext";
 const MapContainer = lazy(() => import("./MapContainer"));
 const PollutionDashboard = lazy(() => import("./PollutionDashboard"));
 const DataFilterPanel = lazy(() => import("./DataFilterPanel"));
-const ChatBot = lazy(() => import("./ChatBot"));
+import ChatBot from "./ChatBot";
 
 /**
  * Professional WebGIS Application
@@ -660,9 +660,7 @@ const ProfessionalWebGISApp: React.FC = () => {
         return (
           <div className="p-6">
             <h3 className="text-base font-semibold mb-4">AI Assistant</h3>
-            <Suspense fallback={<LoadingSpinner message="Loading AI Assistant..." />}>
-              <ChatBot stationData={filteredData} />
-            </Suspense>
+            <ChatBot stationData={filteredData} />
           </div>
         );
 
