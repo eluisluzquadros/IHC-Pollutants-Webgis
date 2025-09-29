@@ -113,6 +113,15 @@ const ProfessionalHeader: React.FC<{
               <div className="text-sm font-semibold text-emerald-600">{recordCount.toLocaleString()}</div>
               <div className="text-xs text-gray-500">Records</div>
             </div>
+            {recordCount > 0 && (
+              <>
+                <div className="w-px h-8 bg-gray-300" />
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <div className="text-xs text-gray-500">Saved</div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -221,6 +230,89 @@ const ProfessionalWebGISApp: React.FC = () => {
     setFilteredData(filtered);
   }, [stationData, filters]);
 
+  // Load data from database on startup
+  const loadDataFromDatabase = useCallback(async () => {
+    console.log('🔄 Starting auto-load from database...');
+    try {
+      setIsLoading(true);
+      console.log('🌐 Fetching from /api/data/records...');
+      const response = await fetch('/api/data/records');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch data from database');
+      }
+      
+      const result = await response.json();
+      console.log('📊 Database response:', result);
+      
+      if (result.success && result.data && result.data.length > 0) {
+        // Transform database format to frontend format
+        const transformedData: StationData[] = result.data.map((record: any) => ({
+          station_id: record.station_id,
+          station_name: record.station_name,
+          lat: record.latitude,
+          lon: record.longitude,
+          sample_dt: record.sample_dt,
+          pol_a: record.pol_a,
+          pol_b: record.pol_b,
+          unit: record.unit || 'μg/m³'
+        }));
+        
+        setStationData(transformedData);
+        console.log(`📊 Auto-loaded ${result.totalRecords} records from ${result.totalStations} stations`);
+      } else {
+        console.log('📊 No saved data found in database');
+      }
+    } catch (error) {
+      console.error('Failed to load data from database:', error);
+      // Don't show error toast for auto-load failures
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Auto-load data from database on component mount
+  useEffect(() => {
+    console.log('🚀 Component mounted - triggering auto-load...');
+    loadDataFromDatabase();
+  }, [loadDataFromDatabase]);
+
+  // Save data to database
+  const saveDataToDatabase = useCallback(async (data: StationData[]) => {
+    try {
+      // Transform frontend format to database format
+      const databaseData = data.map(record => ({
+        station_id: record.station_id,
+        station_name: record.station_name,
+        latitude: record.lat,
+        longitude: record.lon,
+        sample_dt: record.sample_dt,
+        pol_a: record.pol_a,
+        pol_b: record.pol_b,
+        unit: record.unit
+      }));
+
+      const response = await fetch('/api/data/import', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ csvData: databaseData }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save data to database');
+      }
+
+      const result = await response.json();
+      console.log(`💾 Saved ${result.recordsCount} records from ${result.stationsCount} stations to database`);
+      return result;
+    } catch (error) {
+      console.error('Failed to save data to database:', error);
+      throw error;
+    }
+  }, []);
+
   // Optimized file upload handler
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -236,9 +328,17 @@ const ProfessionalWebGISApp: React.FC = () => {
 
     try {
       const data = await importCSVFile(file);
+      
+      // Save to database first
+      await saveDataToDatabase(data);
+      
+      // Then update frontend state
       setStationData(data);
       setError(null);
-      toast.success(`Successfully imported ${data.length} station records from ${new Set(data.map(d => d.station_id)).size} stations`);
+      
+      const stationCount = new Set(data.map(d => d.station_id)).size;
+      toast.success(`Successfully imported and saved ${data.length} records from ${stationCount} stations`);
+      console.log(`🔄 CSV imported and persisted: ${data.length} records, ${stationCount} stations`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to import CSV file';
       setError(errorMessage);
@@ -321,6 +421,19 @@ const ProfessionalWebGISApp: React.FC = () => {
                       Import CSV Data
                     </>
                   )}
+                </Button>
+                
+                {/* Debug button to test auto-load manually */}
+                <Button
+                  onClick={() => {
+                    console.log('🧪 Manual test of loadDataFromDatabase...');
+                    loadDataFromDatabase();
+                  }}
+                  disabled={isLoading}
+                  variant="outline"
+                  className="w-full mt-2"
+                >
+                  Load Saved Data (Test)
                 </Button>
 
                 <Button
