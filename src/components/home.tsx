@@ -177,6 +177,7 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
 
   // Optimized tooltip handlers
   const handleStationHover = useCallback((station: any, x: number, y: number) => {
+    console.log(`🎯 HOME: handleStationHover called with station:`, station.station_id, 'coords:', x, y);
     // Normalize station data to match StationTooltip interface
     const normalizedStation = {
       id: station.station_id || station.id,
@@ -191,6 +192,7 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
   }, []);
 
   const handleStationLeave = useCallback(() => {
+    console.log(`👋 HOME: handleStationLeave called`);
     setActiveTooltip(null);
   }, []);
 

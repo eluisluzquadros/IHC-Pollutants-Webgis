@@ -210,6 +210,12 @@ const MapContainer = ({
   onStationHover,
   onStationLeave,
 }: MapContainerProps) => {
+  console.log(`🔍 MapContainer props received:`, {
+    onStationHover: !!onStationHover,
+    onStationLeave: !!onStationLeave,
+    onStationHoverType: typeof onStationHover,
+    onStationLeaveType: typeof onStationLeave
+  });
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
