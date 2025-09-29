@@ -65,6 +65,8 @@ interface MapContainerProps {
   enableStationClustering?: boolean;
   enableRecordClustering?: boolean;
   showRecordCount?: boolean;
+  onStationHover?: (station: any, x: number, y: number) => void;
+  onStationLeave?: () => void;
 }
 
 interface TooltipState {
@@ -218,6 +220,8 @@ const MapContainer = ({
   enableStationClustering = false,
   enableRecordClustering = false,
   showRecordCount = false,
+  onStationHover,
+  onStationLeave,
 }: MapContainerProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
@@ -229,11 +233,6 @@ const MapContainer = ({
   const clusterGroupRef = useRef<L.LayerGroup | null>(null);
   const stationClusterGroupRef = useRef<any>(null);
   const recordClusterGroupRef = useRef<any>(null);
-  const [tooltip, setTooltip] = useState<TooltipState>({
-    visible: false,
-    position: { x: 0, y: 0 },
-    station: null,
-  });
 
   // Initialize map when component mounts
   useEffect(() => {
@@ -337,37 +336,6 @@ const MapContainer = ({
     };
   }, []);
 
-  // Handle station hover
-  const handleStationHover = useCallback((event: MouseEvent, station: any) => {
-    const rect = mapContainer.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    setTooltip({
-      visible: true,
-      position: {
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top,
-      },
-      station: {
-        id: station.station_id,
-        name: station.station_name,
-        lat: station.lat,
-        lon: station.lon,
-        pol_a: station.pol_a,
-        pol_b: station.pol_b,
-        date: station.sample_dt,
-      },
-    });
-  }, []);
-
-  // Handle station leave
-  const handleStationLeave = useCallback(() => {
-    setTooltip({
-      visible: false,
-      position: { x: 0, y: 0 },
-      station: null,
-    });
-  }, []);
 
   // Clear existing markers and layers
   const clearMapLayers = useCallback(() => {
@@ -793,6 +761,22 @@ const MapContainer = ({
           `;
           
           marker.bindPopup(stationPopupContent);
+          
+          // Add hover events for external tooltip
+          if (onStationHover && onStationLeave) {
+            marker.on('mouseover', (e) => {
+              const rect = mapContainer.current?.getBoundingClientRect();
+              if (rect) {
+                const event = e.originalEvent as MouseEvent;
+                onStationHover(station, event.clientX - rect.left, event.clientY - rect.top);
+              }
+            });
+            
+            marker.on('mouseout', () => {
+              onStationLeave();
+            });
+          }
+          
           markersRef.current.push(marker);
           marker.addTo(map.current!);
         });
@@ -828,55 +812,6 @@ const MapContainer = ({
     <Card className="w-full h-full bg-[#2C3E50] overflow-hidden rounded-lg shadow-lg relative">
       <div ref={mapContainer} className="w-full h-full" />
       
-      {/* Custom Tooltip */}
-      {tooltip.visible && tooltip.station && (
-        <div 
-          className="absolute bg-white border border-gray-300 rounded-lg shadow-lg p-3 pointer-events-none z-[1000]"
-          style={{
-            left: tooltip.position.x + 10,
-            top: tooltip.position.y - 10,
-            maxWidth: '250px',
-            fontSize: '12px'
-          }}
-        >
-          <div className="text-[#2C3E50]">
-            <h4 className="font-semibold text-sm mb-1 text-[#E74C3C]">{tooltip.station.name}</h4>
-            <p className="mb-1"><strong>ID:</strong> {tooltip.station.id}</p>
-            {tooltip.station.date && (
-              <p className="mb-2"><strong>Date:</strong> {tooltip.station.date}</p>
-            )}
-            <div className="flex gap-3 mb-2">
-              <div className="text-center">
-                <div 
-                  className="w-4 h-6 mx-auto mb-1"
-                  style={{
-                    backgroundColor: tooltip.station.pol_a < 3 ? '#2ECC71' : 
-                                   tooltip.station.pol_a < 7 ? '#F39C12' : '#E74C3C',
-                    height: `${Math.max((tooltip.station.pol_a / Math.max(tooltip.station.pol_a, tooltip.station.pol_b, 10)) * 24, 2)}px`
-                  }}
-                />
-                <small><strong>Pol A:</strong><br/>{tooltip.station.pol_a}</small>
-              </div>
-              <div className="text-center">
-                <div 
-                  className="w-4 h-6 mx-auto mb-1"
-                  style={{
-                    backgroundColor: tooltip.station.pol_b < 3 ? '#2ECC71' : 
-                                   tooltip.station.pol_b < 7 ? '#F39C12' : '#E74C3C',
-                    height: `${Math.max((tooltip.station.pol_b / Math.max(tooltip.station.pol_a, tooltip.station.pol_b, 10)) * 24, 2)}px`
-                  }}
-                />
-                <small><strong>Pol B:</strong><br/>{tooltip.station.pol_b}</small>
-              </div>
-            </div>
-            <div className="text-xs text-gray-600 border-t pt-1">
-              <span className="text-[#2ECC71] mr-2">● Low (&lt;3)</span>
-              <span className="text-[#F39C12] mr-2">● Med (3-7)</span>
-              <span className="text-[#E74C3C]">● High (&gt;7)</span>
-            </div>
-          </div>
-        </div>
-      )}
       
       {/* Loading indicator */}
       {!mapLoaded && (

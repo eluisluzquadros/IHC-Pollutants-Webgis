@@ -38,10 +38,9 @@ interface TooltipState {
     name: string;
     lat: number;
     lon: number;
-    sampleDate: string;
-    polA: number;
-    polB: number;
-    unit: string;
+    pol_a: number;
+    pol_b: number;
+    date?: string;
   };
   x: number;
   y: number;
@@ -387,6 +386,8 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
             heatmapRadius={mapSettings.heatmapRadius}
             enableStationClustering={mapSettings.enableStationClustering}
             enableRecordClustering={mapSettings.enableRecordClustering}
+            onStationHover={handleStationHover}
+            onStationLeave={handleStationLeave}
           />
         </div>
       </div>
