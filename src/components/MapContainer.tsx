@@ -12,7 +12,7 @@ import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 
-// Extend Leaflet interface for heatmap
+// Extend Leaflet interface for heatmap and markercluster
 declare module 'leaflet' {
   function heatLayer(
     latlngs: Array<[number, number, number]>,
@@ -23,7 +23,11 @@ declare module 'leaflet' {
       max?: number;
       gradient?: { [key: number]: string };
     }
-  ): L.Layer;
+  ): any;
+  
+  namespace L {
+    function markerClusterGroup(options?: any): any;
+  }
 }
 
 // Fix for default Leaflet markers in bundlers
@@ -223,6 +227,8 @@ const MapContainer = ({
   const markersRef = useRef<L.Marker[]>([]);
   const heatmapLayerRef = useRef<any>(null);
   const clusterGroupRef = useRef<L.LayerGroup | null>(null);
+  const stationClusterGroupRef = useRef<any>(null);
+  const recordClusterGroupRef = useRef<any>(null);
   const [tooltip, setTooltip] = useState<TooltipState>({
     visible: false,
     position: { x: 0, y: 0 },
@@ -248,8 +254,57 @@ const MapContainer = ({
         maxZoom: 19,
       }).addTo(map.current);
 
-      // Initialize custom cluster group
+      // Initialize cluster groups
       clusterGroupRef.current = L.layerGroup();
+      
+      // Initialize marker cluster groups with custom styling
+      stationClusterGroupRef.current = (L as any).markerClusterGroup({
+        maxClusterRadius: 80,
+        showCoverageOnHover: false,
+        spiderfyOnMaxZoom: true,
+        removeOutsideVisibleBounds: true,
+        animate: true,
+        animateAddingMarkers: false,
+        iconCreateFunction: (cluster: any) => {
+          const count = cluster.getChildCount();
+          let className = 'marker-cluster-small';
+          let size = 40;
+          
+          if (count < 10) {
+            className = 'marker-cluster-small';
+            size = 40;
+          } else if (count < 100) {
+            className = 'marker-cluster-medium';
+            size = 50;
+          } else {
+            className = 'marker-cluster-large';
+            size = 60;
+          }
+          
+          return L.divIcon({
+            html: `<div><span>${count}</span></div>`,
+            className: 'marker-cluster ' + className,
+            iconSize: [size, size]
+          });
+        }
+      });
+      
+      recordClusterGroupRef.current = (L as any).markerClusterGroup({
+        maxClusterRadius: 50,
+        showCoverageOnHover: true,
+        spiderfyOnMaxZoom: true,
+        removeOutsideVisibleBounds: true,
+        animate: true,
+        animateAddingMarkers: false,
+        iconCreateFunction: (cluster: any) => {
+          const count = cluster.getChildCount();
+          return L.divIcon({
+            html: `<div><span>${count}</span></div>`,
+            className: 'marker-cluster marker-cluster-records',
+            iconSize: [45, 45]
+          });
+        }
+      });
       
       // Add zoom event listener for dynamic clustering - with proper event handling
       map.current.on('zoomend', (e) => {
@@ -277,6 +332,8 @@ const MapContainer = ({
       markersRef.current = [];
       heatmapLayerRef.current = null;
       clusterGroupRef.current = null;
+      stationClusterGroupRef.current = null;
+      recordClusterGroupRef.current = null;
     };
   }, []);
 
@@ -333,10 +390,20 @@ const MapContainer = ({
       heatmapLayerRef.current = null;
     }
 
-    // Clear cluster group
+    // Clear cluster groups
     if (clusterGroupRef.current) {
       map.current.removeLayer(clusterGroupRef.current);
       clusterGroupRef.current.clearLayers();
+    }
+    
+    if (stationClusterGroupRef.current) {
+      map.current.removeLayer(stationClusterGroupRef.current);
+      stationClusterGroupRef.current.clearLayers();
+    }
+    
+    if (recordClusterGroupRef.current) {
+      map.current.removeLayer(recordClusterGroupRef.current);
+      recordClusterGroupRef.current.clearLayers();
     }
   }, []);
 
@@ -573,169 +640,170 @@ const MapContainer = ({
       });
     }
     
-    // 3. CREATE CLUSTERING AND MARKERS (TWO SEPARATE OPTIONS)
-    const enableAnyClustering = enableStationClustering || enableRecordClustering;
+    // 3. CREATE MARKERS WITH REAL CLUSTERING USING LEAFLET.MARKERCLUSTER
+    console.log(`Creating markers with clustering - Station: ${enableStationClustering}, Record: ${enableRecordClustering}`);
     
-    if (showStationMarkers || enableAnyClustering) {
-      let clusteredStations: any[][] = [];
+    if (showStationMarkers || enableStationClustering || enableRecordClustering) {
       
-      // Handle both clustering types - they can work simultaneously
-      if (enableStationClustering && enableRecordClustering) {
-        // Both types active: First group by station (records), then by geography
-        const recordGroups = createRecordClusters(validStations);
-        // Flatten back to individual stations for geographical clustering
-        const flatStations = recordGroups.flatMap(group => group);
-        clusteredStations = createStationClusters(flatStations, currentZoom);
-        console.log(`Combined clustering: ${recordGroups.length} record groups -> ${clusteredStations.length} geographical groups`);
-      } else if (enableStationClustering) {
-        // Station-based clustering only: geographical proximity
-        clusteredStations = createStationClusters(validStations, currentZoom);
-        console.log(`Station clustering: ${clusteredStations.length} geographical groups`);
-      } else if (enableRecordClustering) {
-        // Record-based clustering only: same station, multiple records
-        clusteredStations = createRecordClusters(validStations);
-        console.log(`Record clustering: ${clusteredStations.length} station groups`);
-      } else {
-        // No clustering - each station in its own group
-        clusteredStations = validStations.map(station => [station]);
-        console.log(`Individual markers: ${clusteredStations.length} stations`);
-      }
-
-      console.log(`Station clustering: Processing ${clusteredStations.length} groups`);
-      
-      clusteredStations.forEach((stationGroup, groupIndex) => {
-        // Log only significant events
-        if (stationGroup.length > 1) {
-          console.log(`Multi-station group: ${stationGroup.length} stations`);
-        }
+      if (enableStationClustering) {
+        // Station-based clustering: Group unique stations geographically
+        console.log('Creating Station Clustering with leaflet.markercluster');
         
-        if (enableAnyClustering && stationGroup.length > 1) {
-          console.log(`Creating cluster marker with ${stationGroup.length} stations`);
-          
-          // Multiple stations - create dynamic cluster marker
-          const centerLat = stationGroup.reduce((sum, s) => sum + s.lat, 0) / stationGroup.length;
-          const centerLon = stationGroup.reduce((sum, s) => sum + s.lon, 0) / stationGroup.length;
-          const avgPolA = stationGroup.reduce((sum, s) => sum + s.pol_a, 0) / stationGroup.length;
-          const avgPolB = stationGroup.reduce((sum, s) => sum + s.pol_b, 0) / stationGroup.length;
-          
-          const clusterMarker = createClusterMarker(stationGroup, centerLat, centerLon);
-          
-          // Get unit from first station (all should have same unit)
-          const unit = stationGroup[0].unit || '';
-          
-          // Enhanced cluster popup - different content based on clustering type
-          let clusterType = 'Cluster';
-          let clusterDescription = `${stationGroup.length} items`;
-          
-          if (enableStationClustering && enableRecordClustering) {
-            clusterType = 'Combined Cluster';
-            clusterDescription = `${stationGroup.length} stations/records with combined grouping`;
-          } else if (enableStationClustering) {
-            clusterType = 'Station Cluster';
-            clusterDescription = `Geographical cluster of ${stationGroup.length} nearby stations`;
-          } else if (enableRecordClustering) {
-            clusterType = 'Record Cluster';
-            clusterDescription = `${stationGroup.length} readings from same station location`;
+        // Get unique stations (deduplicate by station_id + location)
+        const uniqueStations = new Map<string, any>();
+        validStations.forEach(station => {
+          const key = `${station.station_id}-${station.lat}-${station.lon}`;
+          if (!uniqueStations.has(key)) {
+            uniqueStations.set(key, station);
           }
-          
-          const clusterPopupContent = `
-            <div style="color: #2C3E50; font-family: Arial, sans-serif; max-width: 350px;">
-              <h3 style="margin: 0 0 8px 0; color: #DC2626;">${clusterType}: ${stationGroup.length} ${enableStationClustering ? 'Stations' : 'Records'}</h3>
-              <p style="margin: 2px 0; font-size: 11px; color: #666;">${clusterDescription}</p>
-              <p style="margin: 6px 0 2px 0;"><strong>Average Pollution Levels:</strong></p>
-              <div style="display: flex; gap: 15px; margin: 8px 0;">
-                <div style="text-align: center;">
-                  <div style="width: 24px; height: ${Math.max((avgPolA / Math.max(avgPolA, avgPolB, 10)) * 30, 2)}px; 
-                              background: ${avgPolA < 3 ? "#2ECC71" : avgPolA < 7 ? "#F39C12" : "#E74C3C"}; 
-                              margin: 0 auto 4px; border: 1px solid #ccc;"></div>
-                  <small><strong>Pol A:</strong><br>${avgPolA.toFixed(2)} ${unit}</small>
-                </div>
-                <div style="text-align: center;">
-                  <div style="width: 24px; height: ${Math.max((avgPolB / Math.max(avgPolA, avgPolB, 10)) * 30, 2)}px; 
-                              background: ${avgPolB < 3 ? "#2ECC71" : avgPolB < 7 ? "#F39C12" : "#E74C3C"}; 
-                              margin: 0 auto 4px; border: 1px solid #ccc;"></div>
-                  <small><strong>Pol B:</strong><br>${avgPolB.toFixed(2)} ${unit}</small>
-                </div>
-              </div>
-              <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
-              <p style="margin: 4px 0; font-size: 11px; color: #666;"><strong>Stations in this cluster:</strong></p>
-              <div style="max-height: 150px; overflow-y: auto; font-size: 11px;">
-                ${stationGroup.map((station, idx) => 
-                  `<div style="margin: 2px 0; padding: 3px 6px; background: ${idx % 2 === 0 ? '#f8f9fa' : '#ffffff'}; border-radius: 3px; border-left: 3px solid ${(station.pol_a + station.pol_b) / 2 < 3 ? '#2ECC71' : (station.pol_a + station.pol_b) / 2 < 7 ? '#F39C12' : '#E74C3C'};">
-                     <strong>${station.station_name}</strong><br>
-                     <span style="color: #666;">Pol A: ${station.pol_a} | Pol B: ${station.pol_b} | ${station.sample_dt}</span>
-                   </div>`
-                ).join('')}
-              </div>
-              <div style="margin-top: 8px; font-size: 10px; color: #999; text-align: center;">
-                Zoom in for individual stations
-              </div>
-            </div>
-          `;
-          
-          clusterMarker.bindPopup(clusterPopupContent);
-          markersRef.current.push(clusterMarker);
-          clusterMarker.addTo(map.current!);
-        } else if (showStationMarkers || (enableAnyClustering && stationGroup.length === 1)) {
-          // Single station - create individual marker (when markers are enabled OR when clustering but only 1 station)
-          // Individual station marker created
-          
-          const station = stationGroup[0];
+        });
+        
+        const stationArray = Array.from(uniqueStations.values());
+        console.log(`Station clustering: ${stationArray.length} unique stations`);
+        
+        // Create markers for each unique station and add to cluster group
+        stationArray.forEach(station => {
           const marker = L.marker([station.lat, station.lon], {
             icon: createStationIcon(station.pol_a, station.pol_b, station.unit)
           });
-
-          // Connect tooltip events after marker is added to DOM
-          marker.on('add', () => {
-            const markerElement = marker.getElement();
-            if (markerElement) {
-              markerElement.addEventListener('mouseenter', (e) => handleStationHover(e as MouseEvent, station));
-              markerElement.addEventListener('mouseleave', handleStationLeave);
-            }
-          });
-
-          // Individual station popup
-          const popupContent = `
-            <div style="color: #2C3E50; font-family: Arial, sans-serif; min-width: 200px;">
-              <h3 style="margin: 0 0 8px 0; color: #E74C3C;">${station.station_name}</h3>
-              <p style="margin: 2px 0;"><strong>Station ID:</strong> ${station.station_id}</p>
-              <p style="margin: 2px 0;"><strong>Date:</strong> ${station.sample_dt}</p>
+          
+          // Station popup
+          const stationPopupContent = `
+            <div style="color: #2C3E50; font-family: Arial, sans-serif; max-width: 300px;">
+              <h3 style="margin: 0 0 8px 0; color: #3B82F6;">${station.station_name || 'Station ' + station.station_id}</h3>
+              <p style="margin: 2px 0; font-size: 11px; color: #666;">Station ID: ${station.station_id}</p>
+              <p style="margin: 6px 0 2px 0;"><strong>Pollution Levels:</strong></p>
               <div style="display: flex; gap: 15px; margin: 8px 0;">
                 <div style="text-align: center;">
-                  <div style="width: 20px; height: ${Math.max((station.pol_a / Math.max(station.pol_a, station.pol_b, 10)) * 30, 2)}px; 
+                  <div style="width: 24px; height: ${Math.max((station.pol_a / Math.max(station.pol_a, station.pol_b, 10)) * 30, 2)}px; 
                               background: ${station.pol_a < 3 ? "#2ECC71" : station.pol_a < 7 ? "#F39C12" : "#E74C3C"}; 
-                              margin: 0 auto 4px;"></div>
-                  <small><strong>Pol A:</strong><br>${station.pol_a} ${station.unit}</small>
+                              margin: 0 auto 4px; border: 1px solid #ccc;"></div>
+                  <small><strong>Pol A:</strong><br>${station.pol_a.toFixed(2)} ${station.unit}</small>
                 </div>
                 <div style="text-align: center;">
-                  <div style="width: 20px; height: ${Math.max((station.pol_b / Math.max(station.pol_a, station.pol_b, 10)) * 30, 2)}px; 
+                  <div style="width: 24px; height: ${Math.max((station.pol_b / Math.max(station.pol_a, station.pol_b, 10)) * 30, 2)}px; 
                               background: ${station.pol_b < 3 ? "#2ECC71" : station.pol_b < 7 ? "#F39C12" : "#E74C3C"}; 
-                              margin: 0 auto 4px;"></div>
-                  <small><strong>Pol B:</strong><br>${station.pol_b} ${station.unit}</small>
+                              margin: 0 auto 4px; border: 1px solid #ccc;"></div>
+                  <small><strong>Pol B:</strong><br>${station.pol_b.toFixed(2)} ${station.unit}</small>
                 </div>
               </div>
-              <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; font-size: 11px; color: #666;">
-                <div style="display: flex; gap: 10px;">
-                  <span style="color: #2ECC71;">● Low (&lt;3)</span>
-                  <span style="color: #F39C12;">● Medium (3-7)</span>
-                  <span style="color: #E74C3C;">● High (&gt;7)</span>
-                </div>
-              </div>
+              <p style="margin: 8px 0 2px 0; font-size: 10px; color: #888;">
+                📍 ${station.lat.toFixed(4)}, ${station.lon.toFixed(4)}
+              </p>
+              <p style="margin: 2px 0; font-size: 10px; color: #888;">
+                📅 ${station.sample_dt || 'No date available'}
+              </p>
             </div>
           `;
-
-          marker.bindPopup(popupContent);
+          
+          marker.bindPopup(stationPopupContent);
+          stationClusterGroupRef.current.addLayer(marker);
+        });
+        
+        // Add station cluster group to map
+        map.current!.addLayer(stationClusterGroupRef.current);
+        
+      } else if (enableRecordClustering) {
+        // Record-based clustering: Group records by station location
+        console.log('Creating Record Clustering with leaflet.markercluster');
+        
+        const stationGroups = new Map<string, any[]>();
+        validStations.forEach(station => {
+          const key = `${station.station_id}-${station.station_name}`;
+          if (!stationGroups.has(key)) {
+            stationGroups.set(key, []);
+          }
+          stationGroups.get(key)!.push(station);
+        });
+        
+        console.log(`Record clustering: ${stationGroups.size} station locations with multiple records`);
+        
+        // Create markers for each station group
+        stationGroups.forEach(stationGroup => {
+          const representative = stationGroup[0]; // Use first record for position
+          const recordCount = stationGroup.length;
+          
+          const marker = L.marker([representative.lat, representative.lon], {
+            icon: createStationIcon(representative.pol_a, representative.pol_b, representative.unit)
+          });
+          
+          // Record cluster popup with all readings
+          const recordsHtml = stationGroup.map((record, idx) => `
+            <div style="padding: 4px; margin: 2px 0; background: ${idx % 2 === 0 ? '#f8f9fa' : '#ffffff'}; border-radius: 3px;">
+              <small><strong>Reading ${idx + 1}:</strong> Pol A: ${record.pol_a.toFixed(2)}, Pol B: ${record.pol_b.toFixed(2)} ${record.unit}</small>
+              <small style="display: block; color: #888; font-size: 9px;">📅 ${record.sample_dt || 'No date'}</small>
+            </div>
+          `).join('');
+          
+          const recordPopupContent = `
+            <div style="color: #2C3E50; font-family: Arial, sans-serif; max-width: 400px;">
+              <h3 style="margin: 0 0 8px 0; color: #10B981;">${representative.station_name || 'Station ' + representative.station_id}</h3>
+              <p style="margin: 2px 0; font-size: 11px; color: #666;"><strong>${recordCount} readings</strong> at this location</p>
+              <div style="max-height: 200px; overflow-y: auto; margin: 8px 0;">
+                ${recordsHtml}
+              </div>
+              <p style="margin: 8px 0 2px 0; font-size: 10px; color: #888;">
+                📍 ${representative.lat.toFixed(4)}, ${representative.lon.toFixed(4)}
+              </p>
+            </div>
+          `;
+          
+          marker.bindPopup(recordPopupContent);
+          recordClusterGroupRef.current.addLayer(marker);
+        });
+        
+        // Add record cluster group to map
+        map.current!.addLayer(recordClusterGroupRef.current);
+        
+      } else if (showStationMarkers) {
+        // Individual markers without clustering
+        console.log(`Creating ${validStations.length} individual station markers`);
+        
+        validStations.forEach(station => {
+          const marker = L.marker([station.lat, station.lon], {
+            icon: createStationIcon(station.pol_a, station.pol_b, station.unit)
+          });
+          
+          const stationPopupContent = `
+            <div style="color: #2C3E50; font-family: Arial, sans-serif; max-width: 300px;">
+              <h3 style="margin: 0 0 8px 0; color: #3B82F6;">${station.station_name || 'Station ' + station.station_id}</h3>
+              <p style="margin: 2px 0; font-size: 11px; color: #666;">Station ID: ${station.station_id}</p>
+              <p style="margin: 6px 0 2px 0;"><strong>Pollution Levels:</strong></p>
+              <div style="display: flex; gap: 15px; margin: 8px 0;">
+                <div style="text-align: center;">
+                  <div style="width: 24px; height: ${Math.max((station.pol_a / Math.max(station.pol_a, station.pol_b, 10)) * 30, 2)}px; 
+                              background: ${station.pol_a < 3 ? "#2ECC71" : station.pol_a < 7 ? "#F39C12" : "#E74C3C"}; 
+                              margin: 0 auto 4px; border: 1px solid #ccc;"></div>
+                  <small><strong>Pol A:</strong><br>${station.pol_a.toFixed(2)} ${station.unit}</small>
+                </div>
+                <div style="text-align: center;">
+                  <div style="width: 24px; height: ${Math.max((station.pol_b / Math.max(station.pol_a, station.pol_b, 10)) * 30, 2)}px; 
+                              background: ${station.pol_b < 3 ? "#2ECC71" : station.pol_b < 7 ? "#F39C12" : "#E74C3C"}; 
+                              margin: 0 auto 4px; border: 1px solid #ccc;"></div>
+                  <small><strong>Pol B:</strong><br>${station.pol_b.toFixed(2)} ${station.unit}</small>
+                </div>
+              </div>
+              <p style="margin: 8px 0 2px 0; font-size: 10px; color: #888;">
+                📍 ${station.lat.toFixed(4)}, ${station.lon.toFixed(4)}
+              </p>
+              <p style="margin: 2px 0; font-size: 10px; color: #888;">
+                📅 ${station.sample_dt || 'No date available'}
+              </p>
+            </div>
+          `;
+          
+          marker.bindPopup(stationPopupContent);
           markersRef.current.push(marker);
           marker.addTo(map.current!);
-        }
-      });
+        });
+      }
     }
 
-    // 3. FIT MAP TO SHOW ALL STATIONS
-    if (validStations.length > 0) {
+    // 4. FIT MAP TO SHOW ALL STATIONS
+    if (validStations.length > 0 && markersRef.current.length > 0) {
       const group = new L.FeatureGroup(markersRef.current);
       if (group.getBounds().isValid()) {
-        map.current.fitBounds(group.getBounds(), { padding: [20, 20] });
+        map.current!.fitBounds(group.getBounds(), { padding: [20, 20] });
       }
     }
 
