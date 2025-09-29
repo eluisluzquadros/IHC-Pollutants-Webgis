@@ -2,7 +2,7 @@ import { Suspense, lazy } from "react";
 import { useRoutes, Routes, Route } from "react-router-dom";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import routes from "tempo-routes";
+// import routes from "tempo-routes";
 
 // Lazy load the main application component
 const ProfessionalWebGISApp = lazy(() => import("./components/ProfessionalWebGISApp"));
@@ -63,7 +63,7 @@ const ErrorFallback = ({ error, resetError }: { error: Error; resetError: () => 
 );
 
 function App() {
-  const tempoRoutes = import.meta.env.VITE_TEMPO === "true" ? useRoutes(routes) : null;
+  const tempoRoutes = import.meta.env.VITE_TEMPO === "true" ? null : null;
 
   return (
     <Suspense fallback={<AppLoadingFallback />}>

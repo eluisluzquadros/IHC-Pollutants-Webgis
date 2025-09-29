@@ -327,7 +327,7 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
       onToggleHeatmap={handleToggleHeatmap}
       onHeatmapOpacityChange={handleHeatmapOpacityChange}
       onHeatmapRadiusChange={handleHeatmapRadiusChange}
-      onToggleClustering={handleToggleClustering}
+      onToggleClustering={handleToggleStationClustering}
       onExportData={handleExportData}
       onResetView={handleResetView}
     />
@@ -336,7 +336,7 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
     handleToggleHeatmap,
     handleHeatmapOpacityChange,
     handleHeatmapRadiusChange,
-    handleToggleClustering,
+    handleToggleStationClustering,
     handleExportData,
     handleResetView
   ]);
@@ -394,7 +394,7 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
           role="tooltip"
           aria-live="polite"
         >
-          <StationTooltip station={activeTooltip.station} />
+          {/* <StationTooltip station={activeTooltip.station} /> */}
         </div>
       )}
 

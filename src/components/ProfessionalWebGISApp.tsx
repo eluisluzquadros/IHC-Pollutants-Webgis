@@ -267,7 +267,7 @@ const ProfessionalWebGISApp: React.FC = () => {
   }, [filteredData]);
 
   // Safe padding for fitBounds to respect overlays (header/sidebar/legend)
-  const getSafePadding = useCallback((): maplibregl.PaddingOptions => {
+  const getSafePadding = useCallback((): { top: number; left: number; right: number; bottom: number } => {
     const isDesktop =
       typeof window !== "undefined" && window.innerWidth >= 1024;
     const isTablet =
