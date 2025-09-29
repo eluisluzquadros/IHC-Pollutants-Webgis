@@ -305,7 +305,7 @@ What specific aspect would you like to explore?`;
   return (
     <div className="h-full flex flex-col">
       {/* Chat Messages */}
-      <div className="flex-1 min-h-0 overflow-y-auto scrollbar-professional space-y-4 p-4">
+      <div className="flex-1 min-h-[400px] max-h-[600px] overflow-y-auto scrollbar-professional space-y-4 p-4">
         {messages.map((message) => (
           <div
             key={message.id}
