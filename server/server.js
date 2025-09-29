@@ -1,3 +1,24 @@
+// Load environment variables from .env file (for local development)
+// Try multiple possible .env locations to handle different working directories
+const path = require('path');
+
+// Try loading from parent directory first (when running from project root)
+const parentEnvResult = require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+
+if (parentEnvResult.error) {
+  // Fallback: try loading from current directory (when running from server/)
+  const localEnvResult = require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+  
+  if (localEnvResult.error) {
+    // No .env file found - rely on system environment variables (production)
+    console.log('🔧 No .env file found, using system environment variables (production mode)');
+  } else {
+    console.log('🔧 Loaded environment variables from server/.env');
+  }
+} else {
+  console.log('🔧 Loaded environment variables from project root .env');
+}
+
 const express = require('express');
 const cors = require('cors');
 const OpenAI = require('openai').default;

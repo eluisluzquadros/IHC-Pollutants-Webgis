@@ -66,6 +66,15 @@
    cd server && npm install && cd ..
    ```
 
+2.1. **Setup Environment Variables (Local Development)**
+   ```bash
+   # Copy environment template
+   cp .env.example .env
+   
+   # Edit .env file and add your OpenAI API key:
+   # OPENAI_API_KEY=your-actual-api-key-here
+   ```
+
 3. **Configure OpenAI API Key**
    ```bash
    # For local development:
