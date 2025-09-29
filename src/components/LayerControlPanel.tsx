@@ -5,7 +5,7 @@ import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
-import { Layers, Droplets, RefreshCw, Download, Users } from "lucide-react";
+import { Layers, Droplets, RefreshCw, Download, Users, Hash } from "lucide-react";
 
 interface LayerControlPanelProps {
   onToggleStationMarkers?: (enabled: boolean) => void;
@@ -13,6 +13,7 @@ interface LayerControlPanelProps {
   onHeatmapOpacityChange?: (value: number) => void;
   onHeatmapRadiusChange?: (value: number) => void;
   onToggleClustering?: (enabled: boolean) => void;
+  onToggleRecordCount?: (enabled: boolean) => void;
   onExportData?: () => void;
   onResetView?: () => void;
   // New: control positioning so it can be used inline in the sidebar or as a floating overlay
@@ -25,6 +26,7 @@ const LayerControlPanel = ({
   onHeatmapOpacityChange = () => {},
   onHeatmapRadiusChange = () => {},
   onToggleClustering = () => {},
+  onToggleRecordCount = () => {},
   onExportData = () => {},
   onResetView = () => {},
   variant = 'inline',
@@ -34,6 +36,7 @@ const LayerControlPanel = ({
   const [heatmapOpacity, setHeatmapOpacity] = useState(70);
   const [heatmapRadius, setHeatmapRadius] = useState(25);
   const [clusteringEnabled, setClusteringEnabled] = useState(false);
+  const [recordCountEnabled, setRecordCountEnabled] = useState(false);
 
   const handleStationMarkersToggle = (checked: boolean) => {
     setStationMarkersEnabled(checked);
@@ -60,6 +63,11 @@ const LayerControlPanel = ({
   const handleClusteringToggle = (checked: boolean) => {
     setClusteringEnabled(checked);
     onToggleClustering(checked);
+  };
+
+  const handleRecordCountToggle = (checked: boolean) => {
+    setRecordCountEnabled(checked);
+    onToggleRecordCount(checked);
   };
 
   return (
@@ -185,6 +193,21 @@ const LayerControlPanel = ({
                 id="clustering"
                 checked={clusteringEnabled}
                 onCheckedChange={handleClusteringToggle}
+              />
+            </div>
+
+            {/* Record Count Toggle */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Hash className="h-4 w-4 text-[#3498DB]" />
+                <Label htmlFor="record-count" className="text-sm">
+                  Record Count
+                </Label>
+              </div>
+              <Switch
+                id="record-count"
+                checked={recordCountEnabled}
+                onCheckedChange={handleRecordCountToggle}
               />
             </div>
 
