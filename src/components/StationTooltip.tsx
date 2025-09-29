@@ -14,16 +14,12 @@ interface StationData {
 
 interface StationTooltipProps {
   station: StationData;
-  position: { x: number; y: number };
-  visible: boolean;
 }
 
 const StationTooltip: React.FC<StationTooltipProps> = ({ 
-  station, 
-  position, 
-  visible 
+  station
 }) => {
-  if (!visible || !station) return null;
+  if (!station) return null;
 
   // Add safety checks for undefined/null values
   const polA = station.pol_a ?? 0;
@@ -44,15 +40,7 @@ const StationTooltip: React.FC<StationTooltipProps> = ({
   };
 
   return (
-    <div
-      className="fixed z-[1000] pointer-events-none"
-      style={{
-        left: `${position.x + 10}px`,
-        top: `${position.y - 10}px`,
-        transform: 'translateY(-100%)'
-      }}
-    >
-      <Card className="bg-white/95 backdrop-blur-sm border border-gray-200 shadow-xl p-4 min-w-[280px] max-w-[320px]">
+    <Card className="bg-white/95 backdrop-blur-sm border border-gray-200 shadow-xl p-4 min-w-[280px] max-w-[320px]">
         {/* Header */}
         <div className="flex items-start gap-3 mb-3">
           <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -151,7 +139,6 @@ const StationTooltip: React.FC<StationTooltipProps> = ({
           </div>
         </div>
       </Card>
-    </div>
   );
 };
 

@@ -178,7 +178,17 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
 
   // Optimized tooltip handlers
   const handleStationHover = useCallback((station: any, x: number, y: number) => {
-    setActiveTooltip({ station, x, y });
+    // Normalize station data to match StationTooltip interface
+    const normalizedStation = {
+      id: station.station_id || station.id,
+      name: station.station_name || station.name,
+      lat: station.lat,
+      lon: station.lon,
+      pol_a: station.pol_a,
+      pol_b: station.pol_b,
+      date: station.sample_dt || station.date
+    };
+    setActiveTooltip({ station: normalizedStation, x, y });
   }, []);
 
   const handleStationLeave = useCallback(() => {
@@ -394,7 +404,7 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
           role="tooltip"
           aria-live="polite"
         >
-          {/* <StationTooltip station={activeTooltip.station} /> */}
+          <StationTooltip station={activeTooltip.station} />
         </div>
       )}
 
