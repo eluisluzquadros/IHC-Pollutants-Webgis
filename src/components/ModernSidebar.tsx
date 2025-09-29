@@ -161,66 +161,19 @@ function SidebarContent({
 
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-white">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-        {/* Professional Header */}
-        <div className="sidebar-professional-header">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                <Map className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-white">Control Panel</h2>
-                <p className="text-sm text-blue-100 opacity-90">Environmental Data Platform</p>
-              </div>
-            </div>
-            
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/10 rounded-xl p-3 backdrop-blur-sm">
-                <div className="flex items-center gap-2 text-white">
-                  <Activity className="w-4 h-4" />
-                  <div>
-                    <div className="text-lg font-bold">{stationCount}</div>
-                    <div className="text-xs opacity-90">Stations</div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white/10 rounded-xl p-3 backdrop-blur-sm">
-                <div className="flex items-center gap-2 text-white">
-                  <TrendingUp className="w-4 h-4" />
-                  <div>
-                    <div className="text-lg font-bold">{recordCount.toLocaleString()}</div>
-                    <div className="text-xs opacity-90">Records</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {onClose && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={onClose} 
-              className="text-white hover:bg-white/20 ml-4"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          )}
-        </div>
 
-        {/* Professional Tab Navigation */}
-        <div className="tabs-professional">
-          <TabsList className="grid grid-cols-5 gap-0 p-0 bg-transparent h-auto">
+        {/* Compact Tab Navigation */}
+        <div className="border-b border-gray-200 bg-gray-50">
+          <TabsList className="grid grid-cols-5 gap-0 p-0 bg-transparent h-auto w-full">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <TabsTrigger 
                   key={tab.id}
                   value={tab.id}
-                  className="tab-professional"
+                  className="flex flex-col items-center gap-1 py-3 px-2 text-gray-600 hover:text-gray-900 hover:bg-white data-[state=active]:text-blue-600 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-600 transition-all duration-200"
                   title={tab.description}
                 >
                   <Icon className="w-4 h-4" />
@@ -231,22 +184,15 @@ function SidebarContent({
           </TabsList>
         </div>
 
-        {/* Professional Tab Content */}
-        <div className="flex-1 overflow-hidden sidebar-professional-content">
+        {/* Optimized Tab Content */}
+        <div className="flex-1 overflow-hidden">
           {tabs.map((tab) => (
             <TabsContent 
               key={tab.id}
               value={tab.id} 
               className="h-full m-0 overflow-hidden"
             >
-              <div className="h-full overflow-y-auto scrollbar-professional sidebar-professional-section">
-                <div className="mb-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <tab.icon className="w-5 h-5 text-blue-600" />
-                    <h3 className="text-professional-heading">{tab.label}</h3>
-                  </div>
-                  <p className="text-professional-caption">{tab.description}</p>
-                </div>
+              <div className="h-full overflow-y-auto scrollbar-professional p-4">
                 {tab.content}
               </div>
             </TabsContent>

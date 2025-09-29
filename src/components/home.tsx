@@ -10,7 +10,7 @@ import DataFilterPanel, { StationFilters } from "./DataFilterPanel";
 import PollutionDashboard from "./PollutionDashboard";
 import ChatBot from "./ChatBot";
 import ModernSidebar from "./ModernSidebar";
-import ProfessionalHeader from "./ProfessionalHeader";
+import AppBar from "./AppBar";
 import { importCSVFile, downloadCSV, StationData } from "@/utils/csvImporter";
 import { toast } from "sonner";
 import { MapCommandProvider } from "@/contexts/MapCommandContext";
@@ -429,20 +429,24 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
 
   return (
     <MapCommandProvider onExecuteCommands={handleMapCommands}>
-      <div className={`layout-professional ${className}`}>
-        {/* Professional Header */}
-        <ProfessionalHeader
+      <div className={`webgis-app-grid ${className}`}>
+        {/* App Bar Header */}
+        <AppBar
           stationCount={stationStats.totalStations}
           recordCount={stationStats.totalRecords}
           lastUpdated={stationStats.lastUpdated}
           stationData={stationData}
           onInfoClick={() => setShowAbout(true)}
+          onUploadClick={() => fileInputRef.current?.click()}
+          onExportClick={handleExportData}
+          onResetView={handleResetView}
+          onAIAssistantClick={() => {/* This will focus AI Assistant tab in sidebar */}}
         />
 
-        {/* Main Layout */}
-        <div className="layout-main">
+        {/* Main Content Grid */}
+        <div className="webgis-content-grid">
           {/* Sidebar */}
-          <div className="layout-sidebar">
+          <div className="webgis-sidebar">
             <ModernSidebar
               dataManagementContent={dataManagementContent}
               dashboardContent={<PollutionDashboard stationData={filteredData} />}
@@ -454,8 +458,8 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
             />
           </div>
 
-          {/* Map Content */}
-          <div className="layout-content">
+          {/* Map Canvas */}
+          <div className="webgis-map-canvas">
             <MapContainer
               stationData={filteredData}
               showStationMarkers={mapSettings.showStations}
