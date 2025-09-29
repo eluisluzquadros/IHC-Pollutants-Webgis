@@ -494,7 +494,7 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
       {/* Professional Station Tooltip */}
       {activeTooltip && (
         <div
-          className="absolute z-50 animate-professional-fade-in"
+          className="fixed z-[9999] animate-professional-fade-in pointer-events-none"
           style={{
             left: `${activeTooltip.x}px`,
             top: `${activeTooltip.y}px`,
