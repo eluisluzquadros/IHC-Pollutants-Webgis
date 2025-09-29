@@ -715,6 +715,11 @@ const MapContainer = ({
         console.log(`Creating ${validStations.length} individual station markers`);
         
         validStations.forEach(station => {
+          console.log(`🔍 Creating marker for station ${station.station_id}, callbacks available:`, {
+            onStationHover: !!onStationHover,
+            onStationLeave: !!onStationLeave
+          });
+          
           const marker = L.marker([station.lat, station.lon], {
             icon: createStationIcon(station.pol_a, station.pol_b, station.unit)
           });
@@ -751,17 +756,23 @@ const MapContainer = ({
           
           // Add hover events for external tooltip
           if (onStationHover && onStationLeave) {
+            console.log(`✅ Adding hover events to station ${station.station_id}`);
             marker.on('mouseover', (e) => {
+              console.log(`🎯 HOVER detected on station ${station.station_id}`);
               const rect = mapContainer.current?.getBoundingClientRect();
               if (rect) {
                 const event = e.originalEvent as MouseEvent;
+                console.log(`📍 Calling onStationHover with coords:`, event.clientX - rect.left, event.clientY - rect.top);
                 onStationHover(station, event.clientX - rect.left, event.clientY - rect.top);
               }
             });
             
             marker.on('mouseout', () => {
+              console.log(`👋 MOUSEOUT detected on station ${station.station_id}`);
               onStationLeave();
             });
+          } else {
+            console.log(`❌ NO callbacks available for station ${station.station_id}`);
           }
           
           markersRef.current.push(marker);
