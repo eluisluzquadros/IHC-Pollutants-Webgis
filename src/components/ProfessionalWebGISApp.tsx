@@ -1,14 +1,17 @@
 import React, { memo, useCallback, useMemo, useRef, useState, useEffect, Suspense, lazy } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Upload, Download, AlertCircle, CheckCircle, Loader2, MapPin, BarChart3, Settings, Filter } from "lucide-react";
+import { Upload, Download, AlertCircle, CheckCircle, Loader2, MapPin, BarChart3, Settings, Filter, Bot } from "lucide-react";
 import { toast } from "sonner";
 import { importCSVFile, downloadCSV, StationData } from "@/utils/csvImporter";
+import StationTooltip from "./StationTooltip";
+import { MapCommandProvider } from "@/contexts/MapCommandContext";
 
 // Lazy load heavy components for better performance
 const MapContainer = lazy(() => import("./MapContainer"));
 const PollutionDashboard = lazy(() => import("./PollutionDashboard"));
 const DataFilterPanel = lazy(() => import("./DataFilterPanel"));
+const ChatBot = lazy(() => import("./ChatBot"));
 
 /**
  * Professional WebGIS Application
@@ -38,6 +41,20 @@ interface MapSettings {
   enableStationClustering: boolean;
   enableRecordClustering: boolean;
   showRecordCount: boolean;
+}
+
+interface TooltipState {
+  station: {
+    id: string;
+    name: string;
+    lat: number;
+    lon: number;
+    pol_a: number;
+    pol_b: number;
+    date?: string;
+  };
+  x: number;
+  y: number;
 }
 
 const DEFAULT_FILTERS: StationFilters = {
@@ -188,7 +205,8 @@ const ProfessionalWebGISApp: React.FC = () => {
   const [filters, setFilters] = useState<StationFilters>(DEFAULT_FILTERS);
   const [mapSettings, setMapSettings] = useState<MapSettings>(DEFAULT_MAP_SETTINGS);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'data' | 'dashboard' | 'filters' | 'settings'>('data');
+  const [activeTab, setActiveTab] = useState<'data' | 'dashboard' | 'filters' | 'settings' | 'ai'>('data');
+  const [activeTooltip, setActiveTooltip] = useState<TooltipState | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -365,6 +383,26 @@ const ProfessionalWebGISApp: React.FC = () => {
       toast.error('Failed to export data');
     }
   }, [filteredData]);
+
+  // Tooltip handlers for map interactions
+  const handleStationHover = useCallback((station: any, x: number, y: number) => {
+    console.log(`🎯 StationHover:`, station.station_id, 'coords:', x, y);
+    const normalizedStation = {
+      id: station.station_id || station.id,
+      name: station.station_name || station.name,
+      lat: station.lat,
+      lon: station.lon,
+      pol_a: station.pol_a,
+      pol_b: station.pol_b,
+      date: station.sample_dt || station.date
+    };
+    setActiveTooltip({ station: normalizedStation, x, y });
+  }, []);
+
+  const handleStationLeave = useCallback(() => {
+    console.log(`👋 StationLeave called`);
+    setActiveTooltip(null);
+  }, []);
 
   // Safe padding for fitBounds to respect overlays (header/sidebar/legend)
   const getSafePadding = useCallback((): { top: number; left: number; right: number; bottom: number } => {
@@ -618,13 +656,24 @@ const ProfessionalWebGISApp: React.FC = () => {
           </div>
         );
 
+      case 'ai':
+        return (
+          <div className="p-6">
+            <h3 className="text-base font-semibold mb-4">AI Assistant</h3>
+            <Suspense fallback={<LoadingSpinner message="Loading AI Assistant..." />}>
+              <ChatBot stationData={filteredData} />
+            </Suspense>
+          </div>
+        );
+
       default:
         return null;
     }
   }, [activeTab, isLoading, filteredData, stationStats, stationData.length, error, mapSettings, filters, handleFileUpload, handleExportData]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <MapCommandProvider>
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <ProfessionalHeader
         stationCount={stationStats.totalStations}
@@ -648,6 +697,7 @@ const ProfessionalWebGISApp: React.FC = () => {
                 { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
                 { id: 'filters', label: 'Filters', icon: Filter },
                 { id: 'settings', label: 'Settings', icon: Settings },
+                { id: 'ai', label: 'AI Assistant', icon: Bot },
               ].map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
@@ -684,11 +734,31 @@ const ProfessionalWebGISApp: React.FC = () => {
               enableStationClustering={mapSettings.enableStationClustering}
               enableRecordClustering={mapSettings.enableRecordClustering}
               showRecordCount={mapSettings.showRecordCount}
+              onStationHover={handleStationHover}
+              onStationLeave={handleStationLeave}
             />
           </Suspense>
         </main>
       </div>
-    </div>
+
+      {/* Station Tooltip */}
+      {activeTooltip && (
+        <div
+          className="fixed z-[9999] animate-fade-in pointer-events-none"
+          style={{
+            left: `${activeTooltip.x}px`,
+            top: `${activeTooltip.y}px`,
+            transform: "translate(-50%, -100%)",
+            marginTop: "-12px",
+          }}
+          role="tooltip"
+          aria-live="polite"
+        >
+          <StationTooltip station={activeTooltip.station} />
+        </div>
+      )}
+      </div>
+    </MapCommandProvider>
   );
 };
 
