@@ -240,6 +240,9 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
   // Map command handler for AI interactions
   const [focusedStationId, setFocusedStationId] = useState<string | null>(null);
   const [highlightedStationIds, setHighlightedStationIds] = useState<string[]>([]);
+  
+  // Mobile responsive state
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleMapCommands = useCallback((commands: MapCommand[]) => {
     commands.forEach(command => {
@@ -441,12 +444,14 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
           onExportClick={handleExportData}
           onResetView={handleResetView}
           onAIAssistantClick={() => {/* This will focus AI Assistant tab in sidebar */}}
+          onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          isMobileMenuOpen={isMobileMenuOpen}
         />
 
         {/* Main Content Grid */}
         <div className="webgis-content-grid">
           {/* Sidebar */}
-          <div className="webgis-sidebar">
+          <div className={`webgis-sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
             <ModernSidebar
               dataManagementContent={dataManagementContent}
               dashboardContent={<PollutionDashboard stationData={filteredData} />}
@@ -455,8 +460,17 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
               layerControlContent={layerControlContent}
               stationCount={stationStats.totalStations}
               recordCount={stationStats.totalRecords}
+              onClose={() => setIsMobileMenuOpen(false)}
             />
           </div>
+          
+          {/* Mobile Overlay */}
+          {isMobileMenuOpen && (
+            <div 
+              className="md:hidden fixed inset-0 bg-black/50 z-40" 
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+          )}
 
           {/* Map Canvas */}
           <div className="webgis-map-canvas">

@@ -10,7 +10,8 @@ import {
   Upload,
   Download,
   RotateCcw,
-  Bot
+  Bot,
+  Menu
 } from 'lucide-react';
 import { StationData } from '@/utils/csvImporter';
 
@@ -24,6 +25,8 @@ interface AppBarProps {
   onExportClick?: () => void;
   onResetView?: () => void;
   onAIAssistantClick?: () => void;
+  onMenuToggle?: () => void;
+  isMobileMenuOpen?: boolean;
 }
 
 export default function AppBar({ 
@@ -35,7 +38,9 @@ export default function AppBar({
   onUploadClick,
   onExportClick,
   onResetView,
-  onAIAssistantClick
+  onAIAssistantClick,
+  onMenuToggle,
+  isMobileMenuOpen = false
 }: AppBarProps) {
   return (
     <header className="h-16 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-500 shadow-lg z-40">
@@ -82,70 +87,86 @@ export default function AppBar({
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
+          {/* Mobile Menu Toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onMenuToggle}
+            className="md:hidden text-white hover:bg-white/20"
+            title="Toggle Menu"
+          >
+            <Menu className="w-4 h-4" />
+          </Button>
+          
           <Button
             variant="ghost"
             size="sm"
             onClick={onAIAssistantClick}
-            className="text-white hover:bg-white/20 border border-white/30"
+            className="text-white hover:bg-white/20 border border-white/30 hidden sm:flex"
             title="AI Assistant"
           >
             <Bot className="w-4 h-4 mr-2" />
-            AI Assistant
+            <span className="hidden lg:inline">AI Assistant</span>
+            <Bot className="lg:hidden w-4 h-4" />
           </Button>
           
-          <div className="w-px h-6 bg-white/30 mx-1" />
+          <div className="w-px h-6 bg-white/30 mx-1 hidden sm:block" />
           
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onUploadClick}
-            className="text-white hover:bg-white/20"
-            title="Import Data"
-          >
-            <Upload className="w-4 h-4" />
-          </Button>
+          <div className="hidden sm:flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onUploadClick}
+              className="text-white hover:bg-white/20"
+              title="Import Data"
+            >
+              <Upload className="w-4 h-4" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onExportClick}
+              className="text-white hover:bg-white/20"
+              title="Export Data"
+            >
+              <Download className="w-4 h-4" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onResetView}
+              className="text-white hover:bg-white/20"
+              title="Reset Map View"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </Button>
+          </div>
           
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onExportClick}
-            className="text-white hover:bg-white/20"
-            title="Export Data"
-          >
-            <Download className="w-4 h-4" />
-          </Button>
+          <div className="w-px h-6 bg-white/30 mx-1 hidden lg:block" />
           
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onResetView}
-            className="text-white hover:bg-white/20"
-            title="Reset Map View"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </Button>
-          
-          <div className="w-px h-6 bg-white/30 mx-1" />
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onInfoClick}
-            className="text-white hover:bg-white/20"
-            title="About"
-          >
-            <Info className="w-4 h-4" />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-white hover:bg-white/20"
-            onClick={() => window.open('https://github.com/eluisluzquadros/climate-eye-forecasting-now', '_blank')}
-            title="View Source Code"
-          >
-            <Github className="w-4 h-4" />
-          </Button>
+          <div className="hidden lg:flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onInfoClick}
+              className="text-white hover:bg-white/20"
+              title="About"
+            >
+              <Info className="w-4 h-4" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-white/20"
+              onClick={() => window.open('https://github.com/eluisluzquadros/climate-eye-forecasting-now', '_blank')}
+              title="View Source Code"
+            >
+              <Github className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </header>

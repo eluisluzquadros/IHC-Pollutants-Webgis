@@ -1,11 +1,7 @@
 import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { 
-  Menu, 
   Upload, 
   Download, 
   FileText, 
@@ -21,7 +17,6 @@ import {
   Layers
 } from 'lucide-react';
 
-
 interface ModernSidebarProps {
   children?: React.ReactNode;
   dataManagementContent: React.ReactNode;
@@ -31,6 +26,7 @@ interface ModernSidebarProps {
   layerControlContent: React.ReactNode;
   stationCount?: number;
   recordCount?: number;
+  onClose?: () => void;
 }
 
 export default function ModernSidebar({
@@ -41,86 +37,11 @@ export default function ModernSidebar({
   filterContent,
   layerControlContent,
   stationCount = 0,
-  recordCount = 0
+  recordCount = 0,
+  onClose
 }: ModernSidebarProps) {
   const [activeTab, setActiveTab] = useState('chat'); // Start with AI Assistant
-  const [isOpen, setIsOpen] = useState(false);
 
-  return (
-    <>
-      {/* Mobile Menu Button */}
-      <div className="fixed top-6 left-6 z-50 lg:hidden">
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-            <Button 
-              size="sm" 
-              className="btn-professional btn-professional-primary glass-professional shadow-lg"
-            >
-              <Menu className="w-4 h-4" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-full max-w-md p-0 border-0">
-            <SidebarContent
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              dataManagementContent={dataManagementContent}
-              dashboardContent={dashboardContent}
-              chatBotContent={chatBotContent}
-              filterContent={filterContent}
-              layerControlContent={layerControlContent}
-              stationCount={stationCount}
-              recordCount={recordCount}
-              onClose={() => setIsOpen(false)}
-            />
-          </SheetContent>
-        </Sheet>
-      </div>
-
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
-        <div className="sidebar-professional animate-professional-slide-in">
-          <SidebarContent
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            dataManagementContent={dataManagementContent}
-            dashboardContent={dashboardContent}
-            chatBotContent={chatBotContent}
-            filterContent={filterContent}
-            layerControlContent={layerControlContent}
-            stationCount={stationCount}
-            recordCount={recordCount}
-          />
-        </div>
-      </div>
-    </>
-  );
-}
-
-interface SidebarContentProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-  dataManagementContent: React.ReactNode;
-  dashboardContent: React.ReactNode;
-  chatBotContent: React.ReactNode;
-  filterContent: React.ReactNode;
-  layerControlContent: React.ReactNode;
-  stationCount: number;
-  recordCount: number;
-  onClose?: () => void;
-}
-
-function SidebarContent({
-  activeTab,
-  setActiveTab,
-  dataManagementContent,
-  dashboardContent,
-  chatBotContent,
-  filterContent,
-  layerControlContent,
-  stationCount,
-  recordCount,
-  onClose
-}: SidebarContentProps) {
   const tabs = [
     {
       id: 'dashboard',
@@ -159,10 +80,22 @@ function SidebarContent({
     }
   ];
 
-
   return (
     <div className="h-full flex flex-col bg-white">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+        {/* Mobile Close Button */}
+        {onClose && (
+          <div className="md:hidden flex justify-end p-4 border-b border-gray-200">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
 
         {/* Compact Tab Navigation */}
         <div className="border-b border-gray-200 bg-gray-50">
