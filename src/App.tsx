@@ -4,8 +4,8 @@ import { AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 // import routes from "tempo-routes";
 
-// Lazy load the main application component
-const ProfessionalWebGISApp = lazy(() => import("./components/ProfessionalWebGISApp"));
+// Lazy load the main application component with AI Assistant
+const Home = lazy(() => import("./components/home"));
 
 // Professional Loading Component
 const AppLoadingFallback = () => (
@@ -70,14 +70,14 @@ function App() {
       {import.meta.env.VITE_TEMPO === "true" ? (
         tempoRoutes || (
           <Routes>
-            <Route path="/" element={<ProfessionalWebGISApp />} />
-            <Route path="*" element={<ProfessionalWebGISApp />} />
+            <Route path="/" element={<Home />} />
+            <Route path="*" element={<Home />} />
           </Routes>
         )
       ) : (
         <Routes>
-          <Route path="/" element={<ProfessionalWebGISApp />} />
-          <Route path="*" element={<ProfessionalWebGISApp />} />
+          <Route path="/" element={<Home />} />
+          <Route path="*" element={<Home />} />
         </Routes>
       )}
     </Suspense>

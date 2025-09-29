@@ -21,6 +21,11 @@ import {
   Layers
 } from 'lucide-react';
 
+console.log('🔥 MODERN SIDEBAR FILE LOADED');
+
+// INTENTIONAL ERROR TO TEST LOADING
+window.TEST_SIDEBAR_LOADING = true;
+
 interface ModernSidebarProps {
   children?: React.ReactNode;
   dataManagementContent: React.ReactNode;
@@ -42,7 +47,7 @@ export default function ModernSidebar({
   stationCount = 0,
   recordCount = 0
 }: ModernSidebarProps) {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('chat'); // Start with AI Assistant
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -158,6 +163,14 @@ function SidebarContent({
     }
   ];
 
+  console.log('🔍 SIDEBAR DEBUG:', {
+    totalTabs: tabs.length,
+    tabIds: tabs.map(t => t.id),
+    tabLabels: tabs.map(t => t.label),
+    activeTab,
+    chatBotContent: !!chatBotContent
+  });
+
   return (
     <div className="h-full flex flex-col">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
@@ -209,20 +222,22 @@ function SidebarContent({
           )}
         </div>
 
-        {/* Professional Tab Navigation */}
-        <div className="tabs-professional">
-          <TabsList className="grid grid-cols-5 gap-0 p-0 bg-transparent h-auto">
-            {tabs.map((tab) => {
+        {/* Professional Tab Navigation - SIMPLIFIED FOR DEBUG */}
+        <div className="tabs-professional border border-red-500 p-2 m-2">
+          <div className="text-xs text-red-500 mb-2">DEBUG: {tabs.length} tabs total</div>
+          <TabsList className="w-full flex flex-wrap gap-1 bg-gray-100 p-1">
+            {tabs.map((tab, index) => {
               const Icon = tab.icon;
+              console.log(`🔍 Rendering tab ${index + 1}/${tabs.length}:`, tab.label, tab.id);
               return (
                 <TabsTrigger 
                   key={tab.id}
                   value={tab.id}
-                  className="tab-professional"
+                  className="flex-1 min-w-0 px-2 py-1 text-xs data-[state=active]:bg-blue-500 data-[state=active]:text-white"
                   title={tab.description}
                 >
-                  <Icon className="w-4 h-4" />
-                  <span className="text-xs font-medium">{tab.label}</span>
+                  <Icon className="w-3 h-3 mr-1" />
+                  <span className="truncate">{tab.label}</span>
                 </TabsTrigger>
               );
             })}
