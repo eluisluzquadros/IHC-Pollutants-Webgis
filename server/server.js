@@ -73,7 +73,10 @@ app.post('/api/ai/chat', async (req, res) => {
       const totalRecords = stationData.length;
 
       // Date range
-      const dates = stationData.map(d => new Date(d.sample_dt)).sort();
+      const dates = stationData
+        .map(d => d.sample_dt ? new Date(d.sample_dt) : null)
+        .filter(date => date && !isNaN(date.getTime()))
+        .sort();
       const dateRange = {
         start: dates[0]?.toISOString().split('T')[0] || '',
         end: dates[dates.length - 1]?.toISOString().split('T')[0] || ''
@@ -172,7 +175,7 @@ app.post('/api/ai/chat', async (req, res) => {
           anomalies.push({
             stationId: record.station_id,
             stationName: record.station_name,
-            date: record.sample_dt.split('T')[0],
+            date: record.sample_dt ? record.sample_dt.split('T')[0] : 'Unknown',
             pollutant: 'Pollution A',
             value: record.pol_a,
             zScore: zScoreA.toFixed(2),
@@ -187,7 +190,7 @@ app.post('/api/ai/chat', async (req, res) => {
           anomalies.push({
             stationId: record.station_id,
             stationName: record.station_name,
-            date: record.sample_dt.split('T')[0],
+            date: record.sample_dt ? record.sample_dt.split('T')[0] : 'Unknown',
             pollutant: 'Pollution B',
             value: record.pol_b,
             zScore: zScoreB.toFixed(2),
@@ -206,7 +209,7 @@ app.post('/api/ai/chat', async (req, res) => {
       
       // Group data by date for temporal analysis
       const dateGroups = stationData.reduce((groups, record) => {
-        const date = record.sample_dt.split('T')[0];
+        const date = record.sample_dt ? record.sample_dt.split('T')[0] : 'Unknown';
         if (!groups[date]) groups[date] = [];
         groups[date].push(record);
         return groups;
@@ -469,8 +472,9 @@ Respond in JSON format: {"message": "your response", "mapCommands": [optional ma
     console.error('OpenAI API Error:', error);
     
     // Return fallback response
-    const totalStations = stationData ? new Set(stationData.map(d => d.station_id)).size : 0;
-    const totalRecords = stationData ? stationData.length : 0;
+    const fallbackStationData = req.body.stationData || [];
+    const totalStations = fallbackStationData.length > 0 ? new Set(fallbackStationData.map(d => d.station_id)).size : 0;
+    const totalRecords = fallbackStationData.length;
     
     res.json({
       message: totalRecords === 0 
