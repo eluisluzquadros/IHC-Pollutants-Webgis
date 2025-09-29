@@ -7,8 +7,18 @@ const port = process.env.PORT || 3001;
 
 // Configure CORS for Replit environment
 app.use(cors({
-  origin: ['http://localhost:5000', process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null].filter(Boolean),
-  credentials: true
+  origin: [
+    'http://localhost:5000',
+    'https://localhost:5000',
+    process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null,
+    process.env.REPLIT_DEV_DOMAIN ? `http://${process.env.REPLIT_DEV_DOMAIN}` : null,
+    // Allow all Replit domains
+    /^https:\/\/.*\.replit\.dev$/,
+    /^https:\/\/.*\.kirk\.replit\.dev$/
+  ].filter(Boolean),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json({ limit: '10mb' }));
