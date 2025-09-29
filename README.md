@@ -183,6 +183,12 @@ npm run preview
 
 The built files will be in the `dist/` directory, ready for deployment to any static hosting service.
 
+### Access Local Maps
+
+1. cd maps
+2. python -m http.server 8000
+3. Open: http://localhost:8000/mapa.html
+
 ## 🤝 Contributing
 
 1. Fork the repository
