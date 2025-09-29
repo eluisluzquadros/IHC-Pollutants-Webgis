@@ -751,19 +751,15 @@ const MapContainer = ({
           
           // Add hover events for external tooltip
           if (onStationHover && onStationLeave) {
-            console.log(`✓ Adding hover events to station ${station.station_id}`);
             marker.on('mouseover', (e) => {
-              console.log(`🎯 Station ${station.station_id} hovered`);
               const rect = mapContainer.current?.getBoundingClientRect();
               if (rect) {
                 const event = e.originalEvent as MouseEvent;
-                console.log(`📍 Calling onStationHover with coordinates:`, event.clientX - rect.left, event.clientY - rect.top);
                 onStationHover(station, event.clientX - rect.left, event.clientY - rect.top);
               }
             });
             
             marker.on('mouseout', () => {
-              console.log(`👋 Station ${station.station_id} mouse out`);
               onStationLeave();
             });
           }
