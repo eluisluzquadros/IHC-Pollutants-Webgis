@@ -1,8 +1,17 @@
 import { StationData } from "@/utils/csvImporter";
 
-// Backend API configuration for Replit environment
-// In Replit, both frontend and backend run in the same container, so localhost works
-const API_BASE_URL = 'http://localhost:3001';
+// Backend API configuration 
+const getApiBaseUrl = (): string => {
+  // Check for environment variable override first (production deployment)
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  
+  // Use relative path for API calls (proxied by Vite in dev, direct in prod)
+  return '';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 console.log('🔗 AI Service API URL:', API_BASE_URL);
 

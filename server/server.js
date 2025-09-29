@@ -3,6 +3,7 @@ const cors = require('cors');
 const OpenAI = require('openai').default;
 
 const app = express();
+// Use Replit's assigned PORT or fallback to 3001 for development
 const port = process.env.PORT || 3001;
 
 // Configure CORS for Replit environment

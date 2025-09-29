@@ -23,5 +23,9 @@ export default defineConfig({
     port: 5000,
     host: true,
     allowedHosts: true,
+    proxy: {
+      // Proxy API calls to backend server
+      '/api': 'http://localhost:3001'
+    }
   }
 });
