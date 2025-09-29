@@ -380,6 +380,15 @@ const Home: React.FC<HomeProps> = memo(({ className = "" }) => {
 
         {/* Map Content */}
         <div className="layout-content">
+          {(() => {
+            console.log(`🔍 HOME: About to render MapContainer with handlers:`, {
+              handleStationHover: !!handleStationHover,
+              handleStationLeave: !!handleStationLeave,
+              handleStationHoverType: typeof handleStationHover,
+              handleStationLeaveType: typeof handleStationLeave
+            });
+            return null;
+          })()}
           <MapContainer
             stationData={filteredData}
             showStationMarkers={mapSettings.showStations}
