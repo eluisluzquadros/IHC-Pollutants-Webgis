@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Envibase - Inovação em Estudos Ambientais</title>
+<!-- BEGIN: External Scripts -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- END: External Scripts -->
+<!-- BEGIN: Custom Configuration -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              light: '#3b82f6',
+              DEFAULT: '#1e40af',
+              dark: '#1e3a8a',
+              deep: '#0f172a'
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- END: Custom Configuration -->
+<!-- BEGIN: Custom Styles -->
+<style data-purpose="layout">
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      scroll-behavior: smooth;
+    }
+    .hero-gradient {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  </style>
+<style data-purpose="typography">
+    .text-gradient {
+      background: linear-gradient(to right, #60a5fa, #ffffff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+<!-- END: Custom Styles -->
+</head>
+<body class="bg-white text-brand-deep">
+<!-- BEGIN: MainHeader -->
+<header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+<nav class="container mx-auto px-6 py-4 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-10 h-10 bg-brand rounded-lg flex items-center justify-center">
+<span class="text-white font-bold text-xl">E</span>
+</div>
+<span class="font-bold text-2xl tracking-tight text-brand-dark">ENVIBASE</span>
+</div>
+<div class="hidden md:flex items-center gap-8">
+<a class="text-sm font-medium hover:text-brand transition-colors" href="#features">Funcionalidades</a>
+<a class="text-sm font-medium hover:text-brand transition-colors" href="#pricing">Planos</a>
+<a class="text-sm font-medium hover:text-brand transition-colors" href="#faq">FAQ</a>
+<a class="bg-brand text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-brand-dark transition-all shadow-lg shadow-brand/20" href="#download">
+          BAIXAR E-BOOK GRATUITO
+        </a>
+</div>
+</nav>
+</header>
+<!-- END: MainHeader -->
+<main>
+<!-- BEGIN: HeroSection -->
+<section class="hero-gradient text-white py-20 lg:py-32 overflow-hidden">
+<div class="container mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
+<div data-purpose="hero-content">
+<div class="inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full mb-6 border border-white/20">
+<span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+<span class="text-xs font-bold tracking-widest uppercase">Validado por CNPq &amp; Conecta Startup Brasil</span>
+</div>
+<h1 class="text-5xl lg:text-7xl font-extrabold leading-tight mb-6">
+            A Autoridade em <span class="text-gradient">Dados Ambientais</span>.
+          </h1>
+<p class="text-lg text-blue-100 mb-10 max-w-xl leading-relaxed">
+            Otimize seus estudos de impacto ambiental com a plataforma líder em tecnologia e conformidade técnica no Brasil.
+          </p>
+<div class="flex flex-col sm:flex-row gap-4">
+<button class="bg-blue-500 hover:bg-blue-600 px-8 py-4 rounded-xl font-bold transition-all transform hover:-translate-y-1">
+              Conhecer a Plataforma
+            </button>
+<button class="bg-transparent border border-white/30 hover:bg-white/10 px-8 py-4 rounded-xl font-bold transition-all">
+              Falar com Consultor
+            </button>
+</div>
+</div>
+<div class="relative flex justify-center" data-purpose="hero-image-container">
+<!-- Main visual element representing a high-tech platform interface or book -->
+<img alt="E-book Estudos Ambientais na Era Digital" class="w-full max-w-md drop-shadow-2xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIgMPeVu9Evlrck1cbb1buiQ_ldqbWPwRM5bbj8GbYvJ5de44i5DdF_Jq0cXNy4kVPSnYLiOMsHzbHCbLjl7IzbINI9I9tKR11dybXy2s5UHICRZky1uWEo2xoj6nQXbGlfLGT3646EDhObfnwwBPIOrMhCqvIivF7TmbYdXGtnRUHBhaWuEcpvJje1UlkLyABUnWdM7CQzmZ_MDgZdggKyXdb27QKSs6LUBsP57Szw9CIPzanbip-d9L3hOqGajT2GD73lzqSUb9k"/>
+<div class="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-400 rounded-full blur-3xl opacity-20"></div>
+<div class="absolute -top-10 -left-10 w-40 h-40 bg-indigo-600 rounded-full blur-3xl opacity-20"></div>
+</div>
+</div>
+</section>
+<!-- END: HeroSection -->
+<!-- BEGIN: PartnersLogos -->
+<section class="py-12 bg-gray-50 border-b border-gray-100">
+<div class="container mx-auto px-6">
+<p class="text-center text-sm font-semibold text-gray-400 uppercase tracking-widest mb-8">Parcerias Estratégicas e Validação</p>
+<div class="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60">
+<!-- Using descriptive divs for logo placeholders -->
+<div class="font-bold text-xl">Catalisa ICT</div>
+<div class="font-bold text-xl">ProinterBio</div>
+<div class="font-bold text-xl">Conecta Brasil</div>
+<div class="font-bold text-xl">CNPq</div>
+</div>
+</div>
+</section>
+<!-- END: PartnersLogos -->
+<!-- BEGIN: FeaturesGrid -->
+<section class="py-24 bg-white" id="features">
+<div class="container mx-auto px-6">
+<div class="text-center mb-16">
+<h2 class="text-4xl font-bold text-brand-deep mb-4">Potencialize seus resultados</h2>
+<p class="text-gray-600 max-w-2xl mx-auto">Explore as 6 dimensões fundamentais onde a Envibase revoluciona sua operação ambiental.</p>
+</div>
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Feature Card: Organization -->
+<div class="p-8 rounded-2xl border border-gray-100 hover:border-brand/50 hover:shadow-xl transition-all duration-300 group">
+<div class="w-14 h-14 bg-blue-50 text-brand rounded-xl flex items-center justify-center mb-6 group-hover:bg-brand group-hover:text-white transition-colors">
+<svg class="w-8 h-8" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-xl font-bold mb-3">ORGANIZAÇÃO</h3>
+<p class="text-gray-600">Centralize todos os dados de campo e arquivos técnicos em um ecossistema estruturado.</p>
+</div>
+<!-- Feature Card: Productivity -->
+<div class="p-8 rounded-2xl border border-gray-100 hover:border-brand/50 hover:shadow-xl transition-all duration-300 group">
+<div class="w-14 h-14 bg-blue-50 text-brand rounded-xl flex items-center justify-center mb-6 group-hover:bg-brand group-hover:text-white transition-colors">
+<svg class="w-8 h-8" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-xl font-bold mb-3">PRODUTIVIDADE</h3>
+<p class="text-gray-600">Reduza em até 60% o tempo de compilação e geração de relatórios técnicos complexos.</p>
+</div>
+<!-- Feature Card: Discovery -->
+<div class="p-8 rounded-2xl border border-gray-100 hover:border-brand/50 hover:shadow-xl transition-all duration-300 group">
+<div class="w-14 h-14 bg-blue-50 text-brand rounded-xl flex items-center justify-center mb-6 group-hover:bg-brand group-hover:text-white transition-colors">
+<svg class="w-8 h-8" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-xl font-bold mb-3">DISCOVERY</h3>
+<p class="text-gray-600">Insights avançados através de análise de dados históricos e geoespaciais.</p>
+</div>
+<!-- Feature Card: Economy -->
+<div class="p-8 rounded-2xl border border-gray-100 hover:border-brand/50 hover:shadow-xl transition-all duration-300 group">
+<div class="w-14 h-14 bg-blue-50 text-brand rounded-xl flex items-center justify-center mb-6 group-hover:bg-brand group-hover:text-white transition-colors">
+<svg class="w-8 h-8" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-xl font-bold mb-3">ECONOMIA</h3>
+<p class="text-gray-600">Redução drástica de custos operacionais e desperdício de recursos em campo.</p>
+</div>
+<!-- Feature Card: Competitiveness -->
+<div class="p-8 rounded-2xl border border-gray-100 hover:border-brand/50 hover:shadow-xl transition-all duration-300 group">
+<div class="w-14 h-14 bg-blue-50 text-brand rounded-xl flex items-center justify-center mb-6 group-hover:bg-brand group-hover:text-white transition-colors">
+<svg class="w-8 h-8" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-xl font-bold mb-3">COMPETITIVIDADE</h3>
+<p class="text-gray-600">Destaque sua empresa com entregas mais rápidas e tecnicamente superiores.</p>
+</div>
+<!-- Feature Card: Security -->
+<div class="p-8 rounded-2xl border border-gray-100 hover:border-brand/50 hover:shadow-xl transition-all duration-300 group">
+<div class="w-14 h-14 bg-blue-50 text-brand rounded-xl flex items-center justify-center mb-6 group-hover:bg-brand group-hover:text-white transition-colors">
+<svg class="w-8 h-8" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.040L3 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622l-0.382-3.016z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-xl font-bold mb-3">SEGURANÇA</h3>
+<p class="text-gray-600">Criptografia de ponta e redundância de dados para total conformidade legal.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- END: FeaturesGrid -->
+<!-- BEGIN: PricingSection -->
+<section class="py-24 bg-gray-50" id="pricing">
+<div class="container mx-auto px-6">
+<div class="text-center mb-16">
+<h2 class="text-4xl font-bold text-brand-deep mb-4">Planos que acompanham seu crescimento</h2>
+<p class="text-gray-600">Escolha a solução ideal para o seu volume de projetos.</p>
+</div>
+<div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+<!-- Tier: Starter -->
+<div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col">
+<h3 class="text-xl font-bold mb-2">Individual</h3>
+<div class="text-4xl font-bold mb-6">Grátis<span class="text-base font-normal text-gray-400">/mês</span></div>
+<ul class="space-y-4 mb-8 flex-grow">
+<li class="flex items-center gap-2 text-sm text-gray-600"><span class="text-brand">✓</span> Até 1 projeto ativo</li>
+<li class="flex items-center gap-2 text-sm text-gray-600"><span class="text-brand">✓</span> Armazenamento 500MB</li>
+<li class="flex items-center gap-2 text-sm text-gray-600"><span class="text-brand">✓</span> Relatórios simplificados</li>
+</ul>
+<button class="w-full py-3 rounded-xl border-2 border-brand text-brand font-bold hover:bg-brand hover:text-white transition-all">Começar Agora</button>
+</div>
+<!-- Tier: Professional -->
+<div class="bg-brand text-white p-8 rounded-3xl shadow-xl shadow-brand/20 flex flex-col scale-105 relative">
+<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-500 px-4 py-1 rounded-full text-xs font-bold uppercase">Mais Popular</div>
+<h3 class="text-xl font-bold mb-2">Profissional</h3>
+<div class="text-4xl font-bold mb-6">R$ 249<span class="text-base font-normal text-blue-200">/mês</span></div>
+<ul class="space-y-4 mb-8 flex-grow">
+<li class="flex items-center gap-2 text-sm text-blue-50"><span class="text-blue-300">✓</span> Projetos Ilimitados</li>
+<li class="flex items-center gap-2 text-sm text-blue-50"><span class="text-blue-300">✓</span> 50GB de Armazenamento</li>
+<li class="flex items-center gap-2 text-sm text-blue-50"><span class="text-blue-300">✓</span> Exportação para GIS/CAD</li>
+<li class="flex items-center gap-2 text-sm text-blue-50"><span class="text-blue-300">✓</span> Suporte Prioritário</li>
+</ul>
+<button class="w-full py-3 rounded-xl bg-white text-brand font-bold hover:bg-blue-50 transition-all">Assinar Professional</button>
+</div>
+<!-- Tier: Corporate -->
+<div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col">
+<h3 class="text-xl font-bold mb-2">Corporativo</h3>
+<div class="text-4xl font-bold mb-6">Consultar</div>
+<ul class="space-y-4 mb-8 flex-grow">
+<li class="flex items-center gap-2 text-sm text-gray-600"><span class="text-brand">✓</span> Múltiplos Usuários</li>
+<li class="flex items-center gap-2 text-sm text-gray-600"><span class="text-brand">✓</span> API de Integração</li>
+<li class="flex items-center gap-2 text-sm text-gray-600"><span class="text-brand">✓</span> Treinamento In-company</li>
+<li class="flex items-center gap-2 text-sm text-gray-600"><span class="text-brand">✓</span> Gestor de Conta Dedicado</li>
+</ul>
+<button class="w-full py-3 rounded-xl border-2 border-brand text-brand font-bold hover:bg-brand hover:text-white transition-all">Falar com Vendas</button>
+</div>
+</div>
+</div>
+</section>
+<!-- END: PricingSection -->
+<!-- BEGIN: CTA_Ebook -->
+<section class="py-24 bg-brand-deep text-white" id="download">
+<div class="container mx-auto px-6">
+<div class="bg-brand-dark/50 rounded-3xl overflow-hidden flex flex-col lg:flex-row items-center">
+<div class="p-12 lg:p-20 flex-1">
+<h2 class="text-4xl font-bold mb-6">Atualize seus conhecimentos técnicos</h2>
+<p class="text-blue-200 text-lg mb-8">Baixe gratuitamente nosso guia completo sobre Estudos Ambientais na Era Digital e descubra como as novas tecnologias estão transformando o setor.</p>
+<button class="bg-white text-brand-deep px-8 py-4 rounded-xl font-extrabold text-lg hover:bg-blue-50 transition-all flex items-center gap-3">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+              BAIXAR E-BOOK GRATUITO
+            </button>
+</div>
+<div class="flex-1 p-12 bg-white/5 w-full flex justify-center">
+<img alt="E-book Mockup" class="w-full max-w-sm drop-shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwKOPmAuZ9FJK-XW0OVzQMoxS7n8DCLSFVtYvLn5JwWUwkOqhB_8Ih6NUgtXIyX4dti5Pm9P5ZgVJ3V4c-D6i3aqy9sPaK8YZj_mkc6q1_s_4XoDPRaKIblAU7kmItFOxCGcow_lWRm4P6q5IfDjG4n0TygWWtkwBaldsaPydfSsTO7E9AOJ5Bf3GIsnxdXPIceXTrKPpLXN8BRG5xH-xgct1FzE1XHzuSPf5DWN6Eu5-I7A6gLvjs6b44yZQxzGoTuHjyiiFo9sop"/>
+</div>
+</div>
+</div>
+</section>
+<!-- END: CTA_Ebook -->
+<!-- BEGIN: FAQSection -->
+<section class="py-24 bg-white" id="faq">
+<div class="container mx-auto px-6 max-w-3xl">
+<h2 class="text-4xl font-bold text-center mb-16">Perguntas Frequentes</h2>
+<div class="space-y-4">
+<!-- FAQ Item 1 -->
+<details class="group p-6 rounded-2xl bg-gray-50 border border-gray-100 [&amp;_summary::-webkit-details-marker]:hidden">
+<summary class="flex items-center justify-between cursor-pointer">
+<h4 class="font-bold text-lg">Os dados são exportáveis para outros softwares?</h4>
+<span class="transition group-open:rotate-180">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</span>
+</summary>
+<p class="mt-4 text-gray-600 leading-relaxed">
+              Sim, a Envibase permite exportação em diversos formatos padrões do mercado, incluindo GeoJSON, CSV, KML e compatibilidade com AutoCAD e ArcGIS.
+            </p>
+</details>
+<!-- FAQ Item 2 -->
+<details class="group p-6 rounded-2xl bg-gray-50 border border-gray-100 [&amp;_summary::-webkit-details-marker]:hidden">
+<summary class="flex items-center justify-between cursor-pointer">
+<h4 class="font-bold text-lg">A plataforma funciona offline em campo?</h4>
+<span class="transition group-open:rotate-180">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</span>
+</summary>
+<p class="mt-4 text-gray-600 leading-relaxed">
+              Nosso aplicativo móvel permite a coleta de dados totalmente offline. Assim que houver conexão disponível, os dados são sincronizados automaticamente com a nuvem.
+            </p>
+</details>
+<!-- FAQ Item 3 -->
+<details class="group p-6 rounded-2xl bg-gray-50 border border-gray-100 [&amp;_summary::-webkit-details-marker]:hidden">
+<summary class="flex items-center justify-between cursor-pointer">
+<h4 class="font-bold text-lg">Existe suporte para consultoria ambiental?</h4>
+<span class="transition group-open:rotate-180">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</span>
+</summary>
+<p class="mt-4 text-gray-600 leading-relaxed">
+              Oferecemos treinamentos técnicos e suporte especializado para garantir que sua equipe tire o máximo proveito das ferramentas em seus estudos ambientais.
+            </p>
+</details>
+</div>
+</div>
+</section>
+<!-- END: FAQSection -->
+</main>
+<!-- BEGIN: Footer -->
+<footer class="bg-gray-900 text-gray-400 py-16 border-t border-gray-800">
+<div class="container mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
+<div class="col-span-1 md:col-span-1">
+<div class="flex items-center gap-2 mb-6">
+<div class="w-8 h-8 bg-brand rounded flex items-center justify-center">
+<span class="text-white font-bold">E</span>
+</div>
+<span class="font-bold text-xl text-white">ENVIBASE</span>
+</div>
+<p class="text-sm leading-relaxed">
+          Tecnologia brasileira de ponta para a transformação digital do setor ambiental.
+        </p>
+</div>
+<div>
+<h5 class="text-white font-bold mb-6">Plataforma</h5>
+<ul class="space-y-4 text-sm">
+<li><a class="hover:text-brand transition-colors" href="#">Funcionalidades</a></li>
+<li><a class="hover:text-brand transition-colors" href="#">Segurança</a></li>
+<li><a class="hover:text-brand transition-colors" href="#">Integrações</a></li>
+</ul>
+</div>
+<div>
+<h5 class="text-white font-bold mb-6">Empresa</h5>
+<ul class="space-y-4 text-sm">
+<li><a class="hover:text-brand transition-colors" href="#">Sobre Nós</a></li>
+<li><a class="hover:text-brand transition-colors" href="#">Carreiras</a></li>
+<li><a class="hover:text-brand transition-colors" href="#">Contato</a></li>
+</ul>
+</div>
+<div>
+<h5 class="text-white font-bold mb-6">Newsletter</h5>
+<div class="flex gap-2">
+<input class="bg-gray-800 border-none rounded-lg px-4 py-2 w-full text-sm focus:ring-1 focus:ring-brand" placeholder="Seu e-mail" type="email"/>
+<button class="bg-brand text-white px-4 py-2 rounded-lg hover:bg-brand-dark transition-all">OK</button>
+</div>
+</div>
+</div>
+<div class="container mx-auto px-6 mt-16 pt-8 border-t border-gray-800 text-xs text-center">
+<p>© 2023 Envibase Tecnologias. Todos os direitos reservados. Patrocinado por CNPq.</p>
+</div>
+</footer>
+<!-- END: Footer -->
+</body></html>

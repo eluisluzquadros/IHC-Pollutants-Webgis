@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+
+<html lang="pt-br"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Envibase | Inteligência de Dados Ambientais</title>
+<!-- Tailwind CSS v3 with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#0df259',
+              dark: '#0bc74a',
+              light: '#59f78d',
+            },
+            brand: {
+              dark: '#0f172a',
+              muted: '#64748b',
+            }
+          },
+          borderRadius: {
+            'custom': '8px',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+<style data-purpose="typography">
+    body {
+      font-family: 'Inter', sans-serif;
+      scroll-behavior: smooth;
+    }
+    .text-balance {
+      text-wrap: balance;
+    }
+  </style>
+<style data-purpose="custom-elements">
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .hero-gradient {
+      background: radial-gradient(circle at top right, rgba(13, 242, 89, 0.1), transparent),
+                  radial-gradient(circle at bottom left, rgba(15, 23, 42, 0.05), transparent);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 overflow-x-hidden">
+<!-- BEGIN: Navigation -->
+<nav class="fixed top-0 w-full z-50 glass-effect border-b border-slate-200">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-20">
+<!-- Logo Area -->
+<div class="flex items-center space-x-2">
+<div class="w-10 h-10 bg-primary rounded-custom flex items-center justify-center">
+<svg class="w-6 h-6 text-brand-dark" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<span class="text-2xl font-extrabold tracking-tight text-brand-dark">ENVIBASE</span>
+</div>
+<!-- Desktop Menu -->
+<div class="hidden md:flex items-center space-x-8">
+<a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors" href="#about">Sobre</a>
+<a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors" href="#features">Funcionalidades</a>
+<a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors" href="#validation">Validação</a>
+<button class="bg-brand-dark text-white px-5 py-2.5 rounded-custom text-sm font-semibold hover:bg-slate-800 transition-all shadow-sm">
+            Solicitar Demo
+          </button>
+</div>
+</div>
+</div>
+</nav>
+<!-- END: Navigation -->
+<!-- BEGIN: Hero Section -->
+<section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 hero-gradient">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="grid lg:grid-cols-2 gap-12 items-center">
+<!-- Text Content -->
+<div class="text-left" data-purpose="hero-text">
+<div class="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary-dark text-xs font-bold uppercase tracking-wider mb-6">
+            GreenTech &amp; Deep Tech
+          </div>
+<h1 class="text-4xl lg:text-6xl font-extrabold text-brand-dark leading-tight mb-6 text-balance">
+            Transformando dados ambientais complexos em <span class="text-primary-dark">decisões seguras</span> para o seu negócio.
+          </h1>
+<p class="text-lg text-brand-muted mb-8 max-w-xl leading-relaxed">
+            A plataforma de inteligência ambiental validada pelo CNPq e Conecta Startup Brasil. Criada por especialistas para otimizar a gestão de recursos e dados Geoespaciais.
+          </p>
+<div class="flex flex-col sm:flex-row gap-4">
+<button class="bg-primary hover:bg-primary-dark text-brand-dark px-8 py-4 rounded-custom font-bold text-lg shadow-lg shadow-primary/20 transition-all transform hover:-translate-y-0.5">
+              Iniciar meu projeto
+            </button>
+<button class="bg-white border-2 border-slate-200 text-brand-dark px-8 py-4 rounded-custom font-bold text-lg hover:border-primary transition-all">
+              Ver Demo
+            </button>
+</div>
+</div>
+<!-- Dashboard Visual -->
+<div class="relative" data-purpose="hero-image">
+<div class="absolute -inset-4 bg-primary/20 rounded-3xl blur-2xl opacity-30"></div>
+<div class="relative bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden">
+<img alt="Envibase WebGIS Interface" class="w-full h-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAI9JKoUZn7b3GWeku_0ibhJFdAfr7IJAfxL7-890-ad2RBSNcGSnAychptBMYi8_3qd4QpCdrCjriwuBT6RYSRdN_dguU3MCkdwQnaI0lF0aL9arAn0QPQ3KUygJwQuQ-w_MBOIuYIKQpODfAXwaLRoT4JnfE5YJfzE1ZwFEXBY7eJ9nyNryLXulwGNnk7p8Dfr110tZRWZZ5VP7oIwMAH3ihPbQn3HBjOIRmhyZ2ROiiXsRxiuivZexQLw46xZCtG4_k__DOiecdV"/>
+<!-- Overlay indicators for "Data Visual" feel -->
+<div class="absolute top-4 right-4 bg-white/90 p-3 rounded-lg shadow-md border border-slate-100 hidden sm:block">
+<div class="flex items-center space-x-2">
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+<span class="text-[10px] font-bold text-slate-500 uppercase">Live Intelligence</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Hero Section -->
+<!-- BEGIN: About / Purpose -->
+<section class="py-24 bg-white" id="about">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="max-w-3xl mx-auto text-center">
+<h2 class="text-base font-bold text-primary-dark uppercase tracking-widest mb-4">Nossa Missão</h2>
+<p class="text-3xl lg:text-4xl font-bold text-brand-dark mb-8 leading-snug">
+          Organizar a informação ambiental em nível global e tornar seu uso mais acessível e amigável.
+        </p>
+<div class="h-1 w-20 bg-primary mx-auto mb-8"></div>
+<p class="text-brand-muted text-lg">
+          Uma iniciativa do <strong class="text-brand-dark">IHC (Instituto Hidrocarboneto)</strong>, focada em democratizar dados geográficos críticos para empresas, governos e consultores ambientais através de tecnologias de ponta.
+        </p>
+</div>
+</div>
+</section>
+<!-- END: About / Purpose -->
+<!-- BEGIN: Features Grid -->
+<section class="py-24 bg-slate-50" id="features">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="text-center mb-16">
+<h2 class="text-3xl lg:text-4xl font-bold text-brand-dark">Potência Técnica e Flexibilidade</h2>
+<p class="mt-4 text-brand-muted text-lg">Tecnologia avançada para quem lida com alta complexidade de dados.</p>
+</div>
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Feature 1 -->
+<div class="p-8 bg-white rounded-custom border border-slate-200 hover:shadow-xl transition-shadow group">
+<div class="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+<svg class="w-6 h-6 text-brand-dark" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-xl font-bold text-brand-dark mb-3">Persistência Local</h3>
+<p class="text-brand-muted leading-relaxed">Alta performance com PostgreSQL/PostGIS e DuckDB para processamento analítico local ultrarrápido.</p>
+</div>
+<!-- Feature 2 -->
+<div class="p-8 bg-white rounded-custom border border-slate-200 hover:shadow-xl transition-shadow group">
+<div class="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+<svg class="w-6 h-6 text-brand-dark" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-xl font-bold text-brand-dark mb-3">Cloud Híbrida</h3>
+<p class="text-brand-muted leading-relaxed">Integração nativa com Firebase e Google Authentication para colaboração segura em tempo real.</p>
+</div>
+<!-- Feature 3 -->
+<div class="p-8 bg-white rounded-custom border border-slate-200 hover:shadow-xl transition-shadow group">
+<div class="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+<svg class="w-6 h-6 text-brand-dark" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 20l-5.447-2.724A2 2 0 013 15.487V6.707a2 2 0 011.223-1.842l6-2.667a2 2 0 011.554 0l6 2.667m-1.8 1.4l4.9 2.177a2 2 0 011.123 1.801v8.78a2 2 0 01-1.123 1.801l-4.9 2.178A2 2 0 0115 20.2V11.8a2 2 0 011.2-1.8l4.9-2.2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-xl font-bold text-brand-dark mb-3">Múltiplos Projetos</h3>
+<p class="text-brand-muted leading-relaxed">Crie e gerencie diversos projetos WebGIS independentes com workspaces personalizados.</p>
+</div>
+<!-- Feature 4 -->
+<div class="p-8 bg-white rounded-custom border border-slate-200 hover:shadow-xl transition-shadow group">
+<div class="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+<svg class="w-6 h-6 text-brand-dark" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-xl font-bold text-brand-dark mb-3">Camadas Inteligentes</h3>
+<p class="text-brand-muted leading-relaxed">Acesso a catálogo global ou upload de dados próprios em diversos formatos (SHP, KML, GeoJSON).</p>
+</div>
+<!-- Feature 5 -->
+<div class="p-8 bg-white rounded-custom border border-slate-200 hover:shadow-xl transition-shadow group">
+<div class="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+<svg class="w-6 h-6 text-brand-dark" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-xl font-bold text-brand-dark mb-3">Análise Estatística</h3>
+<p class="text-brand-muted leading-relaxed">Gere relatórios dinâmicos e análises espaciais avançadas diretamente no navegador.</p>
+</div>
+<!-- Feature 6 -->
+<div class="p-8 bg-white rounded-custom border border-slate-200 hover:shadow-xl transition-shadow group">
+<div class="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+<svg class="w-6 h-6 text-brand-dark" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-xl font-bold text-brand-dark mb-3">Knowledge Base</h3>
+<p class="text-brand-muted leading-relaxed">Gerenciamento e busca em bases de conhecimento públicas ou privadas de alto valor ambiental.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Features Grid -->
+<!-- BEGIN: Validation / Trust -->
+<section class="py-20 bg-white overflow-hidden" id="validation">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+<h3 class="text-brand-muted font-bold text-sm uppercase tracking-widest mb-12">Tecnologia Validada por Instituições de Excelência</h3>
+<div class="flex flex-wrap justify-center items-center gap-12 lg:gap-24 opacity-70 grayscale hover:grayscale-0 transition-all">
+<!-- Validation Brand 1 -->
+<div class="flex flex-col items-center">
+<img alt="CNPq RHAE" class="h-10 lg:h-12 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDErVAZGaMfHjGKGAetMDdMrQFfoAEESyaGPA7Bc0DmnWgshGaSOfBilyD8bosO1Eij3IVPKwdAHAOPEawGeBNO_vjfUR9fGvLmsMqFwl4qqs-YUbmLqGLgNXiZixhSwfLI9T5YZ4cxG_fcKnY8DTN3ObKI311AG6Wy-tqwZLmBkZD_djbfC_zYbVzpueMF_dKlvEwRoKgOQXwjjdcLU39Bvppq7YilKS2tahkOqAt0DopIadC9DHYJAMxj233Bsv9X7KR_wQphhC1a"/>
+</div>
+<!-- Validation Brand 2 -->
+<div class="flex flex-col items-center">
+<img alt="Conecta Startup Brasil" class="h-10 lg:h-12 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3nRFA_1-Q0BRvVyo_yaY2kNqkg8S2WlN3xqehWf5-P8NaJqiK9VgwFNpDlKO_GFdqJIzsi6-LQDB3032Gnrqu-GY4FC9FjZEGspEr_S60IdY-Zlf0m87EoJwl4o2EAgtcktcoNTr7giozG5K2sG6kqje3lkj6f7sOAqnEvJB4doqOcr83ThTLpuMSKv1pV3aVW101sqgtKGq1zkzz2mv0uwBqfPlo7OF_OKDaGVXlqIkR8j_aAfqT-fFdFq7jQHlL3Ry960-sOtV5"/>
+</div>
+<!-- Validation Brand 3 -->
+<div class="flex flex-col items-center">
+<img alt="PROINTERBIO" class="h-10 lg:h-12 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzwLEN38g5iH7Gbc5cVI9MbBC25tJvkmFi0f6H45nor2rt-v8o4OqGVNYAUBf77FX2pElbjF50s8eOWDkunzCpi89gZ13Iy0MuE7XhnB9gZHCjeZiiGj0TymCfnrBdMrXDPWRoBHb0W9HTDk2sFMDU_FsEGrH5ejIeIXkcxCMqXHqaLbIXi4eDvlNZQF7FITC16ipEctkf5-OhHQfWUKSv7Uo6g8RQ9nYCr9fWpfs4tZyLQmzmxYQ6oY47CTaOpJOLCo7QRuJTt_ic"/>
+</div>
+</div>
+<div class="mt-16 p-8 bg-slate-50 rounded-custom inline-block max-w-2xl border border-slate-100">
+<p class="text-brand-muted italic text-lg leading-relaxed">
+          "A Envibase representa a fronteira da inovação brasileira em GreenTech, unindo rigor acadêmico com soluções escaláveis de mercado."
+        </p>
+</div>
+</div>
+</section>
+<!-- END: Validation / Trust -->
+<!-- BEGIN: Call to Action -->
+<section class="py-24">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="relative bg-brand-dark rounded-3xl p-12 lg:p-20 overflow-hidden">
+<!-- Background accents -->
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
+<div class="absolute bottom-0 left-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -ml-20 -mb-20"></div>
+<div class="relative z-10 text-center max-w-3xl mx-auto">
+<h2 class="text-3xl lg:text-5xl font-extrabold text-white mb-8">Pronto para elevar sua inteligência ambiental?</h2>
+<p class="text-slate-400 text-lg mb-10 leading-relaxed">
+            Junte-se a dezenas de especialistas que já otimizaram seus fluxos de dados com a plataforma líder em IHC Analytics.
+          </p>
+<div class="flex flex-col sm:flex-row justify-center gap-4">
+<button class="bg-primary hover:bg-primary-dark text-brand-dark px-10 py-5 rounded-custom font-bold text-xl transition-all shadow-xl shadow-primary/20">
+              Solicitar Demonstração Gratuita
+            </button>
+</div>
+<p class="mt-6 text-slate-500 text-sm">Sem compromisso. Explore todos os recursos agora.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Call to Action -->
+<!-- BEGIN: Footer -->
+<footer class="bg-slate-50 border-t border-slate-200 pt-16 pb-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="grid md:grid-cols-4 gap-12 mb-16">
+<!-- Brand Info -->
+<div class="col-span-1 md:col-span-1">
+<div class="flex items-center space-x-2 mb-6">
+<div class="w-8 h-8 bg-primary rounded-custom flex items-center justify-center">
+<svg class="w-5 h-5 text-brand-dark" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<span class="text-xl font-extrabold tracking-tight text-brand-dark">ENVIBASE</span>
+</div>
+<p class="text-brand-muted text-sm leading-relaxed">
+            Plataforma de inteligência ambiental para decisões de alto impacto. Greentech validada pelos principais órgãos de fomento do Brasil.
+          </p>
+</div>
+<!-- Links Section 1 -->
+<div>
+<h4 class="font-bold text-brand-dark mb-6">Plataforma</h4>
+<ul class="space-y-4 text-sm text-brand-muted">
+<li><a class="hover:text-primary-dark" href="#">WebGIS Analytics</a></li>
+<li><a class="hover:text-primary-dark" href="#">Knowledge Base</a></li>
+<li><a class="hover:text-primary-dark" href="#">API Documentation</a></li>
+<li><a class="hover:text-primary-dark" href="#">Planos e Preços</a></li>
+</ul>
+</div>
+<!-- Links Section 2 -->
+<div>
+<h4 class="font-bold text-brand-dark mb-6">Empresa</h4>
+<ul class="space-y-4 text-sm text-brand-muted">
+<li><a class="hover:text-primary-dark" href="#">Sobre o IHC</a></li>
+<li><a class="hover:text-primary-dark" href="#">Metodologia</a></li>
+<li><a class="hover:text-primary-dark" href="#">Carreiras</a></li>
+<li><a class="hover:text-primary-dark" href="#">Blog</a></li>
+</ul>
+</div>
+<!-- Contact -->
+<div>
+<h4 class="font-bold text-brand-dark mb-6">Contato</h4>
+<ul class="space-y-4 text-sm text-brand-muted">
+<li class="flex items-center space-x-3">
+<svg class="w-4 h-4 text-primary-dark" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span>contato@envibase.com</span>
+</li>
+<li class="flex items-center space-x-3">
+<svg class="w-4 h-4 text-primary-dark" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span>Brasil</span>
+</li>
+</ul>
+</div>
+</div>
+<!-- Copyright Area -->
+<div class="pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center text-xs text-brand-muted uppercase tracking-widest font-semibold">
+<p>© 2024 Envibase. Todos os direitos reservados.</p>
+<div class="flex space-x-6 mt-4 md:mt-0">
+<a class="hover:text-primary-dark" href="#">Privacidade</a>
+<a class="hover:text-primary-dark" href="#">Termos</a>
+</div>
+</div>
+</div>
+</footer>
+<!-- END: Footer -->
+</body></html>

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\\\.tsx$\")",
+      "Bash(find c:/Users/eluzq/workspace/IHC-Pollutants-Webgis -name *config* -o -name *settings* -o -name *layer* -o -name *visualization*)",
+      "WebFetch(domain:www.jukeboxprint.com)"
+    ]
+  }
+}

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Envibase: 2026 Trend-Led Landing Page</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&amp;family=Outfit:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style type="text/tailwindcss">
+        :root {
+            --paper-grey: #F8F9FA;
+            --high-vis-orange: #FF5C00;
+            --hyper-orange: #FF3D00;
+            --midnight-navy: #0A192F;
+            --deep-black-blue: #0d1117;
+            --neon-emerald: #10B981;
+            --vibrant-green: #00E676;
+            --text-main: #1A1A1A;
+            --text-secondary: #4A5568;
+        }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--paper-grey);
+            color: var(--text-main);
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(10, 25, 47, 0.03) 2px, transparent 2px);
+            background-size: 32px 32px;
+        }
+        h1, h2, h3, h4, h5, .bricolage {
+            font-family: 'Bricolage Grotesque', sans-serif;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        }
+        .technical-annotation {
+            font-family: 'Outfit', sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--hyper-orange);
+            font-weight: 600;
+        }
+        .floating-book {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(1deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        .ethereal-glass {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+        .ethereal-glass:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+        .bento-item {
+            background: #fff;
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+        .bento-item:hover {
+            transform: translateY(-5px);
+        }
+        .partner-logo {
+            filter: grayscale(100%);
+            opacity: 0.6;
+            transition: all 0.4s ease;
+        }
+        .partner-logo:hover {
+            filter: grayscale(0%);
+            opacity: 1;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glow-cta {
+            background: radial-gradient(circle at top right, rgba(0, 230, 118, 0.1), transparent 40%), 
+                        radial-gradient(circle at bottom left, rgba(0, 230, 118, 0.05), transparent 40%);
+        }
+        .input-dark {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .input-dark:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--vibrant-green);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(0, 230, 118, 0.1);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FF3D00',
+                        paper: '#F8F9FA',
+                        navy: '#0A192F',
+                        darknavy: '#0d1117',
+                        emerald: '#10B981',
+                        vibrant: '#00E676'
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        display: ['Bricolage Grotesque', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="antialiased">
+<nav class="fixed top-0 left-0 w-full z-[100] glass-card border-b border-white/20">
+<div class="max-w-[1440px] mx-auto flex items-center justify-between px-8 h-20">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-navy rounded-lg flex items-center justify-center text-white shadow-lg">
+<span class="material-symbols-outlined text-sm">grid_view</span>
+</div>
+<span class="font-bold tracking-tight text-2xl bricolage text-navy">Envibase<span class="text-primary">.</span></span>
+</div>
+<div class="hidden md:flex gap-10 text-[13px] font-medium text-navy/70">
+<a class="hover:text-primary transition-colors flex items-center gap-2" href="#layers">Funcionalidades</a>
+<a class="hover:text-primary transition-colors flex items-center gap-2" href="#pricing">Preços</a>
+<a class="hover:text-primary transition-colors flex items-center gap-2" href="#faq">FAQ</a>
+</div>
+<div class="flex items-center gap-6">
+<button class="bg-navy text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-primary transition-colors shadow-lg shadow-navy/20">
+                    Acessar Plataforma
+                </button>
+</div>
+</div>
+</nav>
+<main>
+<section class="min-h-screen pt-28 flex flex-col items-center justify-center px-8 relative overflow-hidden">
+<div class="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -z-10"></div>
+<div class="absolute bottom-1/4 left-1/4 w-[600px] h-[600px] bg-emerald/5 rounded-full blur-[120px] -z-10"></div>
+<div class="max-w-[1200px] w-full grid lg:grid-cols-12 gap-16 items-center">
+<div class="lg:col-span-6 z-10">
+<div class="inline-flex items-center gap-2 bg-white/60 backdrop-blur-sm border border-navy/10 rounded-full px-4 py-1.5 mb-8 shadow-sm">
+<span class="w-2 h-2 rounded-full bg-emerald animate-pulse"></span>
+<span class="text-xs font-semibold text-navy/80 uppercase tracking-wider">Sistema 2026.1 Online</span>
+</div>
+<h1 class="text-6xl md:text-7xl font-bold leading-[1.05] tracking-tight mb-6 text-navy bricolage">
+                        Assuma o controle dos seus dados ambientais.
+                    </h1>
+<p class="text-xl text-text-secondary max-w-lg mb-10 font-light leading-relaxed">
+                        A Envibase simplifica e automatiza seus estudos ambientais, organizando seus dados e eliminando a necessidade de usar vários aplicativos.
+                    </p>
+<div class="flex flex-col sm:flex-row gap-4">
+<button class="bg-primary text-white font-medium rounded-full px-8 py-4 text-[15px] flex items-center justify-center gap-3 shadow-xl shadow-primary/20 hover:-translate-y-1 transition-transform">
+                            Começar Agora
+                            <span class="material-symbols-outlined text-lg">arrow_right_alt</span>
+</button>
+<button class="bg-white text-navy font-medium rounded-full px-8 py-4 text-[15px] border border-navy/10 flex items-center justify-center gap-3 shadow-sm hover:border-navy/30 transition-colors">
+                            Ver Vídeo
+                            <span class="material-symbols-outlined text-lg">play_circle</span>
+</button>
+</div>
+</div>
+<div class="lg:col-span-6 relative">
+<div class="relative rounded-3xl overflow-hidden glass-card p-2 shadow-2xl">
+<img alt="Interface Concept" class="w-full rounded-2xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUiTYGqNb5h71YQryYJEo2j1lEsIczsD1YtLdMOLu4YT-sFLhE_jQ77_xBS0RG_whzdxPcRUGpH4zuesKXiefImT7HfEN55HYgxqCEblCLY5JuoE8WKqDZ6AFwnT3lC35aPkPbCZ37NdJfLOFmQYXK6PX5DRLBY5UeIt1xOAsFmgaTUpTFj1-kXb5hkGIncfYfrdcV5M1s-QaWuP9Y26VQkJD3AcM9pi5EshKR6DrJ0tDjBf8U6eG0FTE7_V8XdOD8oEBWJmboOd0"/>
+</div>
+</div>
+</div>
+</section>
+<section class="py-20 bg-paper border-y border-navy/5">
+<div class="max-w-[1440px] mx-auto px-8">
+<div class="text-center mb-12">
+<span class="text-xs font-bold text-navy/40 uppercase tracking-[0.2em]">Plataforma acelerada por</span>
+</div>
+<div class="flex flex-wrap justify-center items-center gap-6 md:gap-12">
+<div class="ethereal-glass px-10 py-6 flex items-center gap-4 partner-logo cursor-default">
+<span class="material-symbols-outlined text-primary text-3xl">rocket_launch</span>
+<span class="font-bold tracking-tighter text-2xl bricolage text-navy">CATALISA</span>
+</div>
+<div class="ethereal-glass px-10 py-6 flex items-center gap-4 partner-logo cursor-default">
+<span class="material-symbols-outlined text-primary text-3xl">hub</span>
+<span class="font-bold tracking-tighter text-2xl bricolage text-navy">CONECTA</span>
+</div>
+<div class="ethereal-glass px-10 py-6 flex items-center gap-4 partner-logo cursor-default">
+<span class="material-symbols-outlined text-primary text-3xl">science</span>
+<span class="font-bold tracking-tighter text-2xl bricolage text-navy">MCTI</span>
+</div>
+</div>
+</div>
+</section>
+<section class="max-w-[1200px] mx-auto px-8 py-32" id="layers">
+<div class="text-center mb-20">
+<span class="technical-annotation text-primary mb-3 block">O que você ganha</span>
+<h2 class="text-4xl md:text-5xl font-bold tracking-tight text-navy bricolage">Vantagens da Envibase</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bento-item md:col-span-2 bg-gradient-to-br from-white to-paper">
+<div class="w-12 h-12 rounded-2xl bg-emerald/10 flex items-center justify-center mb-6 text-emerald">
+<span class="material-symbols-outlined">folder_managed</span>
+</div>
+<h3 class="text-2xl font-bold mb-3 text-navy bricolage">Organização</h3>
+<p class="text-text-secondary leading-relaxed">
+                        Criar e organizar projetos. Armazenar dados organizadamente. Compartilhar dados privadamente com sua equipe.
+                    </p>
+</div>
+<div class="bento-item bg-gradient-to-br from-white to-paper">
+<div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 text-primary">
+<span class="material-symbols-outlined">monitoring</span>
+</div>
+<h3 class="text-2xl font-bold mb-3 text-navy bricolage">Produtividade</h3>
+<p class="text-text-secondary leading-relaxed">
+                        Gerar gráficos de barras, estatísticas box plot e plotar gráficos em mapas instantaneamente.
+                    </p>
+</div>
+<div class="bento-item bg-gradient-to-br from-white to-paper">
+<div class="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-6 text-blue-500">
+<span class="material-symbols-outlined">search</span>
+</div>
+<h3 class="text-2xl font-bold mb-3 text-navy bricolage">Descoberta</h3>
+<p class="text-text-secondary leading-relaxed">
+                        Comparar dados de projetos. Encontrar dados públicos e salvar favoritos.
+                    </p>
+</div>
+<div class="bento-item md:col-span-2 bg-navy text-white relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-64 h-64 bg-emerald/20 rounded-full blur-[50px] -mr-32 -mt-32 transition-transform group-hover:scale-150 duration-700"></div>
+<div class="relative z-10">
+<div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mb-6 text-emerald">
+<span class="material-symbols-outlined">security</span>
+</div>
+<h3 class="text-2xl font-bold mb-3 bricolage">Segurança &amp; Economia</h3>
+<p class="text-white/70 leading-relaxed max-w-md">
+                            Banco de dados relacional, segurança online Cloudflare, backups periódicos. Versão grátis e preços promocionais, reduzindo riscos de erros e prejuízos.
+                        </p>
+</div>
+</div>
+</div>
+</section>
+<section class="py-24 bg-white border-y border-navy/5">
+<div class="max-w-[1200px] mx-auto px-8">
+<div class="grid lg:grid-cols-2 gap-16 items-center">
+<div class="relative flex justify-center lg:justify-start">
+<div class="relative w-full max-w-[450px]">
+<div class="floating-book relative z-10 drop-shadow-2xl">
+<div class="bg-white rounded-r-3xl rounded-l-md border-l-[10px] border-navy/10 overflow-hidden shadow-2xl aspect-[3/4] flex flex-col">
+<div class="p-8 flex-1 flex flex-col items-center justify-center text-center bg-gradient-to-br from-slate-50 to-white">
+<div class="w-16 h-16 mb-6">
+<span class="material-symbols-outlined text-6xl text-navy opacity-80">menu_book</span>
+</div>
+<h4 class="text-3xl font-bold text-navy bricolage leading-tight mb-4">Estudos ambientais na era digital</h4>
+<p class="text-sm text-text-secondary font-medium uppercase tracking-widest">Gilson Silva</p>
+<div class="mt-8 w-12 h-1 bg-vibrant"></div>
+</div>
+<div class="h-24 bg-navy/5 flex items-center justify-center">
+<div class="flex items-center gap-2 opacity-40">
+<span class="material-symbols-outlined">science</span>
+<span class="text-[10px] font-bold tracking-[0.2em] uppercase">Instituto Hidrocarboneto</span>
+</div>
+</div>
+</div>
+</div>
+<div class="absolute -bottom-6 -right-6 lg:right-4 z-20 bg-[#E8F5E9] border border-vibrant/20 rounded-2xl p-6 shadow-xl max-w-[180px]">
+<div class="text-vibrant text-5xl font-bold mb-1 bricolage">10+</div>
+<div class="text-[11px] font-bold text-navy leading-tight uppercase tracking-wide">Anos de experiência em crises</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="text-vibrant font-bold text-sm tracking-[0.2em] uppercase mb-6">Nossa Origem</span>
+<h2 class="text-5xl md:text-6xl font-black italic text-navy bricolage leading-[1.1] mb-8">
+                            DO GERENCIAMENTO DE CRISES AO IMPACTO GLOBAL
+                        </h2>
+<div class="space-y-6 mb-12">
+<p class="text-lg text-navy/60 font-medium italic leading-relaxed">
+                                "O que a Envibase faz? A Envibase simplifica e automatiza seus estudos ambientais."
+                            </p>
+<p class="text-text-secondary leading-relaxed text-lg">
+                                Nosso SGDA nativo na nuvem te entrega a tecnologia das grandes empresas para você ganhar tempo, produtividade e reconhecimento. Pare de imaginar e venha para a solução que não muda sua rotina, mas revoluciona seus resultados.
+                            </p>
+</div>
+<div class="grid grid-cols-2 gap-8 mb-12 border-t border-navy/5 pt-8">
+<div>
+<h4 class="font-bold text-navy text-lg mb-2 bricolage">SGDA Nativo</h4>
+<p class="text-sm text-text-secondary leading-relaxed">Sistema de Gerenciamento de Dados Ambientais de última geração.</p>
+</div>
+<div>
+<h4 class="font-bold text-navy text-lg mb-2 bricolage">Impacto Global</h4>
+<p class="text-sm text-text-secondary leading-relaxed">Tecnologia escalável para qualquer tamanho de projeto em qualquer lugar.</p>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row items-center gap-8">
+<button class="bg-vibrant text-navy font-bold rounded-full px-10 py-5 flex items-center justify-center gap-3 shadow-xl shadow-vibrant/20 hover:scale-105 transition-all text-sm uppercase tracking-wider">
+<span class="material-symbols-outlined">download</span>
+                                BAIXAR E-BOOK GRATUITO
+                            </button>
+<a class="flex items-center gap-2 text-navy font-semibold hover:text-vibrant transition-colors group" href="#">
+                                Conheça nossa história completa
+                                <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-32 bg-paper" id="pricing">
+<div class="max-w-[1200px] mx-auto px-8 text-center">
+<span class="text-emerald font-bold text-sm tracking-[0.2em] uppercase mb-4 block">Transparência em Planos</span>
+<h2 class="text-5xl md:text-6xl font-bold tracking-tight text-navy bricolage mb-6">Soluções para cada estágio</h2>
+<p class="text-text-secondary text-lg max-w-3xl mx-auto mb-20">
+                    Seja você um consultor independente ou uma grande organização, temos o plano ideal para sua jornada.
+                </p>
+<div class="grid md:grid-cols-3 gap-8 items-stretch">
+<div class="bg-white rounded-[40px] p-10 flex flex-col items-start text-left border border-black/5 shadow-[0_10px_40px_rgba(0,0,0,0.02)]">
+<span class="text-navy/50 font-medium mb-2 text-lg">Individual (Grátis)</span>
+<h3 class="text-5xl font-bold text-navy bricolage mb-8">Grátis</h3>
+<div class="space-y-4 mb-12 flex-grow">
+<div class="flex items-center gap-3 text-text-secondary">
+<span class="material-symbols-outlined text-emerald text-lg">check</span>
+<span>1 projeto ativo</span>
+</div>
+<div class="flex items-center gap-3 text-text-secondary">
+<span class="material-symbols-outlined text-emerald text-lg">check</span>
+<span>500MB de Cloud</span>
+</div>
+<div class="flex items-center gap-3 text-text-secondary">
+<span class="material-symbols-outlined text-emerald text-lg">check</span>
+<span>Relatórios básicos</span>
+</div>
+</div>
+<button class="w-full py-4 rounded-full border border-black/10 text-navy font-semibold text-lg hover:bg-navy hover:text-white transition-all">
+                            Começar Agora
+                        </button>
+</div>
+<div class="bg-emerald text-white rounded-[40px] p-10 flex flex-col items-start text-left shadow-2xl relative z-10 transform scale-105">
+<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-white text-emerald text-[11px] font-bold py-1.5 px-6 rounded-full tracking-widest uppercase shadow-md">
+                            MAIS SUSTENTÁVEL
+                        </div>
+<span class="text-white/80 font-medium mb-2 text-lg">Profissional</span>
+<div class="mb-8">
+<h3 class="text-5xl font-bold bricolage">R$ 249<span class="text-xl font-normal opacity-80">/mês</span></h3>
+</div>
+<div class="space-y-4 mb-12 flex-grow">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-white text-lg">check</span>
+<span class="font-medium">Projetos Ilimitados</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-white text-lg">check</span>
+<span class="font-medium">50GB Armazenamento</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-white text-lg">check</span>
+<span class="font-medium">Exportação GIS/CAD</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-white text-lg">check</span>
+<span class="font-medium">Suporte Prioritário</span>
+</div>
+</div>
+<button class="w-full bg-white text-emerald font-bold py-5 rounded-full text-lg shadow-xl shadow-black/10 hover:scale-[1.02] transition-transform">
+                            Impulsionar Carreira
+                        </button>
+</div>
+<div class="bg-white rounded-[40px] p-10 flex flex-col items-start text-left border border-black/5 shadow-[0_10px_40px_rgba(0,0,0,0.02)]">
+<span class="text-navy/50 font-medium mb-2 text-lg">Corporativo</span>
+<h3 class="text-4xl font-bold text-navy bricolage mb-8">Personalizado</h3>
+<div class="space-y-4 mb-12 flex-grow">
+<div class="flex items-center gap-3 text-text-secondary">
+<span class="material-symbols-outlined text-emerald text-lg">check</span>
+<span>Usuários Ilimitados</span>
+</div>
+<div class="flex items-center gap-3 text-text-secondary">
+<span class="material-symbols-outlined text-emerald text-lg">check</span>
+<span>Integração via API</span>
+</div>
+<div class="flex items-center gap-3 text-text-secondary">
+<span class="material-symbols-outlined text-emerald text-lg">check</span>
+<span>Gestão de Equipes</span>
+</div>
+</div>
+<button class="w-full py-4 rounded-full border border-black/10 text-navy font-semibold text-lg hover:bg-navy hover:text-white transition-all">
+                            Falar com Consultor
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<section class="py-24 bg-paper" id="faq">
+<div class="max-w-[1100px] mx-auto px-8">
+<h2 class="text-3xl md:text-4xl font-bold text-navy bricolage text-center mb-16">Perguntas Frequentes</h2>
+<div class="grid md:grid-cols-2 gap-x-16 gap-y-2">
+<div class="py-5 cursor-pointer border-b border-navy/5 hover:border-primary/40 transition-all flex justify-between items-center group px-2">
+<h4 class="font-medium text-navy text-[17px] group-hover:text-primary transition-colors">O que é a Envibase?</h4>
+<span class="material-symbols-outlined text-navy/30 group-hover:text-primary transition-colors text-xl">add</span>
+</div>
+<div class="py-5 cursor-pointer border-b border-navy/5 hover:border-primary/40 transition-all flex justify-between items-center group px-2">
+<h4 class="font-medium text-navy text-[17px] group-hover:text-primary transition-colors">Por que eu preciso da Envibase?</h4>
+<span class="material-symbols-outlined text-navy/30 group-hover:text-primary transition-colors text-xl">add</span>
+</div>
+<div class="py-5 cursor-pointer border-b border-navy/5 hover:border-primary/40 transition-all flex justify-between items-center group px-2">
+<h4 class="font-medium text-navy text-[17px] group-hover:text-primary transition-colors">Por que pagar para usar a Envibase?</h4>
+<span class="material-symbols-outlined text-navy/30 group-hover:text-primary transition-colors text-xl">add</span>
+</div>
+<div class="py-5 cursor-pointer border-b border-navy/5 hover:border-primary/40 transition-all flex justify-between items-center group px-2">
+<h4 class="font-medium text-navy text-[17px] group-hover:text-primary transition-colors">Meus dados ambientais estão seguros?</h4>
+<span class="material-symbols-outlined text-navy/30 group-hover:text-primary transition-colors text-xl">add</span>
+</div>
+<div class="py-5 cursor-pointer border-b border-navy/5 hover:border-primary/40 transition-all flex justify-between items-center group px-2">
+<h4 class="font-medium text-navy text-[17px] group-hover:text-primary transition-colors">Quem pode ver meus dados privados?</h4>
+<span class="material-symbols-outlined text-navy/30 group-hover:text-primary transition-colors text-xl">add</span>
+</div>
+<div class="py-5 cursor-pointer border-b border-navy/5 hover:border-primary/40 transition-all flex justify-between items-center group px-2">
+<h4 class="font-medium text-navy text-[17px] group-hover:text-primary transition-colors">Como faço para baixar uma tabela da Envibase?</h4>
+<span class="material-symbols-outlined text-navy/30 group-hover:text-primary transition-colors text-xl">add</span>
+</div>
+</div>
+</div>
+</section>
+<section class="pb-32 px-8 bg-paper">
+<div class="max-w-[1200px] mx-auto">
+<div class="bg-darknavy rounded-[48px] p-12 md:p-24 text-center relative overflow-hidden glow-cta shadow-2xl">
+<div class="relative z-10">
+<h2 class="text-4xl md:text-6xl font-bold text-white bricolage mb-8 max-w-4xl mx-auto leading-tight">
+                            Pronto para elevar sua inteligência ambiental?
+                        </h2>
+<p class="text-white/60 text-lg md:text-xl mb-12 max-w-2xl mx-auto">
+                            Junte-se a dezenas de especialistas que já otimizaram seus fluxos de dados com a plataforma líder em IHC Analytics.
+                        </p>
+<div class="flex flex-col items-center gap-6">
+<button class="bg-vibrant text-navy font-bold rounded-2xl px-12 py-6 text-lg hover:scale-105 transition-all shadow-[0_20px_40px_rgba(0,230,118,0.25)]">
+                                Solicitar Demonstração Gratuita
+                            </button>
+<p class="text-white/40 text-sm">Sem compromisso. Explore todos os recursos agora.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<div class="bg-darknavy pt-24 pb-12 px-8">
+<div class="max-w-[1440px] mx-auto">
+<div class="grid lg:grid-cols-12 gap-16 mb-24 items-start">
+<div class="lg:col-span-5">
+<div class="max-w-md">
+<h2 class="text-3xl font-bold text-white bricolage mb-4">Entre em contato</h2>
+<p class="text-white/60 mb-8 font-light leading-relaxed">
+                                Tem alguma dúvida? Nossa equipe está pronta para ajudar você a dar o próximo passo.
+                            </p>
+<form class="space-y-6">
+<div class="grid grid-cols-2 gap-4">
+<input class="input-dark w-full rounded-xl py-4 px-5 text-sm" placeholder="Seu nome" type="text"/>
+<input class="input-dark w-full rounded-xl py-4 px-5 text-sm" placeholder="Seu email" type="email"/>
+</div>
+<input class="input-dark w-full rounded-xl py-4 px-5 text-sm" placeholder="Assunto" type="text"/>
+<textarea class="input-dark w-full rounded-xl py-4 px-5 text-sm resize-none" placeholder="Sua mensagem" rows="4"></textarea>
+<button class="w-full bg-white/10 text-white font-bold rounded-xl py-4 hover:bg-vibrant hover:text-navy transition-all bricolage text-sm uppercase tracking-widest">
+                                    Enviar Mensagem
+                                </button>
+</form>
+<div class="mt-10 flex items-center gap-3 text-white/40">
+<span class="material-symbols-outlined text-vibrant">mail</span>
+<span class="text-sm font-medium tracking-wide">contato@envibase.com.br</span>
+</div>
+</div>
+</div>
+<div class="lg:col-span-7 grid grid-cols-2 md:grid-cols-3 gap-12 pt-4">
+<div class="col-span-2 md:col-span-1">
+<div class="flex items-center gap-2 mb-8">
+<div class="w-8 h-8 bg-white/10 rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-xs">grid_view</span>
+</div>
+<span class="font-bold tracking-tight text-xl bricolage text-white">Envibase<span class="text-primary">.</span></span>
+</div>
+<p class="text-white/40 text-xs leading-relaxed max-w-[200px] mb-8">
+                                A Envibase é uma plataforma desenvolvida pelo Instituto Hidrocarboneto.
+                            </p>
+<div class="flex gap-4">
+<a class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-vibrant/20 transition-colors" href="#">
+<svg class="w-4 h-4 fill-white/60" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"></path></svg>
+</a>
+<a class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-vibrant/20 transition-colors" href="#">
+<svg class="w-4 h-4 fill-white/60" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path></svg>
+</a>
+</div>
+</div>
+<div>
+<h5 class="font-bold text-white mb-6 bricolage tracking-wide text-sm uppercase">Plataforma</h5>
+<ul class="space-y-4 text-sm font-light text-white/40">
+<li><a class="hover:text-vibrant transition-colors" href="#pricing">Preços</a></li>
+<li><a class="hover:text-vibrant transition-colors" href="#layers">Recursos</a></li>
+<li><a class="hover:text-vibrant transition-colors" href="#">Acessar Plataforma</a></li>
+<li><a class="hover:text-vibrant transition-colors" href="#">Solicitar Demo</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-bold text-white mb-6 bricolage tracking-wide text-sm uppercase">Empresa</h5>
+<ul class="space-y-4 text-sm font-light text-white/40">
+<li><a class="hover:text-vibrant transition-colors" href="#">Termos de uso</a></li>
+<li><a class="hover:text-vibrant transition-colors" href="#">Política de privacidade</a></li>
+<li><a class="hover:text-vibrant transition-colors" href="#">Blog</a></li>
+<li><a class="hover:text-vibrant transition-colors" href="#">Sobre nós</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="text-[11px] text-white/20 font-medium uppercase tracking-[0.2em]">© 2026 Envibase. Todos os direitos reservados.</p>
+<div class="flex items-center gap-8">
+<p class="text-[11px] text-white/20 font-medium uppercase tracking-[0.2em]">Sustentabilidade em primeiro lugar</p>
+<p class="text-[11px] text-white/20 font-medium uppercase tracking-[0.2em]">Ilustrações por Undraw</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<div class="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-3 pointer-events-none">
+<div class="bg-white rounded-2xl rounded-br-sm shadow-xl p-4 border border-navy/10 max-w-[280px] pointer-events-auto flex items-start gap-3">
+<div class="w-8 h-8 bg-navy rounded-lg flex-shrink-0 flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-sm">grid_view</span>
+</div>
+<p class="text-[14px] text-navy font-medium leading-snug mt-1">Como podemos ajudar no seu onboarding?</p>
+</div>
+<button class="w-14 h-14 bg-navy rounded-full shadow-lg flex items-center justify-center text-white hover:bg-primary transition-all pointer-events-auto border-2 border-white focus:outline-none active:scale-95">
+<span class="material-symbols-outlined text-2xl">chat</span>
+</button>
+</div>
+
+</body></html>

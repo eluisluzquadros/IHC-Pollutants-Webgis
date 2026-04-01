@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Envibase: Comprehensive Analytical Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#10b981", // Emerald 500
+                        "primary-dark": "#059669",
+                        "background-light": "#f8fafc",
+                        "background-dark": "#0a0f0d",
+                        "sidebar-dark": "#0d1411",
+                        "card-dark": "#161e1b",
+                        "border-dark": "#1e2925"
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                        'xl': '1rem'
+                    },
+                },
+            },
+        };
+    </script>
+<style type="text/tailwindcss">
+        body {
+            font-family: "Inter", sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #1e2925;
+            border-radius: 10px;
+        }
+        .map-bg {
+            background-image: linear-gradient(rgba(10, 15, 13, 0.5), rgba(10, 15, 13, 0.5)), url(https://lh3.googleusercontent.com/aida-public/AB6AXuDRmVZST-CAU_QTGYmuzPvZryXPjy1WiOIaFOA99G_26IQNLU-5l1R8kHG_7xJRs2KSUrYvlS6UsGh69-S6X73hFqWqGt4QGEtIZwTaNDrSg2PRrQyJxpJW6LjhgCj-rOzwIo_weFlSwuWoJYR770y_vZXgSIygd0y4vkiSbo5esTZ5_7FkiWJq5DxVsX143QpAcv-a9_BOz0kUcyUhRYzdmzZDoI9e7jW3JDxIRXZ4qT9SvBIZqe6MtxXMKX7vak4zUPPC_4QrIFY);
+            background-size: cover;
+            background-position: center;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 h-screen overflow-hidden flex">
+<aside class="w-16 flex flex-col items-center py-6 gap-8 bg-white dark:bg-sidebar-dark border-r border-slate-200 dark:border-border-dark z-20">
+<div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined">eco</span>
+</div>
+<nav class="flex flex-col gap-6">
+<button class="text-primary"><span class="material-symbols-outlined text-2xl">dashboard</span></button>
+<button class="text-slate-400 hover:text-primary transition-colors"><span class="material-symbols-outlined text-2xl">map</span></button>
+<button class="text-slate-400 hover:text-primary transition-colors"><span class="material-symbols-outlined text-2xl">analytics</span></button>
+<button class="text-slate-400 hover:text-primary transition-colors"><span class="material-symbols-outlined text-2xl">folder</span></button>
+<button class="text-slate-400 hover:text-primary transition-colors"><span class="material-symbols-outlined text-2xl">settings</span></button>
+</nav>
+<div class="mt-auto flex flex-col gap-6">
+<button class="text-slate-400 hover:text-primary transition-colors"><span class="material-symbols-outlined">help</span></button>
+<div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden ring-2 ring-border-dark">
+<img alt="User Profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQBNJ2iupJo6McIwH9LKOVdp1ylrSKLs3yjDBsUqv1Kzsin2LJ_DuTDW4DyqIrhl5lD2GTG0JpMfZxE4maMTJHTOECENWu2zf0VDGt6G3h6OJ2iU74DjhnhtAgqRjxhUURng8tCs0VigOU1MSO1LPFXjZ0nBYtUF9uoszcJX5v_DuncmpC4WKsQ8E03bQTVAm0zDHDMU589ZRG8hyQBtzJnh7xjROjWDij8GW5oxSjVCZwcumAY54t5RuyB8dTkPaR5n-mLZSPHQs"/>
+</div>
+</div>
+</aside>
+<aside class="w-[420px] bg-slate-50 dark:bg-sidebar-dark/95 border-r border-slate-200 dark:border-border-dark flex flex-col z-10">
+<div class="p-6 pb-4">
+<div class="flex items-center justify-between mb-4">
+<h1 class="text-lg font-bold tracking-tight">Envibase Discovery <span class="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded ml-2 align-middle border border-primary/20 uppercase">v2.7</span></h1>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+<input class="w-full bg-white dark:bg-card-dark border-slate-200 dark:border-border-dark rounded-lg pl-10 pr-4 py-2.5 text-sm focus:ring-primary focus:border-primary transition-all placeholder:text-slate-500" placeholder="Pesquisar datasets ou parâmetros..." type="text"/>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar px-6 space-y-8 pb-8">
+<section>
+<h3 class="text-[11px] uppercase tracking-widest font-bold text-slate-500 mb-3 flex items-center gap-2">
+<span class="w-1 h-1 bg-primary rounded-full"></span> Escopo de Dados
+            </h3>
+<div class="grid grid-cols-2 gap-3">
+<button class="p-3 rounded-xl border border-primary bg-primary/10 text-left flex flex-col gap-2 transition-all ring-1 ring-primary/20">
+<span class="material-symbols-outlined text-primary text-xl">person</span>
+<span class="text-xs font-semibold">Meus projetos</span>
+</button>
+<button class="p-3 rounded-xl border border-slate-200 dark:border-border-dark bg-white dark:bg-card-dark text-left flex flex-col gap-2 hover:border-primary/50 transition-all">
+<span class="material-symbols-outlined text-slate-400 text-xl">group</span>
+<span class="text-xs font-semibold">Compartilhados</span>
+</button>
+<button class="p-3 rounded-xl border border-slate-200 dark:border-border-dark bg-white dark:bg-card-dark text-left flex flex-col gap-2 hover:border-primary/50 transition-all">
+<span class="material-symbols-outlined text-slate-400 text-xl">star</span>
+<span class="text-xs font-semibold">Favoritos</span>
+</button>
+<button class="p-3 rounded-xl border border-slate-200 dark:border-border-dark bg-white dark:bg-card-dark text-left flex flex-col gap-2 hover:border-primary/50 transition-all">
+<span class="material-symbols-outlined text-slate-400 text-xl">public</span>
+<span class="text-xs font-semibold">Dados Públicos</span>
+</button>
+</div>
+</section>
+<section>
+<div class="flex items-center justify-between mb-3">
+<h3 class="text-[11px] uppercase tracking-widest font-bold text-slate-500 flex items-center gap-2">
+<span class="w-1 h-1 bg-primary rounded-full"></span> Projetos Ativos
+                </h3>
+<button class="text-primary text-[10px] font-bold uppercase hover:underline">Ver todos</button>
+</div>
+<div class="space-y-2">
+<div class="p-3 rounded-xl bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark cursor-pointer hover:border-primary transition-all group">
+<div class="flex justify-between items-start mb-1">
+<span class="font-semibold text-sm truncate pr-2">Monitoramento Rio Amazonas</span>
+<div class="flex text-yellow-500 scale-75 origin-right">
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="material-symbols-outlined text-sm">star_half</span>
+</div>
+</div>
+<div class="flex items-center gap-4 text-[10px] text-slate-400">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">calendar_today</span> Atualizado: 24 Out 2023</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">database</span> 1.2 GB</span>
+</div>
+</div>
+<div class="p-3 rounded-xl bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark opacity-60 cursor-pointer hover:border-primary transition-all group">
+<div class="flex justify-between items-start mb-1">
+<span class="font-semibold text-sm truncate pr-2">Análise Sedimento Bacia X</span>
+<div class="flex text-yellow-500 scale-75 origin-right">
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+</div>
+</div>
+<div class="flex items-center gap-4 text-[10px] text-slate-400">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">calendar_today</span> Atualizado: 12 Set 2023</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">database</span> 450 MB</span>
+</div>
+</div>
+</div>
+</section>
+<section>
+<h3 class="text-[11px] uppercase tracking-widest font-bold text-slate-500 mb-3 flex items-center gap-2">
+<span class="w-1 h-1 bg-primary rounded-full"></span> Localidade
+            </h3>
+<div class="bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-xl p-4 space-y-4">
+<div class="flex items-center text-[10px] text-slate-400 font-medium">
+<span class="hover:text-primary cursor-pointer transition-colors">Brasil</span>
+<span class="material-symbols-outlined text-xs mx-1">chevron_right</span>
+<span class="hover:text-primary cursor-pointer transition-colors">Amazonas</span>
+<span class="material-symbols-outlined text-xs mx-1 text-primary">chevron_right</span>
+<span class="text-primary font-bold">Manaus</span>
+</div>
+<div class="grid grid-cols-1 gap-2">
+<input class="bg-slate-50 dark:bg-sidebar-dark border-slate-200 dark:border-border-dark rounded-lg text-xs py-2 px-3 focus:ring-primary focus:border-primary" placeholder="País" type="text" value="Brasil"/>
+<input class="bg-slate-50 dark:bg-sidebar-dark border-slate-200 dark:border-border-dark rounded-lg text-xs py-2 px-3 focus:ring-primary focus:border-primary" placeholder="Estado" type="text" value="Amazonas"/>
+<input class="bg-slate-50 dark:bg-sidebar-dark border-slate-200 dark:border-border-dark rounded-lg text-xs py-2 px-3 focus:ring-primary focus:border-primary" placeholder="Digite a cidade..." type="text"/>
+</div>
+</div>
+</section>
+<section>
+<h3 class="text-[11px] uppercase tracking-widest font-bold text-slate-500 mb-3 flex items-center gap-2">
+<span class="w-1 h-1 bg-primary rounded-full"></span> Período
+            </h3>
+<div class="grid grid-cols-2 gap-3">
+<div class="space-y-1.5">
+<label class="text-[10px] font-semibold text-slate-500 ml-1">Data inicial</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-sm">calendar_month</span>
+<input class="w-full bg-white dark:bg-card-dark border-slate-200 dark:border-border-dark rounded-lg pl-8 pr-2 py-2 text-[11px] focus:ring-primary transition-all" type="date"/>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="text-[10px] font-semibold text-slate-500 ml-1">Data final</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-sm">calendar_month</span>
+<input class="w-full bg-white dark:bg-card-dark border-slate-200 dark:border-border-dark rounded-lg pl-8 pr-2 py-2 text-[11px] focus:ring-primary transition-all" type="date"/>
+</div>
+</div>
+</div>
+</section>
+<section>
+<h3 class="text-[11px] uppercase tracking-widest font-bold text-slate-500 mb-3 flex items-center gap-2">
+<span class="w-1 h-1 bg-primary rounded-full"></span> Domínio Ambiental
+            </h3>
+<div class="flex flex-wrap gap-2">
+<button class="px-3 py-1.5 rounded-full border border-primary bg-primary/10 text-primary text-[11px] font-bold">Continental</button>
+<button class="px-3 py-1.5 rounded-full border border-slate-200 dark:border-border-dark text-slate-500 text-[11px] font-medium hover:border-primary hover:text-slate-900 dark:hover:text-white transition-all">Costeiro</button>
+<button class="px-3 py-1.5 rounded-full border border-slate-200 dark:border-border-dark text-slate-500 text-[11px] font-medium hover:border-primary hover:text-slate-900 dark:hover:text-white transition-all">Oceânico</button>
+</div>
+</section>
+<section>
+<h3 class="text-[11px] uppercase tracking-widest font-bold text-slate-500 mb-3 flex items-center gap-2">
+<span class="w-1 h-1 bg-primary rounded-full"></span> Matriz e Parâmetros
+            </h3>
+<div class="mb-4 flex flex-wrap gap-1.5">
+<button class="px-2 py-1 rounded-md text-[9px] font-bold uppercase border border-primary bg-primary text-white">Solo</button>
+<button class="px-2 py-1 rounded-md text-[9px] font-bold uppercase border border-slate-200 dark:border-border-dark text-slate-400 hover:border-primary transition-colors">Sedimento</button>
+<button class="px-2 py-1 rounded-md text-[9px] font-bold uppercase border border-slate-200 dark:border-border-dark text-slate-400 hover:border-primary transition-colors">Água</button>
+<button class="px-2 py-1 rounded-md text-[9px] font-bold uppercase border border-slate-200 dark:border-border-dark text-slate-400 hover:border-primary transition-colors">Água Sub.</button>
+<button class="px-2 py-1 rounded-md text-[9px] font-bold uppercase border border-slate-200 dark:border-border-dark text-slate-400 hover:border-primary transition-colors">Biota</button>
+</div>
+<div class="space-y-1 bg-white dark:bg-card-dark/40 p-2 rounded-xl border border-slate-100 dark:border-border-dark/50">
+<div class="flex items-center gap-2 p-2 hover:bg-slate-100 dark:hover:bg-card-dark rounded-lg cursor-pointer transition-colors group">
+<span class="material-symbols-outlined text-slate-400 text-sm">expand_more</span>
+<span class="material-symbols-outlined text-primary text-xl">folder_open</span>
+<span class="text-sm font-medium">Granulometria</span>
+</div>
+<div class="ml-7 space-y-1 border-l border-slate-200 dark:border-border-dark pl-4 mb-2">
+<div class="flex items-center justify-between p-1.5 hover:bg-slate-100 dark:hover:bg-card-dark rounded-lg cursor-pointer group">
+<span class="text-xs text-slate-500 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">Areia Total</span>
+<div class="w-4 h-4 border-2 border-primary rounded bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[12px] font-bold">check</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-1.5 hover:bg-slate-100 dark:hover:bg-card-dark rounded-lg cursor-pointer group">
+<span class="text-xs text-slate-500 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">Silte</span>
+<div class="w-4 h-4 border-2 border-slate-300 dark:border-slate-600 rounded"></div>
+</div>
+<div class="flex items-center justify-between p-1.5 hover:bg-slate-100 dark:hover:bg-card-dark rounded-lg cursor-pointer group">
+<span class="text-xs text-slate-500 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">Argila</span>
+<div class="w-4 h-4 border-2 border-slate-300 dark:border-slate-600 rounded"></div>
+</div>
+</div>
+<div class="flex items-center gap-2 p-2 hover:bg-slate-100 dark:hover:bg-card-dark rounded-lg cursor-pointer transition-colors">
+<span class="material-symbols-outlined text-slate-400 text-sm">chevron_right</span>
+<span class="material-symbols-outlined text-slate-400 text-xl">folder</span>
+<span class="text-sm font-medium text-slate-400">Metais Totais</span>
+</div>
+</div>
+</section>
+</div>
+<div class="p-4 border-t border-slate-200 dark:border-border-dark bg-white dark:bg-sidebar-dark shadow-2xl">
+<div class="flex items-center gap-3 mb-3">
+<div class="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center ring-1 ring-primary/40">
+<span class="material-symbols-outlined text-primary text-sm">auto_awesome</span>
+</div>
+<span class="text-xs font-bold uppercase tracking-wider">AI Insight Assistant</span>
+</div>
+<div class="relative">
+<input class="w-full bg-slate-50 dark:bg-card-dark border-transparent rounded-lg pl-4 pr-10 py-3 text-xs focus:ring-primary focus:border-primary placeholder:text-slate-500" placeholder="Pergunte sobre correlações de dados..." type="text"/>
+<button class="absolute right-2 top-1/2 -translate-y-1/2 text-primary bg-primary/10 p-1 rounded-md hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-lg">send</span>
+</button>
+</div>
+</div>
+</aside>
+<main class="flex-1 relative overflow-hidden map-bg">
+<div class="absolute top-6 left-6 right-6 flex justify-between items-center pointer-events-none">
+<div class="flex gap-3 pointer-events-auto">
+<div class="flex bg-white/90 dark:bg-card-dark/90 backdrop-blur-md rounded-lg border border-slate-200 dark:border-border-dark p-1 shadow-lg">
+<button class="px-4 py-1.5 rounded-md bg-primary text-white text-[11px] font-bold shadow-sm">2D VIEW</button>
+<button class="px-4 py-1.5 rounded-md text-slate-400 text-[11px] font-bold hover:text-slate-600 dark:hover:text-white transition-colors">3D ENGINE</button>
+</div>
+</div>
+<div class="flex gap-3 pointer-events-auto">
+<button class="w-10 h-10 bg-white/90 dark:bg-card-dark/90 backdrop-blur-md rounded-lg border border-slate-200 dark:border-border-dark flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-primary transition-colors shadow-lg">
+<span class="material-symbols-outlined">share</span>
+</button>
+<button class="w-10 h-10 bg-white/90 dark:bg-card-dark/90 backdrop-blur-md rounded-lg border border-slate-200 dark:border-border-dark flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-primary transition-colors shadow-lg">
+<span class="material-symbols-outlined">download</span>
+</button>
+</div>
+</div>
+<div class="absolute top-24 right-6 w-72 bg-white/90 dark:bg-sidebar-dark/95 backdrop-blur-md rounded-xl border border-slate-200 dark:border-border-dark shadow-2xl overflow-hidden pointer-events-auto ring-1 ring-border-dark">
+<div class="px-4 py-3 border-b border-slate-200 dark:border-border-dark flex justify-between items-center bg-slate-50/50 dark:bg-card-dark/50">
+<h4 class="text-[10px] font-black uppercase tracking-widest text-slate-500">Camadas Ativas</h4>
+<span class="material-symbols-outlined text-slate-400 text-sm cursor-pointer hover:text-primary transition-colors">unfold_less</span>
+</div>
+<div class="p-4 space-y-5">
+<div class="space-y-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-lg">visibility</span>
+<div class="flex flex-col">
+<span class="text-xs font-bold">MapBiomas LULC</span>
+<span class="text-[9px] text-slate-500 uppercase">Raster • Versão 8.0</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-sm cursor-pointer">settings</span>
+</div>
+<div class="h-1.5 w-full bg-slate-200 dark:bg-border-dark rounded-full overflow-hidden">
+<div class="h-full bg-primary w-2/3 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+</div>
+</div>
+<div class="space-y-2 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400 text-lg">visibility_off</span>
+<div class="flex flex-col">
+<span class="text-xs font-bold">Limites CAR</span>
+<span class="text-[9px] text-slate-500 uppercase">Vector • IBAMA</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-sm">settings</span>
+</div>
+<div class="h-1.5 w-full bg-slate-200 dark:bg-border-dark rounded-full overflow-hidden">
+<div class="h-full bg-primary w-full opacity-30"></div>
+</div>
+</div>
+</div>
+<div class="p-3 bg-slate-50 dark:bg-card-dark/50 border-t border-slate-200 dark:border-border-dark">
+<button class="w-full py-2 bg-slate-200 dark:bg-border-dark rounded-lg text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 hover:bg-primary hover:text-white transition-all">Adicionar Camada</button>
+</div>
+</div>
+<div class="absolute bottom-16 right-6 flex flex-col gap-2 pointer-events-auto">
+<div class="flex flex-col bg-white/90 dark:bg-card-dark/90 backdrop-blur-md rounded-lg border border-slate-200 dark:border-border-dark shadow-xl overflow-hidden">
+<button class="w-10 h-10 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-sidebar-dark transition-colors border-b border-slate-200 dark:border-border-dark">
+<span class="material-symbols-outlined">add</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-primary hover:bg-slate-50 dark:hover:bg-sidebar-dark transition-colors">
+<span class="material-symbols-outlined">remove</span>
+</button>
+</div>
+<button class="w-10 h-10 bg-white/90 dark:bg-card-dark/90 backdrop-blur-md rounded-lg border border-slate-200 dark:border-border-dark flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-primary transition-colors shadow-xl">
+<span class="material-symbols-outlined">near_me</span>
+</button>
+<button class="w-10 h-10 bg-white/90 dark:bg-card-dark/90 backdrop-blur-md rounded-lg border border-slate-200 dark:border-border-dark flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-primary transition-colors shadow-xl">
+<span class="material-symbols-outlined">layers</span>
+</button>
+</div>
+<button class="absolute bottom-16 left-1/2 -translate-x-1/2 bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-full font-bold shadow-2xl shadow-primary/40 flex items-center gap-3 transition-all hover:scale-105 pointer-events-auto border border-white/10">
+<span class="material-symbols-outlined text-xl">smart_toy</span>
+<span class="tracking-widest text-xs uppercase">Ferramentas GEO-IA</span>
+</button>
+<footer class="absolute bottom-0 left-0 right-0 h-8 bg-white/80 dark:bg-sidebar-dark/90 backdrop-blur-md border-t border-slate-200 dark:border-border-dark px-6 flex items-center justify-between text-[10px] font-bold text-slate-500 tracking-wider pointer-events-auto">
+<div class="flex items-center gap-6">
+<span class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span> 
+                ENGINE STATUS: LIVE
+            </span>
+<div class="flex gap-4 border-l border-border-dark pl-6">
+<span>LAT: -3.46571</span>
+<span>LON: -62.21592</span>
+<span class="text-primary/80">ALT: 42m</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">memory</span>
+<span>24.5 MB</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">wifi</span>
+<span>12ms Latency</span>
+</div>
+<span class="uppercase font-black text-slate-400">© 2024 Envibase Intel</span>
+</div>
+</footer>
+</main>
+
+</body></html>

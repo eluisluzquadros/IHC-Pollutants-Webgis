@@ -1,0 +1,313 @@
+/* Google Fonts — 2026 Trend Palette */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@300;400;500;600;700&family=Geist+Mono:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Premium Studio/Light Mode Foundation */
+    --background: 210 40% 98%; /* #F8F9FA-ish */
+    --foreground: 224 71.4% 4.1%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+
+    /* Primary: Electric Cobalt #2E5BFF */
+    --primary: 231 100% 59%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220.9 39.3% 11%;
+
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+
+    --accent: 220 14.3% 95.9%;
+    --accent-foreground: 220.9 39.3% 11%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 231 100% 59%;
+
+    --radius: 1rem;
+
+    /* Envibase 2026 Spatial Tokens */
+    --envibase-primary: #2E5BFF;
+    --envibase-bg: #FFFFFF;
+    --envibase-bg-alt: #F8F9FA;
+    --glass-background: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(226, 232, 240, 0.8);
+  }
+
+  .dark {
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 40% 98%;
+
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 231 100% 59%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+
+    --accent: 215 27.9% 16.9%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 231 100% 59%;
+
+    /* Dark Mode Spatial Overrides */
+    --envibase-bg: #0A192F;
+    --envibase-bg-alt: #05070A;
+    --glass-background: rgba(10, 25, 47, 0.8);
+    --glass-border: rgba(30, 45, 74, 0.6);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  .font-display {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    @apply font-semibold;
+  }
+}
+
+
+/* ─── Premium Spatial Utilities ─────────────────────────── */
+
+.glass-card {
+  @apply backdrop-blur-xl border transition-all duration-300;
+  background-color: var(--glass-background);
+  border-color: var(--glass-border);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+}
+
+.dark .glass-card {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+.layer-card {
+  @apply sticky top-[100px] transition-all duration-500 backdrop-blur-2xl border rounded-2xl p-4;
+  background-color: var(--glass-background);
+  border-color: var(--glass-border);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
+}
+
+.layer-card:hover {
+  @apply -translate-y-1;
+  border-color: rgba(46, 91, 255, 0.3);
+  box-shadow: 0 20px 50px rgba(46, 91, 255, 0.06);
+}
+
+.dark .layer-card {
+  @apply bg-envibase-bg-dark/90 border-envibase-border/60;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.layer-card:hover {
+  @apply -translate-y-1 border-envibase-primary/20;
+  box-shadow: 0 30px 60px rgba(46, 91, 255, 0.08);
+}
+
+.bento-item {
+  @apply border border-landing-navy/10 rounded-[2.5rem] p-8 transition-all duration-300;
+  box-shadow: 0 4px 20px rgba(10, 25, 47, 0.04);
+}
+
+.dark .bento-item {
+  @apply bg-envibase-surface/40 border-white/10 shadow-none;
+}
+
+.bento-item:hover {
+  @apply -translate-y-1 bg-white border-landing-primary/20;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+.dark .bento-item:hover {
+  @apply bg-envibase-surface/60 border-white/20;
+}
+
+.hero-gradient {
+  background: radial-gradient(circle at 50% 50%, hsla(231, 100%, 59%, 0.05) 0%, transparent 70%);
+}
+
+.dark .hero-gradient {
+  background: radial-gradient(circle at 50% 50%, rgba(46, 91, 255, 0.1) 0%, rgba(5, 7, 10, 0) 70%);
+}
+
+.floating-book {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-20px) rotate(2deg);
+  }
+
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+.technical-annotation {
+  @apply text-[11px] font-semibold tracking-[0.2em] uppercase text-landing-primary;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(19, 236, 128, 0.02);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-[#13ec80]/20 rounded-full border border-[#13ec80]/10;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-[#13ec80]/40;
+}
+
+/* Landing Page Specific Additions */
+.glass-card-onboarding {
+  @apply bg-white border border-landing-navy/10 rounded-[2rem] overflow-hidden shadow-2xl;
+}
+
+.dark .glass-card-onboarding {
+  @apply bg-landing-navy/90 border-white/10 backdrop-blur-xl;
+}
+
+.ethereal-glass {
+  @apply bg-white/80 backdrop-blur-md border border-landing-navy/10 rounded-2xl transition-all duration-300;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.ethereal-glass:hover {
+  @apply bg-white border-landing-primary/20 -translate-y-[2px];
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+.partner-logo {
+  @apply grayscale opacity-60 transition-all duration-500;
+}
+
+.partner-logo:hover {
+  @apply grayscale-0 opacity-100;
+}
+
+.glow-cta {
+  background-image: radial-gradient(circle at top right, rgba(0, 230, 118, 0.1), transparent 40%),
+    radial-gradient(circle at bottom left, rgba(0, 230, 118, 0.05), transparent 40%);
+}
+
+.input-dark {
+  @apply bg-white/5 border border-white/10 text-white transition-all duration-300;
+}
+
+.input-dark:focus {
+  @apply bg-white/10 border-landing-vibrant outline-none;
+  box-shadow: 0 0 0 4px rgba(0, 230, 118, 0.1);
+}
+
+/* ─── No-scrollbar utility ──────────────────────────────── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ─── Leaflet overrides — light mode ───────────────────── */
+.leaflet-control-zoom {
+  border: none !important;
+  border-radius: 0.875rem !important;
+  overflow: hidden;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.10) !important;
+}
+
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+  font-weight: 600 !important;
+  color: #374151 !important;
+  background: #ffffff !important;
+  border: none !important;
+  border-bottom: 1px solid #f3f4f6 !important;
+  width: 34px !important;
+  height: 34px !important;
+  line-height: 34px !important;
+  font-size: 18px !important;
+  transition: background 0.15s, color 0.15s !important;
+}
+
+.leaflet-control-zoom-out {
+  border-bottom: none !important;
+}
+
+.leaflet-control-zoom-in:hover,
+.leaflet-control-zoom-out:hover {
+  background: #eff6ff !important;
+  color: #2E5BFF !important;
+}
+
+/* Attribution — subtle in light mode */
+.leaflet-control-attribution {
+  font-size: 9px !important;
+  background: rgba(255,255,255,0.75) !important;
+  backdrop-filter: blur(4px) !important;
+  border-radius: 0.5rem 0 0 0 !important;
+  padding: 2px 6px !important;
+  color: #9ca3af !important;
+}
+
+/* ─── Platform overlay panel — light mode ──────────────── */
+/* Landing-paper (#F8F9FA) background for visual consistency with landing page */
+.platform-panel-light {
+  background: rgba(248, 249, 250, 0.99) !important;
+  border: 1px solid rgba(46, 91, 255, 0.10) !important;
+  box-shadow: 0 16px 48px rgba(10, 25, 47, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ─── SlimSidebar — light mode legibility ───────────────── */
+/* Ensure icon buttons have readable contrast on white bg */
+.slim-sidebar-light-btn {
+  color: #6b7280;
+}
+.slim-sidebar-light-btn:hover {
+  color: #2E5BFF;
+  background: rgba(46, 91, 255, 0.06);
+}

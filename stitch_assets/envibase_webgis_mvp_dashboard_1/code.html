@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Envibase WebGIS MVP Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec80",
+                        "background-light": "#f6f8f7",
+                        "background-dark": "#102219",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            overflow: hidden;
+        }
+        .map-canvas {
+            background: radial-gradient(circle at center, #1a2e24 0%, #0a110d 100%);
+        }
+        .glass-panel {
+            backdrop-filter: blur(12px);
+            background-color: rgba(16, 34, 25, 0.85);
+            border: 1px solid rgba(19, 236, 128, 0.1);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(19, 236, 128, 0.2);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background-dark text-slate-100 flex h-screen w-screen">
+<!-- Main Map Canvas -->
+<div class="absolute inset-0 z-0 map-canvas" data-location="Amazon Rainforest" style="">
+<!-- Mock Map Visual Elements -->
+<div class="absolute inset-0 opacity-40" data-alt="Dark satellite view of tropical landscape" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAjng11zWM3XBVsEasjyva5Xr9q6iP8hUnFY2OXvhG703rpWOUfH_Hdfyc9a1Jg93J_XXCDzMLy4yo4owbRR-FfZVigJGKw3_RtIBrks99r4DFw4kV3w_8zZbVgHXVqAreXwhTi0LlElzVFdgsFIO_A60o7dwvjLqpJNF0VdbYG4mxCh_ucfiiqIIQv4f4-0JyqdZKELPeF2W0HAqNHhHgQn9S_QUyyEj1pQZU0C56ofvkxjFnfmvxsUuP6hUV5sBVRoDmfQ0SeQ4o'); background-size: cover;"></div>
+<div class="absolute inset-0 pointer-events-none bg-gradient-to-t from-background-dark/80 via-transparent to-background-dark/20"></div>
+<!-- Mock Vector Layers -->
+<svg class="absolute inset-0 w-full h-full opacity-60">
+<path d="M200,300 L400,250 L600,450 L300,600 Z" fill="none" stroke="#13ec80" stroke-dasharray="4" stroke-width="1.5"></path>
+<circle cx="450" cy="380" fill="#13ec80" r="4"></circle>
+<circle cx="480" cy="410" fill="#13ec80" r="4"></circle>
+</svg>
+</div>
+<!-- Sidebar Navigation (Slim) -->
+<aside class="relative z-20 flex h-full w-16 flex-col items-center py-6 glass-panel border-r border-primary/10">
+<div class="mb-8">
+<div class="size-10 rounded-lg bg-primary flex items-center justify-center text-background-dark">
+<span class="material-symbols-outlined font-bold">eco</span>
+</div>
+</div>
+<nav class="flex flex-col gap-6">
+<button class="text-primary p-2 rounded-lg bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">map</span>
+</button>
+<button class="text-slate-400 p-2 rounded-lg hover:text-primary transition-colors">
+<span class="material-symbols-outlined">analytics</span>
+</button>
+<button class="text-slate-400 p-2 rounded-lg hover:text-primary transition-colors">
+<span class="material-symbols-outlined">layers</span>
+</button>
+<button class="text-slate-400 p-2 rounded-lg hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</nav>
+<div class="mt-auto flex flex-col gap-6">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="size-8 rounded-full bg-slate-800 border border-primary/30 flex items-center justify-center overflow-hidden">
+<img alt="User profile" data-alt="User avatar placeholder" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjHsuHn1RYl2eUcHCF_YejNsEIC39mVJDqSAke0fHDeKCBBOSCX3xTsSOsK_djgnLVCUM8NoKCqwWHoi-jempvyvDHV6QMxJN0_IKufg7DqM7pZZsya8W8DhYewAJGTTTggSdAE6qyijXrDUDUxI8cJtQxMDY3br_cgLKjcdiPnWV1JZCitHM6rGqonTfpwjUYbxiwAeqHOO_9EGoOr1IdHHtQLD1qz7LMq-BoFn7-0FHDmk8wnG2DJv_afe91ijhnk_3C95oBr6c"/>
+</div>
+</div>
+</aside>
+<!-- Content Panel -->
+<main class="relative z-10 flex h-full w-[420px] flex-col overflow-hidden glass-panel shadow-2xl">
+<!-- Header / Search Area -->
+<div class="p-6 border-b border-primary/10">
+<div class="flex items-center justify-between mb-4">
+<h1 class="text-xl font-bold tracking-tight text-white">Envibase <span class="text-primary text-xs font-mono ml-2 border border-primary/30 px-1.5 py-0.5 rounded">MVP v0.1</span></h1>
+</div>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-slate-500 group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full bg-background-dark/50 border border-primary/20 rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none text-slate-200" placeholder="Search coordinates, region or layer..." type="text"/>
+</div>
+<!-- Global Filters Bar -->
+<div class="flex gap-2 mt-4 overflow-x-auto pb-2 custom-scrollbar">
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-[11px] font-medium text-primary whitespace-nowrap">
+                    Region: Amazon <span class="material-symbols-outlined text-[14px]">expand_more</span>
+</button>
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-800/50 border border-slate-700 text-[11px] font-medium text-slate-300 whitespace-nowrap">
+                    Matrix: Biota <span class="material-symbols-outlined text-[14px]">expand_more</span>
+</button>
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-800/50 border border-slate-700 text-[11px] font-medium text-slate-300 whitespace-nowrap">
+                    Environment: Terrestrial <span class="material-symbols-outlined text-[14px]">expand_more</span>
+</button>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
+<!-- Eixo A: Escopo de Projetos -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-xs font-bold uppercase tracking-widest text-primary/70">Eixo A: Escopo de Projetos</h2>
+<span class="material-symbols-outlined text-slate-500 text-sm">info</span>
+</div>
+<div class="space-y-2">
+<label class="flex items-center gap-3 p-3 rounded-lg border border-primary/40 bg-primary/5 cursor-pointer group">
+<input checked="" class="text-primary focus:ring-0 bg-transparent border-primary/50 ring-offset-0" name="project" type="radio"/>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-white">Amazon Restoration 2024</span>
+<span class="text-[10px] text-slate-400">ID: AMZ-RES-24 • Sentinel-2 Monitoring</span>
+</div>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-lg border border-white/5 bg-white/5 hover:border-primary/20 cursor-pointer group transition-colors">
+<input class="text-primary focus:ring-0 bg-transparent border-slate-600 ring-offset-0" name="project" type="radio"/>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-300 group-hover:text-white">Cerrado Monitoring Platform</span>
+<span class="text-[10px] text-slate-500">ID: CER-MON-22 • Landsat Analysis</span>
+</div>
+</label>
+</div>
+</section>
+<!-- Eixo B: Fonte de Dados -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-xs font-bold uppercase tracking-widest text-primary/70">Eixo B: Fonte de Dados</h2>
+</div>
+<!-- Data Toggle Switch -->
+<div class="flex p-1 bg-background-dark border border-white/10 rounded-lg mb-4">
+<button class="flex-1 py-1.5 text-xs font-bold bg-primary text-background-dark rounded-md">PUBLIC DATA</button>
+<button class="flex-1 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-300">PRIVATE DATA</button>
+</div>
+<!-- Search Results / Data Cards -->
+<div class="space-y-4">
+<!-- Data Card 1 -->
+<div class="group relative rounded-xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-white/5 p-4 hover:border-primary/30 transition-all">
+<div class="flex justify-between items-start mb-3">
+<div>
+<h3 class="text-sm font-bold text-slate-100 group-hover:text-primary transition-colors">MapBiomas Land Use v8.0</h3>
+<p class="text-[10px] text-slate-400 mt-1">Classification of land cover across Amazon Biome</p>
+</div>
+<span class="text-[9px] font-bold bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded uppercase tracking-tighter border border-blue-500/20">Raster</span>
+</div>
+<div class="flex items-center gap-4 text-[10px] text-slate-500 mb-4">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">database</span> ESA Sentinel</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">calendar_today</span> Oct 2023</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">verified</span> 98% Acc.</span>
+</div>
+<button class="w-full py-2 bg-primary/10 border border-primary/30 text-primary text-[11px] font-bold uppercase tracking-wider rounded-lg hover:bg-primary hover:text-background-dark transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[16px]">add_circle</span>
+                            Add to Map
+                        </button>
+</div>
+<!-- Data Card 2 -->
+<div class="group relative rounded-xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-white/5 p-4 hover:border-primary/30 transition-all">
+<div class="flex justify-between items-start mb-3">
+<div>
+<h3 class="text-sm font-bold text-slate-100 group-hover:text-primary transition-colors">Property Boundaries (CAR)</h3>
+<p class="text-[10px] text-slate-400 mt-1">Official rural environmental registry vector data</p>
+</div>
+<span class="text-[9px] font-bold bg-purple-500/10 text-purple-400 px-1.5 py-0.5 rounded uppercase tracking-tighter border border-purple-500/20">Vector</span>
+</div>
+<div class="flex items-center gap-4 text-[10px] text-slate-500 mb-4">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">account_balance</span> Govt Hub</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">calendar_today</span> Real-time</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">location_on</span> Pará, BR</span>
+</div>
+<button class="w-full py-2 bg-primary/10 border border-primary/30 text-primary text-[11px] font-bold uppercase tracking-wider rounded-lg hover:bg-primary hover:text-background-dark transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[16px]">add_circle</span>
+                            Add to Map
+                        </button>
+</div>
+</div>
+</section>
+</div>
+<!-- System Status Bar -->
+<div class="p-3 bg-background-dark/80 border-t border-primary/10 flex items-center justify-between text-[10px] font-mono text-slate-500">
+<div class="flex items-center gap-3">
+<span class="flex items-center gap-1 text-primary"><span class="size-1.5 rounded-full bg-primary animate-pulse"></span> Engine Live</span>
+<span>LAT: -3.465</span>
+<span>LNG: -62.215</span>
+</div>
+<span>MEM: 24.5MB</span>
+</div>
+</main>
+<!-- Floating Top Bar Controls -->
+<div class="absolute top-6 right-6 z-20 flex items-center gap-3">
+<div class="flex items-center p-1 bg-background-dark/80 border border-primary/20 rounded-lg glass-panel">
+<button class="px-3 py-1.5 text-[11px] font-bold text-primary bg-primary/10 rounded-md">2D</button>
+<button class="px-3 py-1.5 text-[11px] font-bold text-slate-500 hover:text-slate-300">3D</button>
+</div>
+<button class="size-10 glass-panel rounded-lg flex items-center justify-center text-slate-300 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">share</span>
+</button>
+<button class="size-10 glass-panel rounded-lg flex items-center justify-center text-slate-300 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">download</span>
+</button>
+</div>
+<!-- Floating Map Controls (Bottom Right) -->
+<div class="absolute bottom-6 right-6 z-20 flex flex-col gap-3 items-end">
+<!-- Layer Manager Legend -->
+<div class="w-64 glass-panel rounded-xl p-4 shadow-xl mb-4">
+<h4 class="text-[10px] font-bold uppercase tracking-widest text-primary/70 mb-3 flex items-center justify-between">
+                Active Layers
+                <span class="material-symbols-outlined text-sm">unfold_less</span>
+</h4>
+<div class="space-y-3">
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 text-sm">visibility</span>
+<span class="text-[11px] font-medium text-slate-200">MapBiomas LULC</span>
+</div>
+<span class="material-symbols-outlined text-slate-500 text-sm">more_vert</span>
+</div>
+<div class="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-4/5"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">visibility</span>
+<span class="text-[11px] font-medium text-slate-200">Farm Boundary #04</span>
+</div>
+<span class="material-symbols-outlined text-slate-500 text-sm">more_vert</span>
+</div>
+<div class="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-full"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col glass-panel rounded-lg overflow-hidden">
+<button class="size-10 border-b border-white/5 flex items-center justify-center text-slate-300 hover:text-primary hover:bg-white/5">
+<span class="material-symbols-outlined">add</span>
+</button>
+<button class="size-10 border-b border-white/5 flex items-center justify-center text-slate-300 hover:text-primary hover:bg-white/5">
+<span class="material-symbols-outlined">remove</span>
+</button>
+<button class="size-10 flex items-center justify-center text-slate-300 hover:text-primary hover:bg-white/5">
+<span class="material-symbols-outlined">near_me</span>
+</button>
+</div>
+<button class="size-10 glass-panel rounded-lg flex items-center justify-center text-slate-300 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">straighten</span>
+</button>
+<button class="px-4 py-2 bg-primary text-background-dark text-[11px] font-bold rounded-lg flex items-center gap-2 shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+            GEO-AI TOOLS
+        </button>
+</div>
+</body></html>

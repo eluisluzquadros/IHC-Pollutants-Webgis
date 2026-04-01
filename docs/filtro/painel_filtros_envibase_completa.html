@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Ambiental Integrado</title>
+    <style>
+        :root {
+            --bg-body: #f1f5f9;
+            --sidebar-bg: #ffffff;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #22c55e;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        .sidebar { width: 420px; min-width: 420px; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.05); }
+        .sidebar-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h2 { font-size: 18px; font-weight: 700; }
+
+        .scroll-content { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 24px; }
+        .section-label { font-size: 13px; font-weight: 800; text-transform: uppercase; color: var(--text-main); margin-bottom: 10px; display: block; }
+
+        /* Chips Ambiente */
+        .env-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+        .chip { border: 1px solid var(--border); background: #f8fafc; padding: 8px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; user-select: none; }
+        .chip.on { background: #e0f2fe; border-color: #38bdf8; color: var(--primary); font-weight: 600; }
+        .chip .dot { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; }
+        .chip.on .dot { background: var(--primary); }
+
+        /* Inputs */
+        .search-box { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; margin-bottom: 8px; }
+
+        /* Listas e Itens */
+        .picker-list { border: 1px solid var(--border); border-radius: 8px; max-height: 300px; overflow-y: auto; background: #fff; }
+        .group-header { background: #f8fafc; padding: 12px; font-size: 12px; font-weight: 700; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; transition: background 0.2s; user-select:none; }
+        .group-header:hover { background: #f1f5f9; }
+
+        .item-row { padding: 10px 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 1px solid #f8fafc; font-size: 13px; transition: 0.1s; }
+        .item-row:hover { background: #f0f9ff; }
+        .item-row.selected { background: #ecfdf5; border-left: 4px solid var(--success); }
+
+        .checkbox { width: 18px; height: 18px; border: 2px solid #cbd5e1; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+        .selected .checkbox { background: var(--success); border-color: var(--success); color: white; }
+        .selected .checkbox::after { content: '✓'; font-size: 12px; }
+
+        /* Resumo */
+        .applied-area { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1; min-height: 50px; }
+        .applied-chip { background: var(--primary); color: white; padding: 5px 12px; border-radius: 20px; font-size: 11px; display: flex; align-items: center; gap: 6px; }
+        .applied-chip[data-kind="param"] { background: #0f172a; }
+        .applied-chip[data-kind="matrix"] { background: #7c3aed; }
+        .applied-chip[data-kind="biota"] { background: #0ea5e9; }
+        .applied-chip[data-kind="scope"] { background: #334155; }
+        .applied-chip[data-kind="project"] { background: #0f766e; }
+
+        .remove-icon { cursor: pointer; font-weight: bold; opacity: 0.7; }
+        .remove-icon:hover { opacity: 1; }
+
+        .sidebar-footer { padding: 20px 24px; border-top: 1px solid var(--border); display: flex; gap: 12px; background: #fff; }
+        .btn-clear { flex: 1; padding: 12px; border: 1px solid var(--border); background: #fff; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn-apply { flex: 2; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; }
+        .btn-apply:hover { background: var(--primary-hover); }
+
+        .map-placeholder { flex: 1; background: #e5e7eb; display: flex; align-items: center; justify-content: center; }
+        .muted { color: var(--text-muted); font-size: 12px; }
+
+        /* Região (UI como imagem) */
+        .region-bar {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #ffffff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            margin-bottom: 10px;
+        }
+        .region-left {
+            display:flex;
+            align-items:center;
+            gap:10px;
+            min-width: 0;
+        }
+        .pin {
+            width: 22px;
+            height: 22px;
+            border-radius: 999px;
+            display:grid;
+            place-items:center;
+            background:#eff6ff;
+            color: var(--primary);
+            font-size: 12px;
+            flex: 0 0 auto;
+        }
+        .region-crumb {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .caret {
+            color: var(--text-muted);
+            font-size: 14px;
+            flex: 0 0 auto;
+        }
+        .region-controls {
+            display:grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+        .region-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            font-size: 13px;
+            background:#fff;
+        }
+        .region-input::placeholder { color: #94a3b8; }
+
+        /* Período (data inicial/final) */
+        .date-row{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap:10px;
+        }
+        .date-field{
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+        }
+        .date-label{
+            font-size:12px;
+            font-weight:700;
+            color: var(--text-muted);
+        }
+        .date-input{
+            width:100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            font-size: 13px;
+            background:#fff;
+        }
+
+        /* Escopo (cards/toggle group) */
+        .scope-grid{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap:10px;
+            margin-bottom: 10px;
+        }
+        .scope-card{
+            border: 1px solid var(--border);
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 12px;
+            cursor:pointer;
+            transition: .12s;
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+            user-select:none;
+        }
+        .scope-card:hover{ background:#f8fafc; }
+        .scope-card.on{
+            border-color:#38bdf8;
+            background:#e0f2fe;
+        }
+        .scope-title{
+            font-weight:900;
+            font-size:13px;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: .3px;
+        }
+        .scope-sub{
+            font-size:12px;
+            color: var(--text-muted);
+            line-height:1.25;
+        }
+        .scope-projects{
+            margin-top: 10px;
+        }
+        .lock-note{
+            margin-top: 8px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+        .disabled-block{
+            opacity: .55;
+            pointer-events:none;
+            filter: grayscale(10%);
+        }
+
+        /* ✅ NOVO (apenas UI da lista de projetos): colunas de atualizado + avaliação */
+        .proj-row { display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; }
+        .proj-left { display:flex; align-items:center; gap:10px; flex: 1; min-width:0; }
+        .proj-name { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .proj-right { display:flex; align-items:center; gap:10px; flex: 0 0 auto; }
+        .proj-date { font-size: 11px; color: var(--text-muted); white-space:nowrap; }
+        .proj-rating { display:flex; align-items:center; gap:6px; min-width: 88px; justify-content:flex-end; }
+        .proj-stars { font-size: 11px; color: #f59e0b; letter-spacing: .2px; }
+        .proj-count { font-size: 10px; color: #cbd5e1; white-space:nowrap; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>Filtros de Dados</h2>
+            <span style="color: var(--text-muted); font-size: 12px;">v2.7</span>
+        </div>
+
+        <div class="scroll-content">
+
+            <!-- Etapa inicial (não numerada) — Escopo -->
+            <section>
+                <label class="section-label">Escopo</label>
+                <div class="muted" style="margin-top:-4px; margin-bottom:10px;">
+                    Defina o universo de projetos antes de aplicar filtros. Isso controla onde toda a pesquisa acontecerá.
+                </div>
+
+                <div class="scope-grid" id="scopeCards"></div>
+
+                <div class="scope-projects">
+                    <input type="text" id="projectSearch" class="search-box" placeholder="Buscar projeto dentro do escopo...">
+                    <div class="picker-list" id="projectList"></div>
+                    <div class="muted" id="projectHint"></div>
+                </div>
+
+                <div class="lock-note" id="lockNote">Selecione um escopo e um ou mais projetos para liberar os filtros abaixo.</div>
+            </section>
+
+            <!-- Tudo abaixo fica desabilitado até escolher escopo+projeto -->
+            <div id="filtersContainer" class="disabled-block">
+                <!-- Seção 1 - Região -->
+                <section>
+                    <label class="section-label">1. Região</label>
+
+                    <div class="region-bar" title="Selecione país, estado e cidade">
+                        <div class="region-left">
+                            <div class="pin">📍</div>
+                            <div class="region-crumb" id="regionCrumb">Selecione: País › Estado › Cidade</div>
+                        </div>
+                        <div class="caret">▾</div>
+                    </div>
+
+                    <div class="region-controls">
+                        <input class="region-input" id="countryInput" list="countries" placeholder="Brasil..." />
+                        <input class="region-input" id="stateInput" list="states" placeholder="filtrar..." />
+                        <input class="region-input" id="cityInput" list="cities" placeholder="filtrar..." />
+                    </div>
+
+                    <datalist id="countries">
+                        <option value="Brasil"></option>
+                    </datalist>
+                    <datalist id="states">
+                        <option value="São Paulo"></option>
+                        <option value="Rio de Janeiro"></option>
+                        <option value="Minas Gerais"></option>
+                        <option value="Bahia"></option>
+                    </datalist>
+                    <datalist id="cities">
+                        <option value="Santos"></option>
+                        <option value="São Paulo"></option>
+                        <option value="Campinas"></option>
+                        <option value="Rio de Janeiro"></option>
+                        <option value="Niterói"></option>
+                    </datalist>
+
+                    <div class="muted" style="margin-top:8px;">Dica: comece pelo país (ex.: Brasil) e refine para estado e cidade.</div>
+                </section>
+
+                <!-- Período -->
+                <section>
+                    <label class="section-label">Período</label>
+                    <div class="date-row">
+                        <div class="date-field">
+                            <div class="date-label">Data inicial</div>
+                            <input class="date-input" id="dateStart" type="date" />
+                        </div>
+                        <div class="date-field">
+                            <div class="date-label">Data final</div>
+                            <input class="date-input" id="dateEnd" type="date" />
+                        </div>
+                    </div>
+                    <div class="muted" style="margin-top:8px;">Defina o intervalo de tempo para a pesquisa (opcional).</div>
+                </section>
+
+                <section>
+                    <label class="section-label">2. Ambiente</label>
+                    <div class="env-chips" id="envChips"></div>
+                    <div class="muted" id="envHint"></div>
+                </section>
+
+                <section>
+                    <label class="section-label">3. Ecossistema</label>
+                    <input type="text" id="ecoSearch" class="search-box" placeholder="Buscar ecossistema (PT/EN/descrição/categoria)...">
+                    <div class="picker-list" id="ecoList"></div>
+                    <div class="muted" id="ecoCount"></div>
+                </section>
+
+                <section>
+                    <label class="section-label">4. Matriz e Parâmetros</label>
+
+                    <div class="muted" style="margin: -4px 0 8px;">Selecione uma ou mais matrizes. Se escolher Biota, refine por organismo.</div>
+                    <div class="env-chips" id="matrixChips"></div>
+                    <div class="env-chips" id="biotaChips" style="display:none; margin-top:-2px;"></div>
+                    <div class="muted" id="matrixHint" style="margin-top: 6px;"></div>
+
+                    <input type="text" id="paramSearch" class="search-box" placeholder="Filtrar analitos (nome/categoria)...">
+                    <div class="picker-list" id="paramList"></div>
+                    <div class="muted" id="paramCount"></div>
+                </section>
+
+                <section>
+                    <label class="section-label">5. Filtros Selecionados</label>
+                    <div class="applied-area" id="selectionSummary"></div>
+                </section>
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            <button class="btn-clear" id="btnReset">Limpar</button>
+            <button class="btn-apply" id="btnApply">Aplicar Filtros</button>
+        </div>
+    </aside>
+
+    <main class="map-placeholder">
+        <div style="text-align: center; opacity: 0.2;">
+            <h1 style="font-size: 3rem;">MAPA INTERATIVO</h1>
+        </div>
+    </main>
+
+    <script>
+        // ----------------------------
+        // DADOS (demo — expanda depois)
+        // ----------------------------
+        const ECO_DATA = [
+            { cat: "Aquático Continental", pt: "Riacho", en: "Stream / Creek", desc: "Curso d'água menor que um rio, de fluxo contínuo.", env: ["continental"] },
+            { cat: "Aquático Continental", pt: "Rio", en: "River", desc: "Grande curso d'água natural que deságua no mar, lago ou outro rio.", env: ["continental"] },
+            { cat: "Costeiro", pt: "Estuário", en: "Estuary", desc: "Corpo d'água semifechado onde o rio encontra o mar.", env: ["costeiro"] },
+            { cat: "Costeiro", pt: "Manguezal", en: "Mangrove", desc: "Ecossistema de transição costeiro com árvores adaptadas a águas salobras.", env: ["costeiro"] },
+            { cat: "Oceânico", pt: "Atol", en: "Atoll", desc: "Um anel de recifes de coral circundando uma lagoa.", env: ["oceanico"] },
+            { cat: "Oceânico / Costeiro", pt: "Mar", en: "Sea", desc: "Uma grande extensão de água salgada, geralmente parte de um oceano.", env: ["oceanico", "costeiro"] },
+            { cat: "Continental", pt: "Solo", en: "Soil", desc: "A camada superficial da Terra, onde plantas crescem.", env: ["continental"] }
+        ];
+
+        const PARAM_DATA = {
+            "Granulometria": ["Cascalho", "Areia Grossa", "Areia Fina", "Silte", "Argila"],
+            "Matéria Orgânica": ["Carbonatos", "Matéria Orgânica Total", "Carbono Orgânico Total", "Nitrogênio Total", "Enxofre"],
+            "Metais Totais": ["Alumínio (Al)", "Arsênio (As)", "Cádmio (Cd)", "Chumbo (Pb)", "Cobre (Cu)", "Ferro (Fe)", "Mercúrio (Hg)", "Zinco (Zn)"],
+            "Hidrocarbonetos": ["C10", "C12", "Pristano", "Fitano", "HTP"],
+            "HPAs": ["Naftaleno", "Antraceno", "Pireno", "Benzo(a)pireno", "Sigma HPAs"],
+            "Biomarcadores": ["TR19", "TR20", "TS", "TM", "H30", "GAM"]
+        };
+
+        // ----------------------------
+        // ✅ ESCOPO (atualizado + avaliação)
+        // ----------------------------
+        const SCOPE_META = [
+          { id:"meus projetos", label:"Meus projetos", desc:"Dados e projetos criados por você." },
+          { id:"compartilhados", label:"Compartilhados", desc:"Projetos recebidos/compartilhados com você." },
+          { id:"favoridos", label:"Favoritos", desc:"Atalhos para os seus conjuntos mais usados." },
+          { id:"dados publicos", label:"Dados públicos", desc:"Bases públicas e coleções abertas." }
+        ];
+
+        const SCOPE_DATA = [
+          { scope:"meus projetos", project:"Meu projeto 01", updated:"04/03/2025" },
+          { scope:"meus projetos", project:"Meu XPTO 01", updated:"02/02/2026" },
+          { scope:"meus projetos", project:"Meu Teste 01", updated:"22/07/2025" },
+          { scope:"meus projetos", project:"Meu Encerrado 01", updated:"19/05/2026" },
+
+          { scope:"compartilhados", project:"Proj Receb 2025_01_03", updated:"05/01/2025" },
+          { scope:"compartilhados", project:"Proj Env 2025_01_03", updated:"30/11/2026" },
+          { scope:"compartilhados", project:"Proj Receb 2025_01_03", updated:"11/10/2025" },
+          { scope:"compartilhados", project:"Proj Parcial 2025_01_03", updated:"14/08/2026" },
+          { scope:"compartilhados", project:"Proj Exp 2025_01_03", updated:"29/12/2025" },
+          { scope:"compartilhados", project:"Proj Receb 2025_05_04", updated:"21/03/2026" },
+          { scope:"compartilhados", project:"Proj Receb 2026_01_07", updated:"03/06/2025" },
+          { scope:"compartilhados", project:"Proj Receb 2025_12_05", updated:"07/07/2026" },
+
+          { scope:"favoridos", project:"Natureza 0001 A", updated:"18/09/2025", rating:{ stars:4, count:904 } },
+          { scope:"favoridos", project:"Ambiente 024 B", updated:"25/12/2026", rating:{ stars:3, count:57 } },
+          { scope:"favoridos", project:"Rios Poluídos 2025", updated:"09/02/2025", rating:{ stars:4, count:169 } },
+          { scope:"favoridos", project:"Rio Doce 002", updated:"12/01/2026", rating:{ stars:4, count:27 } },
+          { scope:"favoridos", project:"Praias e Lagoas", updated:"30/04/2025", rating:{ stars:4, count:502 } },
+
+          { scope:"dados publicos", project:"Dados ANA", updated:"15/06/2026", rating:{ stars:5, count:6525 } },
+          { scope:"dados publicos", project:"Dados INEA", updated:"17/11/2025", rating:{ stars:4, count:527 } },
+          { scope:"dados publicos", project:"Dados IBAMA", updated:"04/10/2026", rating:{ stars:5, count:2307 } },
+          { scope:"dados publicos", project:"Dados Rurais", updated:"26/08/2025", rating:{ stars:3, count:224 } },
+          { scope:"dados publicos", project:"Dados GOV BR", updated:"28/04/2026", rating:{ stars:5, count:5457 } },
+          { scope:"dados publicos", project:"Dados Aleatórios", updated:"12/05/2025", rating:{ stars:1, count:15 } },
+          { scope:"dados publicos", project:"Dados Sedimento", updated:"09/09/2026", rating:{ stars:4, count:85 } },
+          { scope:"dados publicos", project:"Dados Biota", updated:"01/01/2026", rating:{ stars:4, count:221 } },
+        ];
+
+        // ----------------------------
+        // ESTADO
+        // ----------------------------
+        let selectedScopes = new Set();
+        let selectedProjectIds = new Set();
+
+        let activeEnvs = new Set();
+        let selectedEcoIds = new Set();
+        let selectedParamIds = new Set();
+        let activeParamCat = null;
+
+        let selectedMatrices = new Set();
+        let selectedBiota = new Set();
+
+        const ENV_META = [
+          { id: 'continental', label: 'Continental' },
+          { id: 'costeiro', label: 'Costeiro' },
+          { id: 'oceanico', label: 'Oceânico' }
+        ];
+
+        // ----------------------------
+        // UTIL
+        // ----------------------------
+        const normalize = (s) => (s ?? "")
+          .toString()
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+
+        const debounce = (fn, ms=180) => {
+          let t;
+          return (...args) => {
+            clearTimeout(t);
+            t = setTimeout(() => fn(...args), ms);
+          };
+        };
+
+        const makeEcoId = (e) => `${e.env.join('|')}::${e.cat}::${e.pt}`;
+        const makeParamId = (cat, name) => `${cat}::${name}`;
+        const makeProjectId = (scope, project) => `${scope}::${project}`;
+
+        const ECO_INDEX = ECO_DATA.map(e => ({
+          ...e,
+          id: makeEcoId(e),
+          searchable: normalize([e.pt, e.en, e.desc, e.cat, e.env.join(" ")].join(" "))
+        }));
+
+        const PARAM_INDEX = (() => {
+          const out = [];
+          for (const [cat, items] of Object.entries(PARAM_DATA)) {
+            for (const name of items) {
+              out.push({
+                cat,
+                name,
+                id: makeParamId(cat, name),
+                searchable: normalize([cat, name].join(" "))
+              });
+            }
+          }
+          return out;
+        })();
+
+        function activeEnvLabels() {
+          if (activeEnvs.size === 0) return "Nenhum ambiente selecionado.";
+          const labels = ENV_META.filter(e => activeEnvs.has(e.id)).map(e => e.label);
+          return `Ativos: ${labels.join(", ")}`;
+        }
+
+        function setFiltersLockedState() {
+          const locked = !((selectedScopes.size > 0) && (selectedProjectIds.size > 0));
+          const container = document.getElementById("filtersContainer");
+          const note = document.getElementById("lockNote");
+          container.classList.toggle("disabled-block", locked);
+
+          if (locked) {
+            note.textContent = "Selecione um escopo e um ou mais projetos para liberar os filtros abaixo.";
+          } else {
+            note.textContent = `Escopos: ${selectedScopes.size} • Projetos: ${selectedProjectIds.size}`;
+          }
+        }
+
+        // ----------------------------
+        // ✅ ESCOPO: indexes + render (cards + lista com data/avaliação)
+        // ----------------------------
+        const PROJECTS_BY_SCOPE = (() => {
+          const map = new Map();
+          for (const row of SCOPE_DATA) {
+            if (!map.has(row.scope)) map.set(row.scope, []);
+            map.get(row.scope).push(row);
+          }
+          // ordena por nome do projeto
+          for (const [scope, list] of map.entries()) {
+            list.sort((a,b) => a.project.localeCompare(b.project));
+          }
+          return map;
+        })();
+
+        function renderScopeCards() {
+          const el = document.getElementById("scopeCards");
+          el.innerHTML = "";
+
+          SCOPE_META.forEach(s => {
+            const isOn = selectedScopes.has(s.id);
+            const card = document.createElement("div");
+            card.className = "scope-card" + (isOn ? " on" : "");
+            card.innerHTML = `
+              <div class="scope-title">${s.label}</div>
+              <div class="scope-sub">${s.desc}</div>
+            `;
+            card.onclick = () => {
+              if (selectedScopes.has(s.id)) {
+                selectedScopes.delete(s.id);
+                for (const pid of [...selectedProjectIds]) {
+                  if (pid.startsWith(s.id + "::")) selectedProjectIds.delete(pid);
+                }
+              } else {
+                selectedScopes.add(s.id);
+              }
+              renderScopeCards();
+              renderProjectList();
+              setFiltersLockedState();
+              renderSummary();
+            };
+            el.appendChild(card);
+          });
+        }
+
+        function starsText(stars) {
+          const s = Math.max(0, Math.min(5, Number(stars) || 0));
+          return "★".repeat(s) + "☆".repeat(5 - s);
+        }
+
+        function getProjectsForSelectedScopes() {
+          const out = [];
+          for (const scope of selectedScopes) {
+            const list = PROJECTS_BY_SCOPE.get(scope) || [];
+            for (const row of list) {
+              out.push({
+                scope,
+                name: row.project,
+                updated: row.updated || "",
+                rating: row.rating || null,
+                id: makeProjectId(scope, row.project),
+                searchable: normalize(`${row.project} ${scope}`)
+              });
+            }
+          }
+          out.sort((a,b) => a.name.localeCompare(b.name) || a.scope.localeCompare(b.scope));
+          return out;
+        }
+
+        function renderProjectList() {
+          const container = document.getElementById("projectList");
+          const hint = document.getElementById("projectHint");
+          const q = normalize(document.getElementById("projectSearch").value);
+          container.innerHTML = "";
+
+          if (selectedScopes.size === 0) {
+            hint.textContent = "Escolha um ou mais escopos para listar os projetos.";
+            const empty = document.createElement("div");
+            empty.className = "item-row";
+            empty.style.cursor = "default";
+            empty.style.color = "var(--text-muted)";
+            empty.innerHTML = `<span>Selecione um escopo acima.</span>`;
+            container.appendChild(empty);
+            return;
+          }
+
+          const list = getProjectsForSelectedScopes();
+          const filtered = list.filter(p => !q || p.searchable.includes(q));
+
+          hint.textContent = `${filtered.length} projeto(s) disponível(is) nos escopos selecionados`;
+
+          if (filtered.length === 0) {
+            const empty = document.createElement("div");
+            empty.className = "item-row";
+            empty.style.cursor = "default";
+            empty.style.color = "var(--text-muted)";
+            empty.innerHTML = `<span>Nenhum projeto encontrado.</span>`;
+            container.appendChild(empty);
+            return;
+          }
+
+          filtered.forEach(p => {
+            const isSelected = selectedProjectIds.has(p.id);
+            const row = document.createElement("div");
+            row.className = "item-row" + (isSelected ? " selected" : "");
+
+            const showRating = (p.scope === "favoridos" || p.scope === "dados publicos") && p.rating;
+
+            row.innerHTML = `
+              <div class="proj-row">
+                <div class="proj-left">
+                  <div class="checkbox"></div>
+                  <span class="proj-name">${p.name} (${p.scope})</span>
+                </div>
+                <div class="proj-right">
+                  <span class="proj-date">${p.updated || ""}</span>
+                  ${showRating ? `
+                    <div class="proj-rating">
+                      <span class="proj-stars">${starsText(p.rating.stars)}</span>
+                      <span class="proj-count">(${p.rating.count})</span>
+                    </div>
+                  ` : `<div style="min-width:88px;"></div>`}
+                </div>
+              </div>
+            `;
+
+            row.onclick = () => {
+              if (selectedProjectIds.has(p.id)) selectedProjectIds.delete(p.id);
+              else selectedProjectIds.add(p.id);
+
+              renderProjectList();
+              setFiltersLockedState();
+              renderSummary();
+            };
+
+            container.appendChild(row);
+          });
+        }
+
+        // ----------------------------
+        // RENDER AMBIENTE
+        // ----------------------------
+        function renderEnvChips() {
+            const container = document.getElementById('envChips');
+            container.innerHTML = '';
+
+            ENV_META.forEach(env => {
+                const btn = document.createElement('div');
+                btn.className = `chip ${activeEnvs.has(env.id) ? 'on' : ''}`;
+                btn.innerHTML = `<span class="dot"></span> ${env.label}`;
+                btn.onclick = () => {
+                    if (activeEnvs.has(env.id)) activeEnvs.delete(env.id);
+                    else activeEnvs.add(env.id);
+                    updateUI();
+                };
+                container.appendChild(btn);
+            });
+
+            document.getElementById("envHint").textContent = activeEnvLabels();
+        }
+
+        // ----------------------------
+        // MATRIZ (chips + subchips Biota)
+        // ----------------------------
+        const MATRIX_META = [
+          { id: "solo", label: "Solo" },
+          { id: "sedimento", label: "Sedimento" },
+          { id: "agua", label: "Água" },
+          { id: "agua_subterranea", label: "Água Subterrânea" },
+          { id: "biota", label: "Biota" }
+        ];
+
+        const BIOTA_META = [
+          { id: "camarao", label: "Camarão" },
+          { id: "baleia", label: "Baleia" },
+          { id: "tartaruga", label: "Tartaruga" },
+          { id: "mexilhao", label: "Mexilhão" },
+          { id: "caranguejo", label: "Caranguejo" },
+          { id: "golfinho", label: "Golfinho" },
+          { id: "pinguim", label: "Pinguim" }
+        ];
+
+        function renderMatrix() {
+          const matEl = document.getElementById("matrixChips");
+          const bioEl = document.getElementById("biotaChips");
+          const hintEl = document.getElementById("matrixHint");
+
+          matEl.innerHTML = "";
+          bioEl.innerHTML = "";
+
+          MATRIX_META.forEach(m => {
+            const btn = document.createElement("div");
+            btn.className = `chip ${selectedMatrices.has(m.id) ? "on" : ""}`;
+            btn.innerHTML = `<span class="dot"></span> ${m.label}`;
+            btn.onclick = () => {
+              if (selectedMatrices.has(m.id)) {
+                selectedMatrices.delete(m.id);
+                if (m.id === "biota") selectedBiota.clear();
+              } else {
+                selectedMatrices.add(m.id);
+              }
+              updateUI();
+            };
+            matEl.appendChild(btn);
+          });
+
+          const biotaActive = selectedMatrices.has("biota");
+          bioEl.style.display = biotaActive ? "flex" : "none";
+
+          if (biotaActive) {
+            BIOTA_META.forEach(b => {
+              const btn = document.createElement("div");
+              btn.className = `chip ${selectedBiota.has(b.id) ? "on" : ""}`;
+              btn.innerHTML = `<span class="dot"></span> ${b.label}`;
+              btn.onclick = () => {
+                if (selectedBiota.has(b.id)) selectedBiota.delete(b.id);
+                else selectedBiota.add(b.id);
+                updateUI();
+              };
+              bioEl.appendChild(btn);
+            });
+          }
+
+          const mats = MATRIX_META.filter(m => selectedMatrices.has(m.id)).map(m => m.label);
+          const bios = BIOTA_META.filter(b => selectedBiota.has(b.id)).map(b => b.label);
+
+          if (mats.length === 0) {
+            hintEl.textContent = "Nenhuma matriz selecionada.";
+          } else if (selectedMatrices.has("biota")) {
+            hintEl.textContent = bios.length ? `Matriz: ${mats.join(", ")} • Biota: ${bios.join(", ")}` : `Matriz: ${mats.join(", ")} • (Selecione organismos em Biota)`;
+          } else {
+            hintEl.textContent = `Matriz: ${mats.join(", ")}`;
+          }
+        }
+
+        // ----------------------------
+        // ECOSSISTEMAS (só aparece se houver ambiente selecionado)
+        // ----------------------------
+        function renderEcos() {
+            const container = document.getElementById('ecoList');
+            const q = normalize(document.getElementById('ecoSearch').value);
+            container.innerHTML = '';
+
+            if (activeEnvs.size === 0) {
+              document.getElementById("ecoCount").textContent = `0 ecossistema(s) disponível(is)`;
+
+              const empty = document.createElement("div");
+              empty.className = "item-row";
+              empty.style.cursor = "default";
+              empty.style.color = "var(--text-muted)";
+              empty.innerHTML = `<span>Selecione um ambiente para ver os ecossistemas.</span>`;
+              container.appendChild(empty);
+              return;
+            }
+
+            const filtered = ECO_INDEX.filter(item => {
+              const matchEnv = item.env.some(e => activeEnvs.has(e));
+              const matchText = !q || item.searchable.includes(q);
+              return matchEnv && matchText;
+            });
+
+            document.getElementById("ecoCount").textContent = `${filtered.length} ecossistema(s) disponível(is)`;
+
+            if (filtered.length === 0) {
+              const empty = document.createElement("div");
+              empty.className = "item-row";
+              empty.style.cursor = "default";
+              empty.style.color = "var(--text-muted)";
+              empty.innerHTML = `<span>Nenhum ecossistema encontrado.</span>`;
+              container.appendChild(empty);
+              return;
+            }
+
+            filtered.forEach(item => {
+                const isSelected = selectedEcoIds.has(item.id);
+                const div = document.createElement('div');
+                div.className = `item-row ${isSelected ? 'selected' : ''}`;
+                div.innerHTML = `<div class="checkbox"></div> <span>${item.pt}</span>`;
+                div.onclick = () => {
+                    if (isSelected) selectedEcoIds.delete(item.id);
+                    else selectedEcoIds.add(item.id);
+                    updateUI();
+                };
+                container.appendChild(div);
+            });
+        }
+
+        // ----------------------------
+        // PARAMS (accordion) com ids + busca
+        // ----------------------------
+        function renderParams() {
+            const container = document.getElementById('paramList');
+            const q = normalize(document.getElementById('paramSearch').value);
+            container.innerHTML = '';
+
+            const groups = new Map();
+            for (const row of PARAM_INDEX) {
+              if (!q || row.searchable.includes(q)) {
+                if (!groups.has(row.cat)) groups.set(row.cat, []);
+                groups.get(row.cat).push(row);
+              }
+            }
+
+            const cats = [...groups.keys()];
+            if (q && cats.length === 1) activeParamCat = cats[0];
+            if (activeParamCat && !groups.has(activeParamCat)) activeParamCat = null;
+
+            let totalVisible = 0;
+            for (const items of groups.values()) totalVisible += items.length;
+            document.getElementById("paramCount").textContent = `${totalVisible} parâmetro(s) visível(is)`;
+
+            if (cats.length === 0) {
+              const empty = document.createElement("div");
+              empty.className = "item-row";
+              empty.style.cursor = "default";
+              empty.style.color = "var(--text-muted)";
+              empty.innerHTML = `<span>Nenhum parâmetro encontrado.</span>`;
+              container.appendChild(empty);
+              return;
+            }
+
+            for (const [cat, items] of groups.entries()) {
+                const isOpen = activeParamCat === cat;
+
+                const header = document.createElement('div');
+                header.className = 'group-header';
+                header.innerHTML = `<span>${cat}</span> <span>${isOpen ? '▲' : '▼'}</span>`;
+                header.onclick = () => {
+                    activeParamCat = isOpen ? null : cat;
+                    renderParams();
+                };
+                container.appendChild(header);
+
+                if (isOpen) {
+                    items.forEach(row => {
+                        const isSelected = selectedParamIds.has(row.id);
+                        const div = document.createElement('div');
+                        div.className = `item-row ${isSelected ? 'selected' : ''}`;
+                        div.style.paddingLeft = '25px';
+                        div.innerHTML = `<div class="checkbox"></div> <span>${row.name}</span>`;
+                        div.onclick = (e) => {
+                            e.stopPropagation();
+                            if (isSelected) selectedParamIds.delete(row.id);
+                            else selectedParamIds.add(row.id);
+                            updateUI();
+                        };
+                        container.appendChild(div);
+                    });
+                }
+            }
+        }
+
+        // ----------------------------
+        // SUMMARY
+        // ----------------------------
+        function renderSummary() {
+            const container = document.getElementById('selectionSummary');
+            if (!container) return;
+            container.innerHTML = '';
+
+            // ✅ chips múltiplos de escopo
+            const scopeChip = [...selectedScopes].map(s => ({ kind:"scope", id:s, label:`Escopo: ${s}` }));
+
+            // ✅ chips múltiplos de projeto (mostra escopo)
+            const projChip = [...selectedProjectIds].map(pid => {
+              const [scope, ...rest] = pid.split("::");
+              const project = rest.join("::");
+              return { kind:"project", id: pid, label:`Projeto: ${project} (${scope})` };
+            });
+
+            const ecosSelected = ECO_INDEX
+              .filter(e => selectedEcoIds.has(e.id))
+              .map(e => ({ kind:"eco", id:e.id, label:e.pt }));
+
+            const paramsSelected = PARAM_INDEX
+              .filter(p => selectedParamIds.has(p.id))
+              .map(p => ({ kind:"param", id:p.id, label:p.name }));
+
+            const matricesSelected = MATRIX_META
+              .filter(m => selectedMatrices.has(m.id))
+              .map(m => ({ kind:"matrix", id:m.id, label:m.label }));
+
+            const biotaSelected = BIOTA_META
+              .filter(b => selectedBiota.has(b.id))
+              .map(b => ({ kind:"biota", id:b.id, label:`Biota: ${b.label}` }));
+
+            const all = [...scopeChip, ...projChip, ...matricesSelected, ...biotaSelected, ...ecosSelected, ...paramsSelected];
+
+            if (all.length === 0) {
+                container.innerHTML = '<span style="color: #94a3b8; font-size: 12px;">Nenhum item selecionado</span>';
+                return;
+            }
+
+            all.forEach(item => {
+                const chip = document.createElement('div');
+                chip.className = 'applied-chip';
+                chip.dataset.kind = item.kind;
+                chip.innerHTML = `${item.label} <span class="remove-icon" title="Remover">✕</span>`;
+                chip.querySelector(".remove-icon").onclick = () => removeOne(item.kind, item.id);
+                container.appendChild(chip);
+            });
+        }
+
+        function removeOne(kind, id) {
+            if (kind === "eco") selectedEcoIds.delete(id);
+            if (kind === "param") selectedParamIds.delete(id);
+
+            if (kind === "matrix") {
+              selectedMatrices.delete(id);
+              if (id === "biota") selectedBiota.clear();
+            }
+            if (kind === "biota") selectedBiota.delete(id);
+
+            // ✅ remove um escopo específico (e seus projetos)
+            if (kind === "scope") {
+              selectedScopes.delete(id);
+              for (const pid of [...selectedProjectIds]) {
+                if (pid.startsWith(id + "::")) selectedProjectIds.delete(pid);
+              }
+              renderScopeCards();
+              renderProjectList();
+              setFiltersLockedState();
+            }
+
+            // ✅ remove um projeto específico
+            if (kind === "project") {
+              selectedProjectIds.delete(id);
+              renderProjectList();
+              setFiltersLockedState();
+            }
+
+            updateUI();
+        }
+
+        // ----------------------------
+        // Região breadcrumb (somente UI)
+        // ----------------------------
+        function updateRegionCrumb() {
+          const country = document.getElementById('countryInput').value.trim();
+          const state = document.getElementById('stateInput').value.trim();
+          const city = document.getElementById('cityInput').value.trim();
+
+          const parts = [
+            country || "País",
+            state || "Estado",
+            city || "Cidade"
+          ];
+
+          document.getElementById('regionCrumb').textContent = `Selecione: ${parts[0]} › ${parts[1]} › ${parts[2]}`;
+        }
+
+        // ----------------------------
+        // UI orchestration
+        // ----------------------------
+        function updateUI() {
+            renderEnvChips();
+            renderEcos();
+            renderMatrix();
+            renderParams();
+            renderSummary();
+            setFiltersLockedState();
+        }
+
+        function resetAll() {
+            // ✅ reset multi
+            selectedScopes.clear();
+            selectedProjectIds.clear();
+
+            activeEnvs = new Set();
+            selectedEcoIds.clear();
+            selectedParamIds.clear();
+            activeParamCat = null;
+
+            selectedMatrices.clear();
+            selectedBiota.clear();
+
+            document.getElementById('projectSearch').value = '';
+            document.getElementById('ecoSearch').value = '';
+            document.getElementById('paramSearch').value = '';
+
+            // Região (UI)
+            document.getElementById('countryInput').value = '';
+            document.getElementById('stateInput').value = '';
+            document.getElementById('cityInput').value = '';
+            updateRegionCrumb();
+
+            // Período
+            document.getElementById('dateStart').value = '';
+            document.getElementById('dateEnd').value = '';
+
+            renderScopeCards();
+            renderProjectList();
+            updateUI();
+        }
+
+        // ----------------------------
+        // EVENTS
+        // ----------------------------
+        document.getElementById('ecoSearch').addEventListener('input', debounce(renderEcos, 180));
+        document.getElementById('paramSearch').addEventListener('input', debounce(renderParams, 180));
+        document.getElementById('projectSearch').addEventListener('input', debounce(renderProjectList, 180));
+
+        document.getElementById('btnReset').addEventListener('click', resetAll);
+
+        document.getElementById('btnApply').addEventListener('click', () => {
+          const payload = {
+            // ✅ agora multi
+            scope: [...selectedScopes],
+            projects: [...selectedProjectIds].map(pid => {
+              const [scope, ...rest] = pid.split("::");
+              return { scope, project: rest.join("::") };
+            }),
+
+            date_start: document.getElementById('dateStart').value || null,
+            date_end: document.getElementById('dateEnd').value || null,
+
+            envs: [...activeEnvs],
+            matrizes: [...selectedMatrices],
+            biota: [...selectedBiota],
+            ecossistemas: ECO_INDEX.filter(e => selectedEcoIds.has(e.id)).map(e => ({
+              id: e.id, pt: e.pt, en: e.en, categoria: e.cat, env: e.env
+            })),
+            parametros: PARAM_INDEX.filter(p => selectedParamIds.has(p.id)).map(p => ({
+              id: p.id, categoria: p.cat, nome: p.name
+            }))
+          };
+          alert("Filtros aplicados!\n\nPayload (console):\n" + JSON.stringify(payload, null, 2).slice(0, 1200) + (JSON.stringify(payload).length > 1200 ? "\n...\n" : ""));
+          console.log("FILTER_PAYLOAD:", payload);
+        });
+
+        document.getElementById('countryInput').addEventListener('input', updateRegionCrumb);
+        document.getElementById('stateInput').addEventListener('input', updateRegionCrumb);
+        document.getElementById('cityInput').addEventListener('input', updateRegionCrumb);
+
+        // init
+        updateRegionCrumb();
+        renderScopeCards();
+        renderProjectList();
+        setFiltersLockedState();
+        updateUI();
+    </script>
+</body>
+</html>

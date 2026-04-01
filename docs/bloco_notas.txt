@@ -1,0 +1,86 @@
+como tornar a plataforma "generalizavel" no momento ela só "recebe/visualiza" um único tipo de informação, mas  quero que o usuário possa adicionar multiplas camadas de dados para elaborar seu webgis e análises de modo mais eficiente.
+
+Quero criar uma landing page rebranding da plataforma Envibase desenvolvida pelo Instituto Hidrocarboneto - IHC
+Para contexto os sites da envibase e ihc são: https://www.envibase.com/ e https://www.ihc.com.br/
+
+Como Benchmarking para esse desafio temos uma lista dos principais players de WebGis/GeoAI mundial:
+# Benchmarking relevantes para conhecer
+
+
+## ESPANHA
+
+### Vizzuality
+- https://www.vizzuality.com/
+Top01 benchmark: plataforma da vizzuality chamada Landgriffon lançada em 03/2024
+Website: https://landgriffon.com/   
+Github: https://github.com/Vizzuality/landgriffon 
+Reportagem: https://medium.com/vizzuality-blog/vizzuality-carto-launch-eudr-compliance-tool-114c87126fcd 
+
+### Carto
+- https://carto.com/ 
+
+## BÉLGICA
+- https://remotesensing.vito.be/ 
+- https://terrascope.be/en 
+
+## EUA
+- https://www.esri.com/pt-br/home 
+- https://www.mapbox.com/ 
+- https://foursquare.com/products/studio/ 
+- https://www.aino.world/ 
+- https://www.kontur.io/ 
+
+## UCRÂNIA
+- https://dekart.xyz/ 
+
+
+## INTERNACIONAL
+### WRI
+
+#### Global Forest Whatch desenvolvida opensource pela Vizzuality
+
+Website: https://www.globalforestwatch.org/  
+
+#### Top02 benchmark: plataforma da WRI chamada Global Nature Watch lançada em 11/2025
+- Website: https://www.globalnaturewatch.org/ 
+- Github: https://github.com/wri/project-zeno/
+- Reportagens:
+Projetct Global Nature Watch: https://developmentseed.org/projects/global-nature-watch/ 
+
+- Introducing Global Nature Watch: AI-Powered Insights for Nature:
+https://landcarbonlab.org/events/introducing-global-nature-watch-ai-powered-insights-for-nature/?apcid=006660c1cde3182a0b29ce06&utm_campaign=gnw2025&utm_medium=email&utm_source=email1 
+
+#### CityMetrics
+- https://pt-br.shiftcities.org/post/meet-citymetrics-open-source-interactive-tool-analyzing-urban-risks-and-opportunities 
+
+### OVERTUREMAPS
+- https://overturemaps.org/ 
+
+## BRASIL
+- Observatório da Agropecuária Brasileira: https://observatorio.agropecuaria.inmet.gov.br/ (desenvolvido pela empresa YouxGroup https://youxgroup.com.br/observatorio-mapa/)
+- https://brasil.mapbiomas.org/ 
+- https://inde.gov.br/  "Infraestrutura Nacional de Dados Espaciais – INDE"
+
+
+# Projetos de Plataformas Opensource
+
+- https://www.openvisualization.org/  (deck.gl e kepler.gl)
+- https://deck.gl/ 
+- https://kepler.gl/  (desenvolvido pelo time de engenharia de dados do Uber quando foi criada a Spin-off Unfolded e em 2023 foi adquirida pela Foursquare sendo renomeado para Foursquare Studio. Foursquare continua dando suporte ao Kepler.gl
+
+
+# Plataformas para Catálogo de dados e gestão de metadados
+https://source.coop/ 
+https://basedosdados.org/
+
+
+# Open-Source UI Kit for Geospatial Applications
+https://www.kontur.io/blog/ui-kit/
+https://www.kontur.io/services/ux-research/ 
+
+## Design system on Figma
+https://www.figma.com/design/C2TlBs45hTL0U5pqZl2n9d/Kontur-Design-System?node-id=1379-10803&p=f 
+
+## GitHub
+https://github.com/konturio/ui   
+https://konturio.github.io/ui/ 
