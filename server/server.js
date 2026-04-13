@@ -28,17 +28,31 @@ const app = express();
 // Use Replit's assigned PORT or fallback to 3001 for development
 const port = process.env.PORT || 3001;
 
-// Configure CORS for Replit environment
+// Configure CORS for Replit and local development
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',')
+  : [];
+
 app.use(cors({
-  origin: [
-    'http://localhost:5000',
-    'https://localhost:5000',
-    process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null,
-    process.env.REPLIT_DEV_DOMAIN ? `http://${process.env.REPLIT_DEV_DOMAIN}` : null,
-    // Allow all Replit domains
-    /^https:\/\/.*\.replit\.dev$/,
-    /^https:\/\/.*\.kirk\.replit\.dev$/
-  ].filter(Boolean),
+  origin: (origin, callback) => {
+    // Allow requests with no origin (curl, server-to-server)
+    if (!origin) return callback(null, true);
+
+    // Dev: allow localhost on common ports
+    if (process.env.NODE_ENV !== 'production') {
+      const devPattern = /^https?:\/\/localhost:(\d+)$/;
+      if (devPattern.test(origin)) return callback(null, true);
+    }
+
+    // Replit domains
+    const replitPattern = /^https:\/\/.*\.replit\.dev$/;
+    if (replitPattern.test(origin)) return callback(null, true);
+
+    // Env-configured origins
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+
+    callback(new Error(`CORS: origin '${origin}' not allowed`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

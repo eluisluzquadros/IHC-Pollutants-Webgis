@@ -65,7 +65,6 @@ const ErrorFallback = ({ error, resetError }: { error: Error; resetError: () => 
 );
 
 function App() {
-  const tempoRoutes = import.meta.env.VITE_TEMPO === "true" ? null : null;
 
   return (
     <Suspense fallback={<AppLoadingFallback />}>

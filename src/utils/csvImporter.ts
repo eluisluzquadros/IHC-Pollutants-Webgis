@@ -9,7 +9,9 @@ export interface StationData {
   unit: string;
 }
 
-export const parseCSV = (csvText: string): StationData[] => {
+export const parseCSV = (rawText: string): StationData[] => {
+  // Strip BOM (e.g. files saved in Excel) and normalize CRLF → LF
+  const csvText = rawText.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const lines = csvText.trim().split('\n');
   
   // Skip header row

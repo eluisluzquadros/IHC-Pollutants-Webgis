@@ -13,7 +13,9 @@ const getApiBaseUrl = (): string => {
 
 const API_BASE_URL = getApiBaseUrl();
 
-console.log('🔗 AI Service API URL:', API_BASE_URL);
+if (import.meta.env.DEV) {
+  console.log('🔗 AI Service API URL:', API_BASE_URL || '(relative proxy)');
+}
 
 export interface MapCommand {
   type: 'focus_station' | 'filter_data' | 'highlight_stations' | 'set_zoom' | 'apply_time_filter';
@@ -74,7 +76,7 @@ export class AIService {
     const totalRecords = stationData.length;
 
     // Date range
-    const dates = stationData.map(d => new Date(d.sample_dt)).sort();
+    const dates = stationData.map(d => new Date(d.sample_dt)).sort((a, b) => a.getTime() - b.getTime());
     const dateRange = {
       start: dates[0]?.toISOString().split('T')[0] || '',
       end: dates[dates.length - 1]?.toISOString().split('T')[0] || ''
@@ -292,8 +294,36 @@ export class AIService {
     const issues: string[] = [];
     const recommendations: string[] = [];
 
-    // Determinar qualidade
-    let quality: 'excellent' | 'good' | 'fair' | 'poor' = 'good';
+    // Check for missing coordinates
+    const missingCoords = stationData.filter(d => !d.lat || !d.lon || isNaN(d.lat) || isNaN(d.lon)).length;
+    if (missingCoords > 0) {
+      issues.push(`${missingCoords} registros com coordenadas ausentes ou inválidas`);
+      recommendations.push('Verifique as colunas de latitude e longitude no arquivo CSV');
+    }
+
+    // Check for missing/zero pollution values
+    const zeroPollution = stationData.filter(d => d.pol_a === 0 && d.pol_b === 0).length;
+    if (zeroPollution > stationData.length * 0.1) {
+      issues.push(`${zeroPollution} registros com poluição zero em ambos os poluentes`);
+      recommendations.push('Confirme se leituras zero são válidas ou representam dados ausentes');
+    }
+
+    // Check for extreme outliers (> 3σ)
+    const polAValues = stationData.map(d => d.pol_a);
+    const avgA = polAValues.reduce((s, v) => s + v, 0) / polAValues.length;
+    const stdA = Math.sqrt(polAValues.reduce((s, v) => s + Math.pow(v - avgA, 2), 0) / polAValues.length);
+    const extremes = stationData.filter(d => Math.abs(d.pol_a - avgA) > 3 * stdA).length;
+    if (extremes > 0) {
+      issues.push(`${extremes} leituras extremas detectadas (> 3σ) para Poluente A`);
+      recommendations.push('Revise as leituras extremas — podem ser erros de medição');
+    }
+
+    // Determine quality level
+    let quality: 'excellent' | 'good' | 'fair' | 'poor';
+    if (issues.length === 0) quality = 'excellent';
+    else if (issues.length === 1) quality = 'good';
+    else if (issues.length === 2) quality = 'fair';
+    else quality = 'poor';
 
     return { quality, issues, recommendations };
   }
