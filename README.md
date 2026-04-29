@@ -6,8 +6,6 @@
 
 🔗 **Repositório Bitbucket (desafio técnico)**: [bitbucket.org/ihc-background/desafio_tecnico](https://bitbucket.org/ihc-background/desafio_tecnico)
 
-🔗 **Demo Replit**: [ihc-pollutants-webgis-eluzquadros.replit.app](https://ihc-pollutants-webgis-eluzquadros.replit.app)
-
 ---
 
 ## 📋 Sumário
