@@ -4,8 +4,6 @@
 
 [![Envibase Platform](https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?w=800&q=80)](https://github.com/eluisluzquadros/IHC-Pollutants-Webgis)
 
-🔗 **Repositório GitHub**: [github.com/eluisluzquadros/IHC-Pollutants-Webgis](https://github.com/eluisluzquadros/IHC-Pollutants-Webgis)
-
 🔗 **Repositório Bitbucket (desafio técnico)**: [bitbucket.org/ihc-background/desafio_tecnico](https://bitbucket.org/ihc-background/desafio_tecnico)
 
 🔗 **Demo Replit**: [ihc-pollutants-webgis-eluzquadros.replit.app](https://ihc-pollutants-webgis-eluzquadros.replit.app)
