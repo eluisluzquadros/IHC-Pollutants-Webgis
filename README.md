@@ -6,7 +6,7 @@
 
 🔗 **Repositório GitHub**: [github.com/eluisluzquadros/IHC-Pollutants-Webgis](https://github.com/eluisluzquadros/IHC-Pollutants-Webgis)
 
-🔗 **Repositório Bitbucket (desafio técnico)**: [bitbucket.org/ihc-background/desafio_tecnico](https://bitbucket.org/ihc-background/desafio_tecnico/src/main/)
+🔗 **Repositório Bitbucket (desafio técnico)**: [bitbucket.org/ihc-background/desafio_tecnico](https://bitbucket.org/ihc-background/desafio_tecnico)
 
 🔗 **Demo Replit**: [ihc-pollutants-webgis-eluzquadros.replit.app](https://ihc-pollutants-webgis-eluzquadros.replit.app)
 
@@ -64,9 +64,9 @@ A **Envibase** é uma plataforma SGDA nativa na nuvem desenvolvida pelo **Instit
 
 ### 📁 Gestão de Dados e Projetos
 - **Importação Flexível**: CSV com mapeamento de colunas customizável
-- **Projetos Isolados**: Separação de datasets por projeto (IndexedDB local)
-- **Autenticação Google**: Login com conta Google via Firebase Auth
-- **Armazenamento Local**: Dados persistidos no browser via `idb`
+- **Projetos Isolados**: Separação de datasets por projeto (PostgreSQL/IndexedDB local)
+- **Autenticação Local**: Login nativo (Email/Senha) com JWT e segurança via bcrypt
+- **Armazenamento Seguro**: Dados persistidos em banco de dados local (PostgreSQL ou Fallback em Memória)
 
 ### 🎨 Design Premium
 - **Tema Claro/Escuro**: Alternância sem reinicialização com `prefers-color-scheme`
@@ -96,7 +96,7 @@ IHC-Pollutants-Webgis/
 │   │   ├── ProjectManagerPanel.tsx # Gestão de projetos
 │   │   └── ui/                   # Componentes ShadCN/UI
 │   ├── contexts/
-│   │   ├── AuthContext.tsx        # Estado de autenticação (Firebase)
+│   │   ├── AuthContext.tsx        # Estado de autenticação (JWT Local)
 │   │   ├── DuckDBContext.tsx      # Engine SQL in-browser (DuckDB-WASM)
 │   │   └── MapCommandContext.tsx  # Comandos de mapa via IA
 │   ├── hooks/
@@ -117,8 +117,7 @@ IHC-Pollutants-Webgis/
 ├── docs/                          # Recursos de documentação
 ├── public/                        # Assets estáticos
 ├── .env.example                   # Template de variáveis de ambiente
-├── firebase.json                  # Configuração Firebase Hosting
-├── firestore.rules                # Regras de segurança Firestore
+├── drizzle.config.ts              # Configuração do Drizzle ORM
 └── vite.config.ts                 # Configuração do Vite (porta 5000, proxy)
 ```
 
@@ -231,7 +230,7 @@ ST002,Estação Beta,-23.5489,-46.6388,2024-01-15,6.1,5.4,µg/m³
 | Recharts | 3.2 | Gráficos interativos |
 | DuckDB-WASM | 1.33 | Analytics SQL in-browser |
 | Framer Motion | 11 | Animações |
-| Firebase | 12 | Auth + Firestore |
+| PostgreSQL / Drizzle | latest | Persistência e Autenticação |
 | Turf.js | 7.3 | Análise geoespacial |
 | React Router | 6.23 | Roteamento SPA |
 
@@ -348,7 +347,7 @@ MIT License — consulte o arquivo [LICENSE](LICENSE) para detalhes.
 - **Leaflet + MapLibre** — Ecossistema de mapeamento
 - **ShadCN/UI** — Biblioteca de componentes
 - **DuckDB** — Analytics in-browser
-- **Firebase** — Auth e infraestrutura
+- **PostgreSQL / Drizzle** — Persistência e Auth
 - **OpenStreetMap** — Tiles de mapa base
 - **Instituto Hidrocarboneto (IHC)** — Patrocinador e contexto de uso
 

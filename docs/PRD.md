@@ -60,7 +60,7 @@ A **Envibase** é um SGDA (Sistema de Gerenciamento de Dados Ambientais) nativo 
 ### 3.1 ✅ Implementado
 
 #### Autenticação e Gestão de Usuários
-- Login social com Google (Firebase Auth)
+- Autenticação Local segura (Email/Senha) via JWT e bcrypt
 - Perfil de usuário no header (avatar, nome, email)
 - Modo visitante (acesso limitado sem login)
 
@@ -131,7 +131,7 @@ A **Envibase** é um SGDA (Sistema de Gerenciamento de Dados Ambientais) nativo 
 
 ### 4.2 Segurança
 - Variáveis de ambiente para chaves de API (nunca expostas no bundle)
-- Firebase Security Rules restringindo acesso a dados privados por UID
+- Autenticação JWT e isolamento de dados por User ID no banco de dados
 - CORS configurado no backend Express
 - Nenhuma chave de API hardcoded no código-fonte
 
@@ -179,7 +179,7 @@ A **Envibase** é um SGDA (Sistema de Gerenciamento de Dados Ambientais) nativo 
 
 | Serviço | Propósito | Criticidade |
 |---------|-----------|-------------|
-| Firebase Auth/Firestore | Autenticação e metadados | Alta |
+| PostgreSQL / Drizzle | Autenticação e metadados | Alta |
 | OpenStreetMap Tile Server | Mapa base | Alta |
 | OpenAI / Anthropic / Gemini | Assistente de IA | Média (opcional) |
 | Replit | Ambiente de hospedagem demo | Baixa |

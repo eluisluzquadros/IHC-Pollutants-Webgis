@@ -32,7 +32,7 @@
 - [x] **Exportação CSV** — Download de dados filtrados
 - [x] **Assistente de IA** — Multi-LLM: OpenAI, Anthropic, Gemini, DeepSeek, Zhipu, MiniMax
 - [x] **Dashboard Analytics** — KPIs, gráficos Recharts, DuckDB-WASM
-- [x] **Autenticação** — Login Google via Firebase Auth
+- [x] **Autenticação** — Migração completa para Local Auth (JWT + Postgres)
 - [x] **Gestão de Projetos** — IndexedDB com separação por projeto
 - [x] **Landing Page** — Hero, Funcionalidades, Preços (3 planos), FAQ, Footer
 - [x] **Tema Claro/Escuro** — Glassmorphism, Tailwind dark mode
@@ -138,7 +138,7 @@
 
 ### 3.2 — Infraestrutura
 
-- [ ] **Migrar storage** — De IndexedDB para Supabase Storage (S3-compatible) para planos pagos
+- [ ] **Escalar storage** — Otimizar queries PostgreSQL e suporte a S3 para planos pagos
 - [ ] **CDN de tiles** — Cache de tiles de mapa para performance global
 - [ ] **Rate limiting** — Proteção das APIs públicas
 - [ ] **Monitoramento** — Sentry (erros), PostHog (analytics) e Uptime Robot (disponibilidade)
