@@ -1,5 +1,25 @@
-import { pgTable, serial, text, real, timestamp, integer, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, real, timestamp, varchar } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+
+// Users table
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+  displayName: varchar('display_name', { length: 255 }),
+  role: varchar('role', { length: 50 }).default('user').notNull(),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// Projects table
+export const projects = pgTable('projects', {
+  id: varchar('id', { length: 100 }).primaryKey(),
+  ownerId: integer('owner_id').notNull().references(() => users.id),
+  name: text('name').notNull(),
+  description: text('description'),
+  settings: text('settings'), // Can store JSON string
+  createdAt: timestamp('created_at').defaultNow()
+});
 
 // Environmental monitoring stations table
 export const stations = pgTable('stations', {
@@ -42,3 +62,7 @@ export type Station = typeof stations.$inferSelect;
 export type InsertStation = typeof stations.$inferInsert;
 export type PollutionRecord = typeof pollutionRecords.$inferSelect;
 export type InsertPollutionRecord = typeof pollutionRecords.$inferInsert;
+export type User = typeof users.$inferSelect;
+export type InsertUser = typeof users.$inferInsert;
+export type Project = typeof projects.$inferSelect;
+export type InsertProject = typeof projects.$inferInsert;

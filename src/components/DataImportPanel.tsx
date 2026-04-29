@@ -45,7 +45,7 @@ const DataImportPanel: React.FC<{ onImportSuccess?: () => void }> = ({ onImportS
     const { user } = useAuth();
     const { db } = useDuckDB();
 
-    const ownerId = user?.uid ?? 'anonymous';
+    const ownerId = user?.id || 'anonymous';
 
     // Projects
     const [projects, setProjects] = useState<StoredProject[]>([]);

@@ -13,9 +13,10 @@ const ProjectManagerPanel: React.FC = () => {
   const [editing, setEditing] = useState<StoredProject|undefined>();
   const [deleteConfirm, setDeleteConfirm] = useState<string|null>(null);
   const [activeProjectId, setActiveProjectId] = useState<string|null>(null);
-  const ownerId = user?.uid ?? 'anonymous';
+  const ownerId = user?.id ?? 'anonymous';
 
   const load = useCallback(async () => {
+    if (!user?.id) return;
     setLoading(true);
     try {
       const list = await getProjects(ownerId);

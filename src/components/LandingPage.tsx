@@ -4,14 +4,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { MapCommandProvider } from '@/contexts/MapCommandContext';
 import ChatBot from './ChatBot';
+import { AuthModal } from './AuthModal';
 
 const LandingPage = () => {
-    const { user, loginWithGoogle } = useAuth();
+    const { user } = useAuth();
     const navigate = useNavigate();
     const [isScrolled, setIsScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [activeFaq, setActiveFaq] = useState<number | null>(null);
-    const [isLoginPending, setIsLoginPending] = useState(false);
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [showAIChat, setShowAIChat] = useState(false);
     // Dark Mode Theme State
     const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -36,22 +37,11 @@ const LandingPage = () => {
         }
     };
 
-    const handleAccessPlatform = async () => {
+    const handleAccessPlatform = () => {
         if (user) {
             navigate('/platform');
         } else {
-            setIsLoginPending(true);
-            try {
-                await loginWithGoogle();
-                navigate('/platform');
-                toast.success("Bem-vindo ao Envibase!");
-            } catch (error: any) {
-                if (error.title !== 'Login Cancelled') {
-                    toast.error("Falha ao acessar plataforma. Tente novamente.");
-                }
-            } finally {
-                setIsLoginPending(false);
-            }
+            setIsAuthModalOpen(true);
         }
     };
 
@@ -96,10 +86,9 @@ const LandingPage = () => {
                         </button>
                         <button
                             onClick={handleAccessPlatform}
-                            disabled={isLoginPending}
                             className="hidden md:block bg-landing-navy dark:bg-white text-white dark:text-landing-navy px-6 py-2.5 rounded-full text-sm font-medium hover:bg-landing-primary hover:dark:bg-gray-200 transition-colors shadow-lg shadow-landing-navy/20 dark:shadow-white/10"
                         >
-                            {isLoginPending ? 'Entrando...' : 'Acessar Plataforma'}
+                            Acessar Plataforma
                         </button>
                         <button
                             className="md:hidden text-landing-navy dark:text-white"
@@ -121,10 +110,9 @@ const LandingPage = () => {
                         <hr className="border-landing-navy/5 dark:border-white/5" />
                         <button
                             onClick={handleAccessPlatform}
-                            disabled={isLoginPending}
                             className="bg-landing-navy dark:bg-white text-white dark:text-landing-navy w-full py-4 rounded-xl font-bold"
                         >
-                            {isLoginPending ? 'Entrando...' : 'Acessar Plataforma'}
+                            Acessar Plataforma
                         </button>
                     </div>
                 </div>
@@ -591,6 +579,12 @@ const LandingPage = () => {
                     <span className="material-symbols-outlined text-2xl">{showAIChat ? 'close' : 'chat'}</span>
                 </button>
             </div>
+
+            <AuthModal 
+                isOpen={isAuthModalOpen} 
+                onClose={() => setIsAuthModalOpen(false)} 
+                onSuccess={() => navigate('/platform')} 
+            />
         </div>
     );
 };

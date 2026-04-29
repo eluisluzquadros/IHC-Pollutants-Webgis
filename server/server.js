@@ -12,13 +12,15 @@ const { llmManager } = require('./services/llmProviders.js');
 
 // Import database connection (with in-memory fallback)
 const { db, useInMemory, inMemoryDb } = require('./db.js');
-let stations, pollutionRecords, eq, sql;
+let stations, pollutionRecords, users, projects, eq, sql;
 
 // Only load Drizzle ORM modules if using PostgreSQL
 if (!useInMemory) {
   const schema = require('../shared/schema.js');
   stations = schema.stations;
   pollutionRecords = schema.pollutionRecords;
+  users = schema.users;
+  projects = schema.projects;
   const drizzleOrm = require('drizzle-orm');
   eq = drizzleOrm.eq;
   sql = drizzleOrm.sql;
@@ -60,7 +62,61 @@ app.use(cors({
 
 app.use(express.json({ limit: '10mb' }));
 
+// Setup Auth Routes
+const { setupAuthRoutes } = require('./auth.js');
+const { verifyToken } = setupAuthRoutes(app, db, users);
 
+// Project Endpoints
+app.get('/api/projects', verifyToken, async (req, res) => {
+  try {
+    if (useInMemory) {
+      return res.json({ success: true, projects: [] }); // In-memory fallback
+    }
+    const userProjects = await db.select().from(projects).where(eq(projects.ownerId, req.user.id));
+    
+    // Parse settings JSON
+    const formattedProjects = userProjects.map(p => ({
+      ...p,
+      settings: p.settings ? JSON.parse(p.settings) : {}
+    }));
+    
+    res.json({ success: true, projects: formattedProjects });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar projetos' });
+  }
+});
+
+app.post('/api/projects', verifyToken, async (req, res) => {
+  try {
+    if (useInMemory) {
+      return res.status(400).json({ error: 'Operação não suportada em modo local/memória' });
+    }
+    
+    const { name, description } = req.body;
+    const projectId = `proj_${Date.now()}`;
+    const settings = JSON.stringify({
+      theme: 'dark',
+      defaultView: { lat: -22.9, lon: -43.2, zoom: 6 }
+    });
+
+    const newProject = await db.insert(projects).values({
+      id: projectId,
+      ownerId: req.user.id,
+      name,
+      description,
+      settings
+    }).returning();
+    
+    const formattedProject = {
+      ...newProject[0],
+      settings: JSON.parse(newProject[0].settings)
+    };
+
+    res.json({ success: true, project: formattedProject });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao criar projeto' });
+  }
+});
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({

@@ -56,7 +56,6 @@
     "drizzle-kit": "^0.31.5",
     "drizzle-orm": "^0.44.5",
     "embla-carousel-react": "^8.1.5",
-    "firebase": "^12.9.0",
     "framer-motion": "^11.18.0",
     "idb": "^8.0.3",
     "jspdf": "^4.1.0",

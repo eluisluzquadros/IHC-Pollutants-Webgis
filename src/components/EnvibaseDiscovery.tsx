@@ -109,7 +109,7 @@ const EnvibaseDiscovery: React.FC = () => {
                         <img
                             className="w-full h-full object-cover"
                             alt="User profile avatar"
-                            src={user?.photoURL || "https://lh3.googleusercontent.com/aida-public/AB6AXuA8iUCtOswV0crkmt3GC0vBoQJNkg7BeFiTekA6PzRPrK7K2Mo_zsB34qkRudcSu9Tv-mexejHLtaH9FlZiCxLoq1ilN1P6zePp0ihdOiy6j3KeSlxCiffOQpoM8_Zea4f04WjLDrJnsHDQlN-cNo7T98lWz6QMUiKmeGlicF_by6xaP4as7_86tbHaRtHZYcEqnuWshHnmhqy7vNEBb2sQMI5CWaVcVSLuUzyWf1L36qLZkTGcOIpZFXzQ000l9656dLqZyJf8Vy4"}
+                            src={"https://lh3.googleusercontent.com/aida-public/AB6AXuA8iUCtOswV0crkmt3GC0vBoQJNkg7BeFiTekA6PzRPrK7K2Mo_zsB34qkRudcSu9Tv-mexejHLtaH9FlZiCxLoq1ilN1P6zePp0ihdOiy6j3KeSlxCiffOQpoM8_Zea4f04WjLDrJnsHDQlN-cNo7T98lWz6QMUiKmeGlicF_by6xaP4as7_86tbHaRtHZYcEqnuWshHnmhqy7vNEBb2sQMI5CWaVcVSLuUzyWf1L36qLZkTGcOIpZFXzQ000l9656dLqZyJf8Vy4"}
                         />
                     </div>
                 </div>

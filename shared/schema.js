@@ -25,6 +25,27 @@ const pollutionRecords = pgTable('pollution_records', {
   createdAt: timestamp('created_at').defaultNow()
 });
 
+// Users table for local authentication
+const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  displayName: text('display_name'),
+  role: varchar('role', { length: 50 }).default('user'),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// Projects table
+const projects = pgTable('projects', {
+  id: varchar('id', { length: 100 }).primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  ownerId: varchar('owner_id', { length: 100 }).notNull(),
+  settings: text('settings'), // JSON stringified
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
 // Define relations
 const stationsRelations = relations(stations, ({ many }) => ({
   pollutionRecords: many(pollutionRecords)
@@ -40,6 +61,8 @@ const pollutionRecordsRelations = relations(pollutionRecords, ({ one }) => ({
 module.exports = {
   stations,
   pollutionRecords,
+  users,
+  projects,
   stationsRelations,
   pollutionRecordsRelations
 };
