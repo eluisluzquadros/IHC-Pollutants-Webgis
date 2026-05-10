@@ -173,10 +173,6 @@ LLM_MODEL=gpt-4o
 ### 4. Inicie os servidores
 
 ```bash
-# Terminal 1: Backend IA (porta 3001)
-cd server && npm start
-
-# Terminal 2: Frontend (porta 5000)
 npm run dev
 ```
 
